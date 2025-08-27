@@ -1,0 +1,6 @@
+{
+    "id": "frontend_dependencies",
+    "version": "1.0.0",
+    "name": "Frontend install",
+    "description": "Installs node.js and npm"
+}

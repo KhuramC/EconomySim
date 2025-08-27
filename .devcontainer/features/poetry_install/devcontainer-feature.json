@@ -1,0 +1,6 @@
+{
+    "id": "poetry_install",
+    "version": "1.0.0",
+    "name": "Poetry(Backend) Feature",
+    "description": "Installs poetry"
+}

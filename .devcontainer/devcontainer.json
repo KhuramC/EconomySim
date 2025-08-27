@@ -1,7 +1,8 @@
 {
-    "name": "Python Backend DevContainer",
+    "name": "EconSim DevContainer",
     "image": "python:3.11",
     "features":{
+            "./features/frontend_dependencies": {},
             "./features/poetry_install": {}
         },
     "customizations": {
@@ -12,7 +13,6 @@
                 "ms-python.vscode-pylance",
                 "donjayamanne.python-extension-pack"
             ]
-        }
-    },
-    "onCreateCommand": "poetry install"
+       }
+    }
 }
