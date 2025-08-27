@@ -11,5 +11,5 @@
             ]
         }
     },
-    "postCreateCommand": "pip install poetry"
+    "postCreateCommand": "pip install poetry==2.1.4"
 }
