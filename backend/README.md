@@ -1,9 +1,10 @@
 # Backend
 
-## Steps to use DevContainers
+## Steps to Start Developing
 
-1. Ensure the docker engine exists, preferably by installing Docker Desktop.
-1. Install the devcontainer extension in VSCode
-1. Open the backend folder in the container (if you are already in the folder, you can do open workspace)
-![image](./pictures/openDevContainer.png)
-1. Everything necessary should be already within the devcontainer to start developing the backend.
+The backend, being Python based, will use [poetry](https://python-poetry.org/) to help
+manage dependencies.
+
+1. Make sure one is in the container.
+1. Cd into the backend directory.
+1. Run `poetry install` to install dependencies
