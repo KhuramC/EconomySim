@@ -1,6 +1,9 @@
 {
     "name": "Python Backend DevContainer",
     "image": "python:3.11",
+    "features":{
+            "./features/poetry_install": {}
+        },
     "customizations": {
         "vscode": {
             "extensions": [
@@ -11,5 +14,5 @@
             ]
         }
     },
-    "postCreateCommand": "pip install poetry==2.1.4"
+    "onCreateCommand": "poetry install"
 }
