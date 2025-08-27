@@ -1,5 +1,5 @@
 [project]
-name = "engine"
+name = "backend"
 version = "0.1.0"
 description = "Econ simulation backend with Mesa + FastAPI"
 readme = "README.md"
