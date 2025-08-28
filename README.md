@@ -2,6 +2,9 @@
 
 ## Steps to use DevContainers
 
+Devcontainers provide a common base to ensure that everything is the same between developers.
+Although it does not need to be used, it is highly recommended, as issues could arise from not.
+
 1. If in Windows, use WSL for the repo, otherwise, just clone the repo.
 1. Ensure the docker engine exists, like by installing Docker Desktop.
 1. Install the devcontainer extension in VSCode
