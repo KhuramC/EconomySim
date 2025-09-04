@@ -11,7 +11,8 @@
                 "ms-python.python",
                 "ms-python.black-formatter",
                 "ms-python.vscode-pylance",
-                "donjayamanne.python-extension-pack"
+                "donjayamanne.python-extension-pack",
+                "ms-toolsai.jupyter"
             ]
        }
     }
