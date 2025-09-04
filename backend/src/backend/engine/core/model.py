@@ -28,14 +28,12 @@ class EconomyModel(Model):
         """Advance the simulation by one week."""
         self.week += 1
 
+        # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]
-        for industryAgent in list(industryAgents):
-            industryAgent.step()
-            print(
-                f"Industry Type: {industryAgent.industry_type}, Starting Price: {industryAgent.starting_price}"
-            )
+        industryAgents.shuffle_do("determine_price")
+        industryAgents.shuffle_do("change_employment")
 
+        # people agents do their tasks
         peopleAgents = self.agents_by_type[PersonAgent]
-        for personAgent in list(peopleAgents):
-            personAgent.step()
-            print("Income:", personAgent.income)
+        peopleAgents.shuffle_do("purchase")
+        peopleAgents.shuffle_do("change_employment")
