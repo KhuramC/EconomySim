@@ -10,7 +10,7 @@ from ..types.IndustryType import IndustryType
 
 class EconomyModel(Model):
 
-    def __init__(self, num_people=5):
+    def __init__(self, num_people: int):
         super().__init__()
         self.week = 0
 
