@@ -8,11 +8,14 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                //python extensions
                 "ms-python.python",
                 "ms-python.black-formatter",
                 "ms-python.vscode-pylance",
                 "donjayamanne.python-extension-pack",
-                "ms-toolsai.jupyter"
+                "ms-toolsai.jupyter",
+                //formatting
+                "esbenp.prettier-vscode"
             ]
        }
     }
