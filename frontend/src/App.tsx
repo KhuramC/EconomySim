@@ -1,5 +1,4 @@
 import { Routes } from './Routes.jsx';
-import Navbar from './components/Navbar.jsx'
 import Theme from './components/Theme.jsx'
 import './App.css'
 import {
@@ -13,8 +12,6 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-
-        <Navbar />
         <Routes />
       </ThemeProvider>
     </>
