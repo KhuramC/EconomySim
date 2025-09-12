@@ -6,7 +6,6 @@ import {
 } from '@mui/material';
 
 function App() {
-
   const theme = Theme;
 
   return (
