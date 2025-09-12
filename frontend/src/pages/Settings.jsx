@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Button,
@@ -13,6 +14,12 @@ import {
 } from "@mui/material";
 
 function Settings({textSize, setTextSize, volume, setVolume}) {
+  
+  useEffect(() => {
+    const audio = new Audio("/sharp-pop.mp3");
+    audio.volume = volume / 100; // optional: scale pop by current volume
+    audio.play();
+  }, [volume]); // trigger every time volume changes
 
   return (
     <Box p={10} height="100vh">

@@ -1,20 +1,20 @@
 import { BrowserRouter as Router, Routes as Switch, Route } from 'react-router-dom';
-import HomePage from './pages/Home';
-import AboutPage from './pages/About';
-import SettingsPage from './pages/Settings';
+import Home from './pages/Home';
+import About from './pages/About';
+import Settings from './pages/Settings';
 import Navbar from './components/Navbar';
 export const Routes = ({ textSize, setTextSize, volume, setVolume }) => {
   return (
     <Router>
       <Navbar />
       <Switch>
-        <Route path="/" element={<HomePage volume={volume} />} />
-        <Route path="/home" element={<HomePage volume={volume} />} />
-        <Route path="/about" element={<AboutPage volume={volume} />} />
+        <Route path="/" element={<Home volume={volume} />} />
+        <Route path="/home" element={<Home volume={volume} />} />
+        <Route path="/about" element={<About volume={volume} />} />
         <Route
           path="/settings"
           element={
-            <SettingsPage
+            <Settings
               textSize={textSize}
               setTextSize={setTextSize}
               volume={volume}
