@@ -6,8 +6,6 @@ import {
 } from '@mui/material';
 
 function App() {
-  // hello world
-  // yooo
   const theme = Theme;
 
   return (
