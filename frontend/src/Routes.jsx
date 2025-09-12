@@ -3,17 +3,26 @@ import HomePage from './pages/Home';
 import AboutPage from './pages/About';
 import SettingsPage from './pages/Settings';
 import Navbar from './components/Navbar';
-export const Routes = () => {
+export const Routes = ({ textSize, setTextSize, volume, setVolume }) => {
   return (
     <Router>
-
       <Navbar />
       <Switch>
-        <Route path="/" element={<HomePage/>} />
-        <Route path="/home" element={<HomePage/>} />
-        <Route path="/about" element={<AboutPage/>} />
-        <Route path="/settings" element={<SettingsPage/>} />
+        <Route path="/" element={<HomePage volume={volume} />} />
+        <Route path="/home" element={<HomePage volume={volume} />} />
+        <Route path="/about" element={<AboutPage volume={volume} />} />
+        <Route
+          path="/settings"
+          element={
+            <SettingsPage
+              textSize={textSize}
+              setTextSize={setTextSize}
+              volume={volume}
+              setVolume={setVolume}
+            />
+          }
+        />
       </Switch>
     </Router>
   );
-}
+};
