@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button, Container, Typography, Box} from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
 function Home() {
+
+  const navigate = useNavigate();
+
   const handleStart = () => {
-    console.log("Simulation started!");
+    console.log("Navigating to setup page...");
+    navigate("/setup");
   };
 
   return (
