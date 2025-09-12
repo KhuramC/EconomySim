@@ -19,6 +19,7 @@ function Home() {
           textAlign="center"
         >
           <h1>Economy Simulation</h1>
+          <h2>by JellyBean</h2>
           <Typography variant="body2" color="white" gutterBottom>
             Test your strategy and decision-making in a dynamic economy.
           </Typography>
