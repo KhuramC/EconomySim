@@ -40,3 +40,26 @@
 .read-the-docs {
   color: #888;
 }
+
+/*Dynamic Font Size Stuff */
+
+:root {
+  --app-font-size: 18px;
+}
+
+/* Apply the variable everywhere */
+body {
+  font-size: var(--app-font-size);
+  font-family: Arial, sans-serif;
+}
+
+/* Keep navbar fixed */
+.navbar {
+  font-size: 16px !important;
+}
+
+/* Keep page titles fixed */
+.page-title {
+  font-size: 24px !important;
+  font-weight: bold;
+}
