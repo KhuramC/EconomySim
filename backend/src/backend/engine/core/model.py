@@ -9,10 +9,23 @@ from ..types.IndustryType import IndustryType
 
 
 class EconomyModel(Model):
+    """
+    The main model for the economic simulation.
 
-    def __init__(self, num_people: int):
+    Attributes:
+        week (int): The current week in the simulation.
+        random_events (bool): Whether random events are enabled in the simulation.
+    """
+    
+    week: int
+    """The current week in the simulation."""
+    random_events: bool
+    """Whether random events are enabled in the simulation."""
+
+    def __init__(self, num_people: int, random_events: bool = False):
         super().__init__()
         self.week = 0
+        self.random_events = random_events
 
         self.datacollector = DataCollector(
             model_reporters={
