@@ -9,15 +9,15 @@ import {
   Paper,
   Container,
   Typography,
-  Stack
+  Stack,
 } from "@mui/material";
 
 function Home() {
-  
-
   return (
-
-        <h1>Home</h1>
+    <>
+      <h1>Welcome</h1>
+      <Button variant="contained">Start Simulation</Button>
+    </>
   );
 }
 
