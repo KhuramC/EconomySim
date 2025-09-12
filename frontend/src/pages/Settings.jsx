@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Button,
@@ -15,11 +15,30 @@ import {
 
 function Settings({textSize, setTextSize, volume, setVolume}) {
   
+  const volumeTimeout = useRef(null);
+  const prevVolume = useRef(volume); // store previous volume
+
   useEffect(() => {
-    const audio = new Audio("/sharp-pop.mp3");
-    audio.volume = volume / 100; // optional: scale pop by current volume
-    audio.play();
-  }, [volume]); // trigger every time volume changes
+    // skip sound if volume didn't actually change
+    if (prevVolume.current === volume) return;
+
+    // update previous volume for next change
+    prevVolume.current = volume;
+
+    if (volumeTimeout.current) {
+      clearTimeout(volumeTimeout.current);
+    }
+
+    volumeTimeout.current = window.setTimeout(() => {
+      const audio = new Audio("/sharp-pop.mp3");
+      audio.volume = volume / 100;
+      audio.play();
+    }, 200);
+
+    return () => {
+      if (volumeTimeout.current) clearTimeout(volumeTimeout.current);
+    };
+  }, [volume]);
 
   return (
     <Box p={10} height="100vh">
