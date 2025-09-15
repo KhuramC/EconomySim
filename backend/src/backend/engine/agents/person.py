@@ -2,6 +2,7 @@ from mesa import Agent, Model
 from .industry import IndustryAgent
 import logging
 
+
 class PersonAgent(Agent):
     """
     An agent representing a person in the simulation.
@@ -31,8 +32,8 @@ class PersonAgent(Agent):
         self.income = income
         self.employer = employer
         self.current_money = current_money
-        
-    def demand_func(self,preferences, prices,sigma,income):
+
+    def demand_func(self, preferences, prices, sigma, income):
         """
         Demand function for a product given:
         Args:
@@ -41,35 +42,31 @@ class PersonAgent(Agent):
             sigma (_type_): Elasticity of subsitution between products.
             income (_type_): The total money available to spend on the products.
         """
-        
+
         ## TODO: update demand func to use preferences and prices as dictionaries with keys
         # being the industry type. Should sigma be a bigger model variable?
         # how do we determine how much money the user uses out of the potential they have now?
         # how do we determine what happens if they want more than is available to buy?
         # see this for CES utility function: https://www.econgraphs.org/textbooks/intermediate_micro/scarcity_and_choice/preferences_and_utility/ces
-        
+
         numerators = [
-            (a_i ** sigma) * (p_i ** sigma) # top part of formula (excluding income)
+            (a_i**sigma) * (p_i**sigma)  # top part of formula (excluding income)
             for a_i, p_i in zip(preferences, prices)
         ]
-        
+
         denominator = (
-            (a_j ** sigma) * (p_j ** (1 -  sigma)) # bottom part of formula
+            (a_j**sigma) * (p_j ** (1 - sigma))  # bottom part of formula
             for a_j, p_j in zip(preferences, prices)
         )
-        
-        demands = [
-            (num / denominator) * income
-            for num in numerators
-        ]
+
+        demands = [(num / denominator) * income for num in numerators]
         return demands
-        
 
     def purchase_goods(self):
         """
         How the person will try to purchase the goods available based on their preferences.
         """
-        
+
         # TODO: implement CES utility function for spending behavior.
         # a somewhat base is given with demand_func
         # need to have solution for if they want 3 of one type of good and only 2 are available.
@@ -84,7 +81,7 @@ class PersonAgent(Agent):
         if self.employer is not None:
             logging.info("Already employed, no action taken.")
             return
-        
+
         # TODO: Implement person employment logic
         # deals with trying to find a new job if unemployed
         pass
