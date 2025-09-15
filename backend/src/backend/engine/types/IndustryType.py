@@ -1,6 +1,5 @@
 from enum import StrEnum
 
-
 class IndustryType(StrEnum):
     """
     An enumeration of different industry types supported by the simulation.
