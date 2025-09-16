@@ -20,7 +20,7 @@ ensures that all the python dependencies have been installed.
 
 ### Important Poetry Commands
 
-- `poetry install` (in directory with pyproject.toml) - installs dependencies
+- `poetry install` (in directory with [pyproject.toml](./pyproject.toml)) - installs dependencies
 - `poetry run pytest` - runs tests in venv
 - `poetry env activate` - shows command to activate venv
 - `eval $(poetry env activate)` - activates venv
