@@ -33,6 +33,9 @@ class PersonAgent(Agent):
         employer: IndustryAgent | None = None,
         current_money: int = 0,
     ):
+        """
+        Initialize a PersonAgent with its starting values.
+        """
         super().__init__(model)
         self.demographic = demographic
         self.income = income
