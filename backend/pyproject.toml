@@ -21,6 +21,10 @@ pytest = "^7.0"
 pytest-asyncio = "^0.23.8"
 pytest-cov = "^3.0"
 
+# for doing simulation testing with jupyter notebooks
+ipywidgets = "^8.1.0"
+jupyter = "^1.1.1"
+
 # for testing FastAPI
 httpx = "^0.28.1"
 
