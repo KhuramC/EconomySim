@@ -31,6 +31,7 @@ class ModelController:
             random_events (bool): Whether to enable random events in the model.
         """
         # apply city template settings first
+        # TODO: Implement City Template logic
         match city_template:
             case CityTemplate.SMALL:
                 pass
@@ -78,3 +79,8 @@ class ModelController:
             return self.models[model_id]
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
+        
+        
+        # TODO: engine interfaces:
+        # - get econ indicators (choose by time and/or category)
+        
