@@ -1,17 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button, Container, Typography, Box} from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
-function Home() {
 
-  const navigate = useNavigate();
-
-  const handleStart = () => {
-    console.log("Navigating to setup page...");
-    navigate("/setup");
-  };
-
+function Home({ onStart }) {
   return (
       <Container maxWidth="sm">
         <Box
@@ -32,7 +23,7 @@ function Home() {
             color="primary"
             size="large"
             startIcon={<PlayArrowIcon />}
-            onClick={handleStart}
+            onClick={onStart}
             sx={{ mt: 3, borderRadius: 2 }}
           >
             Start Simulation

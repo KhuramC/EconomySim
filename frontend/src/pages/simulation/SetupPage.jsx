@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
 import { Box, Grid, Typography, Button, Card, CardContent, Modal } from '@mui/material';
 
-function SetupPage() {
+function SetupPage({ onSetupComplete }) {
+    // Parameter popups
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTopic, setEditingTopic] = useState(null);
 
     const handleOpenModal = (topic) => {
         setEditingTopic(topic);
         setIsModalOpen(true);
-    }
+    };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingTopic(null);
     };
 
-
     console.log("Current topic to edit:", editingTopic);
+
+    // Simulation settings state
+    const [config, setConfig] = useState({
+        demographics: { },
+        industries: { },
+        policies: { }
+    });
+
+    const handleBeginClick = () => {
+        // When user clicks the button, call the function from the parent
+        // and pass collected config data
+        onSetupComplete(config);
+    };
 
     return (
         // Container with padding
@@ -184,7 +197,7 @@ function SetupPage() {
                 </Box>
             </Modal>
 
-            <Button variant="contained" color="primary" sx={{ mt: 4 }}>Begin Simulation</Button>
+            <Button variant="contained" color="primary" sx={{ mt: 4 }} onClick={handleBeginClick}>Begin Simulation</Button>
         </Box>
     );
 }
