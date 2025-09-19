@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Grid, Typography, Button, Card, CardContent, Modal } from '@mui/material';
+import TopicCard from '../../components/TopicCard';
 
 function SetupPage({ onSetupComplete }) {
     // Parameter popups
@@ -45,138 +46,90 @@ function SetupPage({ onSetupComplete }) {
                 <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
                     <Typography variant='h5'>Demographics</Typography>
 
-                    {/* Example card (topic of setup parameters) */}
-                    <Card sx={{ mb: 2, flexGrow: 1 }}>
-                        <CardContent>
-                            <Typography variant='h6'>Upper Class</Typography>
-                            <Typography variant='body2'>
-                                Percentage of Pop: 5%, Avg Household Income: $500,000
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Upper Class')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Upper Class"
+                        description="Percentage of Pop: 5%, Avg Household Income: $500,000"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Middle Class</Typography>
-                            <Typography variant='body2'>
-                                Percentage of Pop: 55%, Avg Household Income: $80,000
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Middle Class')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Middle Class"
+                        description="Percentage of Pop: 55%, Avg Household Income: $80,000"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Lower Class</Typography>
-                            <Typography variant='body2'>
-                                Percentage of Pop: 40%, Avg Household Income: $30,000
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Lower Class')}>...</Button>
-                        </CardContent>
-                    </Card>                    
+                    <TopicCard
+                        title="Lower Class"
+                        description="Percentage of Pop: 40%, Avg Household Income: $30,000"
+                        onEdit={handleOpenModal}
+                    />                  
                 </Grid>
 
                 <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="h5">Industries</Typography>
 
-                    {/* Example card (topic of setup parameters) */}
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Utilities</Typography>
-                            <Typography variant='body2'>
-                                Avg. Price of Electricity: $200 / kwH
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Utilities')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Utilities"
+                        description="Avg. Price of Electricity: $200 / kwH"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Housing</Typography>
-                            <Typography variant='body2'>
-                                Avg. Rent: $500 / month
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Housing')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Housing"
+                        description="Avg. Rent: $500 / month"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Groceries</Typography>
-                            <Typography variant='body2'>
-                                Avg. Price of Goods: $200
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Groceries')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Groceries"
+                        description="Avg. Price of Goods: $200"
+                        onEdit={handleOpenModal}
+                    />  
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Entertainment</Typography>
-                            <Typography variant='body2'>
-                                Avg. Price of Goods: $200
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Entertainment')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Entertainment"
+                        description="Avg. Price of Goods: $200"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Luxury Goods</Typography>
-                            <Typography variant='body2'>
-                                Avg. Price of Goods: $800
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Luxury Goods')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Luxury Goods"
+                        description="Avg. Price of Goods: $800"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Gas</Typography>
-                            <Typography variant='body2'>
-                                Avg. Price Per Gallon: $4.00
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Gas')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Gas"
+                        description="Avg. Price Per Gallon: $4.00"
+                        onEdit={handleOpenModal}
+                    /> 
                 </Grid>
 
                 <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="h5">Policies</Typography>
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Taxes</Typography>
-                            <Typography variant='body2'>
-                                Tax Structure: Progressive Tax
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Taxes')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Taxes"
+                        description="Tax Structure: Progressive Tax"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Tariffs</Typography>
-                            <Typography variant='body2'>
-                                Current rate on imports: 5%
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Tariffs')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Tariffs"
+                        description="Current rate on imports: 5%"
+                        onEdit={handleOpenModal}
+                    />
 
-                    <Card sx={{ mb: 2, flexGrow: 1  }}>
-                        <CardContent>
-                            <Typography variant='h6'>Subsidies</Typography>
-                            <Typography variant='body2'>
-                                Current Goods Subsidized: Electric cars, food stamps
-                            </Typography>
-                            <Button variant='outlined' size='small' sx={{ mt: 1 }} onClick={() => handleOpenModal('Subsidies')}>...</Button>
-                        </CardContent>
-                    </Card>
+                    <TopicCard
+                        title="Subsidies"
+                        description="Current Goods Subsidized: Electric cars, food stamps"
+                        onEdit={handleOpenModal}
+                    /> 
                 </Grid>
             </Grid>
 
+
+            {/* Modal (popup) for ediiting simulation configuration by topic. */}
             <Modal open={isModalOpen} onClose={handleCloseModal} aria-labelledby="modal-title">
                 <Box sx={{
                     position: 'absolute',
@@ -196,6 +149,7 @@ function SetupPage({ onSetupComplete }) {
                     <Button onClick={handleCloseModal} sx={{ mt: 2 }}>Save and Close</Button>
                 </Box>
             </Modal>
+
 
             <Button variant="contained" color="primary" sx={{ mt: 4 }} onClick={handleBeginClick}>Begin Simulation</Button>
         </Box>
