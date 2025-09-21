@@ -44,7 +44,7 @@ export const Routes = ({ textSize, setTextSize, volume, setVolume }) => {
         <Route
           path="/settings"
           element={
-            <Settings
+            <SettingsPage
               textSize={textSize}
               setTextSize={setTextSize}
               volume={volume}
