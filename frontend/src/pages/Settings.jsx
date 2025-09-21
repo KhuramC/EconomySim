@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { usePopEffect } from "../hooks/usePopEffect";
 import {
   Button,
   createTheme,
@@ -15,37 +16,13 @@ import {
 
 function Settings({textSize, setTextSize, volume, setVolume}) {
   
-  const volumeTimeout = useRef(null);
-  const prevVolume = useRef(volume); // store previous volume
-
-  useEffect(() => {
-    // skip sound if volume didn't actually change
-    if (prevVolume.current === volume) return;
-
-    // update previous volume for next change
-    prevVolume.current = volume;
-
-    if (volumeTimeout.current) {
-      clearTimeout(volumeTimeout.current);
-    }
-
-    volumeTimeout.current = window.setTimeout(() => {
-      const audio = new Audio("/sharp-pop.mp3");
-      audio.volume = volume / 100;
-      audio.play();
-    }, 200);
-
-    return () => {
-      if (volumeTimeout.current) clearTimeout(volumeTimeout.current);
-    };
-  }, [volume]);
-
+  usePopEffect(volume, volume / 100);
   return (
     <Box p={10} height="100vh">
       {/* Header at the very top */}
-      <Typography variant="h4" gutterBottom>
+      <h1>
         Settings
-      </Typography>
+      </h1>
 
       {/* One row = label + slider + value */}
       <Grid container spacing={2} alignItems="center">
