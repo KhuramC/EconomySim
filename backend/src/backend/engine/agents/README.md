@@ -1,6 +1,9 @@
 # Agents
 
-There are two main agents: agents representing the different industries being simulated,
-and agents representing individual people.
+There are two main agents:
 
-These files govern how the agents act in each timestep.
+1. [Agents representing industry types](./industry.py)
+1. [Agents representing individual people](./person.py)
+
+These files govern the different actions that the agents can take
+during timesteps in the simulation.
