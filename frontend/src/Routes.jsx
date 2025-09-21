@@ -41,7 +41,17 @@ export const Routes = ({ textSize, setTextSize, volume, setVolume }) => {
           } 
         />
         <Route path="/about" element={<AboutPage/>} />
-        <Route path="/settings" element={<SettingsPage/>} />
+        <Route
+          path="/settings"
+          element={
+            <Settings
+              textSize={textSize}
+              setTextSize={setTextSize}
+              volume={volume}
+              setVolume={setVolume}
+            />
+          }
+        />
         <Route path="/tutorial" element={<TutorialPage/>} />
       </Switch>
     </Router>
