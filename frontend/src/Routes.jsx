@@ -8,8 +8,7 @@ import TutorialPage from './pages/Tutorial';
 import Navbar from './components/Navbar';
 import SimulationHandler from './pages/simulation/simulation_handler';
 
-export const Routes = ({ textSize, setTextSize, volume, setVolume, mode, setMode }) => {
-
+export const Routes = () => {
   const [isSimulationStarted, setSimulationStarted] = useState(false);
 
   const [stage, setStage] = useState('setup'); // Track current stage of simulation
@@ -18,16 +17,17 @@ export const Routes = ({ textSize, setTextSize, volume, setVolume, mode, setMode
   const handleStartSimulation = () => setSimulationStarted(true);
 
   const handleSetupComplete = (configData) => {
-        console.log("Configuration received from setup:", configData);
-        setSimulationConfig(configData);
-        setStage('running'); // Move to next stage, e.g., 'running'
+    console.log("Configuration received from setup:", configData);
+    setSimulationConfig(configData);
+    setStage('running'); // Move to next stage, e.g., 'running'
   };
 
   return (
     <Router>
       <Navbar />
       <Switch>
-        <Route path="/" 
+        <Route 
+          path="/" 
           element={
             isSimulationStarted ? (
               <SimulationHandler 
@@ -40,21 +40,9 @@ export const Routes = ({ textSize, setTextSize, volume, setVolume, mode, setMode
             )
           } 
         />
-        <Route path="/about" element={<AboutPage/>} />
-        <Route
-          path="/settings"
-          element={
-            <SettingsPage
-              textSize={textSize}
-              setTextSize={setTextSize}
-              volume={volume}
-              setVolume={setVolume}
-              mode={mode}
-              setMode={setMode}
-            />
-          }
-        />
-        <Route path="/tutorial" element={<TutorialPage/>} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/tutorial" element={<TutorialPage />} />
       </Switch>
     </Router>
   );

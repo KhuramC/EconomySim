@@ -1,27 +1,37 @@
 import { useState } from "react";
 import { useEffect, useRef } from "react";
+import { useAppSettings } from "../context/AppSettingsContext";
 import { usePopEffect } from "../hooks/usePopEffect";
+import PageTitle from "../components/PageTitle";
 import {
   Box,
   Grid,
   Typography,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  useTheme
 } from "@mui/material";
 
-function Settings({ textSize, setTextSize, volume, setVolume, mode, setMode }) {
+function Settings() {
+  const { textSize, setTextSize, volume, setVolume, mode, setMode } = useAppSettings();
 
   usePopEffect(volume, volume / 100);
+  const theme = useTheme();
 
   // Toggle handler for dark/light mode
   const handleModeToggle = () => setMode(mode === "light" ? "dark" : "light");
 
-  return (
-    <Box p={10} height="100vh">
-      {/* Header */}
-      <h1>Settings</h1>
+  // Determine slider color based on current mode
+  const sliderColor = theme.palette.mode === "light" 
+    ? theme.palette.primary.light 
+    : theme.palette.primary.dark;
 
-      {/* Dark/Light Mode Toggle in Grid */}
+  return (
+    <Box p={0} height="80vh">
+      {/* Header */}
+        <PageTitle text="Settings"/>
+
+      {/* Dark/Light Mode Toggle */}
       <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
         <Grid item xs={3}>
           <Typography
@@ -41,7 +51,7 @@ function Settings({ textSize, setTextSize, volume, setVolume, mode, setMode }) {
             label={mode === "dark" ? "Dark Mode" : "Light Mode"}
           />
         </Grid>
-        <Grid item xs={3}></Grid> {/* Empty column for alignment */}
+        <Grid item xs={3}></Grid>
       </Grid>
 
       {/* Volume Slider */}
@@ -66,7 +76,10 @@ function Settings({ textSize, setTextSize, volume, setVolume, mode, setMode }) {
             step={1}
             value={volume}
             onChange={(e) => setVolume(Number(e.target.value))}
-            style={{ width: "100%" }}
+            style={{
+              width: "100%",
+              accentColor: sliderColor // this makes the slider thumb and track match the toggle
+            }}
           />
         </Grid>
         <Grid item xs={3}>
@@ -105,7 +118,10 @@ function Settings({ textSize, setTextSize, volume, setVolume, mode, setMode }) {
             step={1}
             value={textSize}
             onChange={(e) => setTextSize(Number(e.target.value))}
-            style={{ width: "100%" }}
+            style={{
+              width: "100%",
+              accentColor: sliderColor
+            }}
           />
         </Grid>
         <Grid item xs={3}>

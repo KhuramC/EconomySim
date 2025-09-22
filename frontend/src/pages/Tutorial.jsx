@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAppSettings } from "../context/AppSettingsContext";
+import PageTitle from "../components/PageTitle";
 import {
   Button,
   createTheme,
@@ -14,12 +16,12 @@ import {
 
 function Tutorial() {
   
-
+  
   return (
-      <div>
-        <h1>Tutorial</h1>
+    <Box p={0} height="80vh">
+        <PageTitle text="Tutorial" />
         <p>This is a tutorial page</p>
-      </div>
+    </Box>
   );
 }
 
