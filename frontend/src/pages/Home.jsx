@@ -13,9 +13,9 @@ function Home({ onStart }) {
           minHeight="80vh"
           textAlign="center"
         >
-          <h1>Economy Simulation</h1>
+          <h1>Rat Race</h1>
           <h2>by JellyBean</h2>
-          <Typography variant="body2" color="white" gutterBottom>
+          <Typography variant="body2" gutterBottom>
             Test your strategy and decision-making in a dynamic economy.
           </Typography>
           <Button
