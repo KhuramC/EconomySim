@@ -27,7 +27,7 @@ const getTheme = (mode = "light") =>
         selectedOpacity: 1,
       },
       background: {
-        default: mode === "light" ? "#ffffffff" : "#1e201dff",
+        default: mode === "light" ? "#daf5f0ff" : "#1e201dff",
         paper: mode === "light" ? "#ffffffff" : "#2b2c28",
       },
       text: {
