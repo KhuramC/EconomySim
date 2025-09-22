@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Grid, Typography, Button, Card, CardContent, Modal } from '@mui/material';
 import TopicCard from '../../components/TopicCard';
+import PageTitle from "../../components/PageTitle";
 
 function SetupPage({ onSetupComplete }) {
     // Parameter popups
@@ -35,9 +36,7 @@ function SetupPage({ onSetupComplete }) {
     return (
         // Container with padding
         <Box sx={{ p: 3}}>
-            <Typography variant="h4" gutterBottom mt={4}>
-                Setup Your Simulation
-            </Typography>
+            <PageTitle text="Simulation Set-Up" />
 
             {/* Handles overall layout */}
             <Grid container spacing={3} sx={{ display: 'flex' }}>
@@ -142,7 +141,7 @@ function SetupPage({ onSetupComplete }) {
                     boxShadow: 24,
                     p: 4,
                 }}>
-                    <Typography id="modal-title" variant="h6" component="h2" sx={{ color: 'black' }}>Editing {editingTopic}</Typography>
+                    <Typography id="modal-title" variant="h6" component="h2" >Editing {editingTopic}</Typography>
 
                     {renderModalContent(editingTopic)}
 
@@ -163,7 +162,7 @@ const renderModalContent = (topic) => {
         case 'Lower Class':
             return (
                 <Box>
-                    <Typography sx={{ color: 'black' }}>Adjust Demographics:</Typography>
+                    <Typography >Adjust Demographics:</Typography>
                     {/* Add sliders and input fields for demographics here */}
                 </Box>
             );
