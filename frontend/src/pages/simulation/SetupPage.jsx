@@ -142,7 +142,7 @@ function SetupPage({ onSetupComplete }) {
                     boxShadow: 24,
                     p: 4,
                 }}>
-                    <Typography id="modal-title" variant="h6" component="h2" sx={{ color: 'black' }}>Editing {editingTopic}</Typography>
+                    <Typography id="modal-title" variant="h6" component="h2" >Editing {editingTopic}</Typography>
 
                     {renderModalContent(editingTopic)}
 
@@ -163,7 +163,7 @@ const renderModalContent = (topic) => {
         case 'Lower Class':
             return (
                 <Box>
-                    <Typography sx={{ color: 'black' }}>Adjust Demographics:</Typography>
+                    <Typography >Adjust Demographics:</Typography>
                     {/* Add sliders and input fields for demographics here */}
                 </Box>
             );
