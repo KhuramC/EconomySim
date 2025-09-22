@@ -1,37 +1,60 @@
 import { useState } from "react";
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { usePopEffect } from "../hooks/usePopEffect";
 import {
-  Button,
-  createTheme,
-  ThemeProvider,
   Box,
   Grid,
-  Paper,
-  Container,
   Typography,
-  Stack
+  Switch,
+  FormControlLabel
 } from "@mui/material";
 
-function Settings({textSize, setTextSize, volume, setVolume}) {
-  
+function Settings({ textSize, setTextSize, volume, setVolume, mode, setMode }) {
+
   usePopEffect(volume, volume / 100);
+
+  // Toggle handler for dark/light mode
+  const handleModeToggle = () => setMode(mode === "light" ? "dark" : "light");
+
   return (
     <Box p={10} height="100vh">
-      {/* Header at the very top */}
-      <h1>
-        Settings
-      </h1>
+      {/* Header */}
+      <h1>Settings</h1>
 
-      {/* One row = label + slider + value */}
-      <Grid container spacing={2} alignItems="center">
+      {/* Dark/Light Mode Toggle in Grid */}
+      <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
         <Grid item xs={3}>
-          <Typography style={{ 
-           width: "130px",
-           textAlign: "left",
-           fontSize: `${textSize}px`,
-           transition: "font-size 0.2s ease" }} >
+          <Typography
+            style={{
+              width: "130px",
+              textAlign: "left",
+              fontSize: `${textSize}px`,
+              transition: "font-size 0.2s ease"
+            }}
+          >
+            Theme:
+          </Typography>
+        </Grid>
+        <Grid item xs={6}>
+          <FormControlLabel
+            control={<Switch checked={mode === "dark"} onChange={handleModeToggle} />}
+            label={mode === "dark" ? "Dark Mode" : "Light Mode"}
+          />
+        </Grid>
+        <Grid item xs={3}></Grid> {/* Empty column for alignment */}
+      </Grid>
+
+      {/* Volume Slider */}
+      <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
+        <Grid item xs={3}>
+          <Typography
+            style={{ 
+              width: "130px",
+              textAlign: "left",
+              fontSize: `${textSize}px`,
+              transition: "font-size 0.2s ease"
+            }}
+          >
             Volume Control:
           </Typography>
         </Grid>
@@ -47,19 +70,32 @@ function Settings({textSize, setTextSize, volume, setVolume}) {
           />
         </Grid>
         <Grid item xs={3}>
-        <Typography style={{
-          width: "60px", 
-          textAlign: "right", 
-          fontSize: `${textSize}px`,
-          transition: "font-size 0.2s ease" }} >
-          {volume}%
-        </Typography>
+          <Typography
+            style={{
+              width: "60px",
+              textAlign: "right",
+              fontSize: `${textSize}px`,
+              transition: "font-size 0.2s ease"
+            }}
+          >
+            {volume}%
+          </Typography>
         </Grid>
       </Grid>
 
+      {/* Text Size Slider */}
       <Grid container spacing={2} alignItems="center" sx={{ mt: 1 }}>
         <Grid item xs={3}>
-          <Typography style={{ width: "130px", textAlign: "left", fontSize: `${textSize}px`, transition: "font-size 0.2s ease" }}>Text Size:</Typography>
+          <Typography
+            style={{
+              width: "130px",
+              textAlign: "left",
+              fontSize: `${textSize}px`,
+              transition: "font-size 0.2s ease"
+            }}
+          >
+            Text Size:
+          </Typography>
         </Grid>
         <Grid item xs={6}>
           <input
@@ -73,11 +109,14 @@ function Settings({textSize, setTextSize, volume, setVolume}) {
           />
         </Grid>
         <Grid item xs={3}>
-          <Typography style={{
-            width: "60px", 
-            textAlign: "right", 
-            fontSize: `${textSize}px`,
-            transition: "font-size 0.2s ease" }} >
+          <Typography
+            style={{
+              width: "60px",
+              textAlign: "right",
+              fontSize: `${textSize}px`,
+              transition: "font-size 0.2s ease"
+            }}
+          >
             {textSize}px
           </Typography>
         </Grid>

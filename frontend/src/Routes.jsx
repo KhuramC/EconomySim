@@ -8,7 +8,7 @@ import TutorialPage from './pages/Tutorial';
 import Navbar from './components/Navbar';
 import SimulationHandler from './pages/simulation/simulation_handler';
 
-export const Routes = ({ textSize, setTextSize, volume, setVolume }) => {
+export const Routes = ({ textSize, setTextSize, volume, setVolume, mode, setMode }) => {
 
   const [isSimulationStarted, setSimulationStarted] = useState(false);
 
@@ -49,6 +49,8 @@ export const Routes = ({ textSize, setTextSize, volume, setVolume }) => {
               setTextSize={setTextSize}
               volume={volume}
               setVolume={setVolume}
+              mode={mode}
+              setMode={setMode}
             />
           }
         />

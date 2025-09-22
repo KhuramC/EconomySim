@@ -7,13 +7,15 @@ import {
     Box,
     Typography,
     Breadcrumbs,
-    Link
+    Link,
+    useTheme
 } from "@mui/material";
 
 
 
 function Navbar() {
     const location = useLocation();
+    const theme = useTheme();
 
     const links = [
         { label: "Home", path: "/" },
@@ -21,6 +23,11 @@ function Navbar() {
         { label: "Settings", path: "/settings" },
         { label: "Tutorial", path: "/Tutorial" },
     ];
+
+    // Pick a color for active link based on mode
+    const activeColor = theme.palette.mode === "light" 
+        ? theme.palette.primary.light  // dark green in light mode
+        : theme.palette.primary.dark; // lighter color in dark mode
 
 
     return (
@@ -37,7 +44,7 @@ function Navbar() {
                             location.pathname === link.path ? (
                                 <Typography
                                     key={link.path}
-                                    color="#faf7f1"
+                                    sx={{ color: activeColor, fontWeight: "bold" }} 
                                 >
                                     {link.label}
                                 </Typography>
