@@ -13,11 +13,16 @@ available_indicators: tuple = (
     "HooverIndex",
     "LorenzCurve",
 )
+"""The indicators that can be retrieved from the model."""
 
 
 class ModelController:
     """
     Controller class to manage multiple EconomyModel instances.
+
+    Attributes:
+        models (dict): A dictionary mapping model IDs to EconomyModel instances.
+        next_id (int): The next available model ID.
     """
 
     models: dict[int, EconomyModel] = {}
@@ -154,9 +159,9 @@ class ModelController:
             dataframe (pd.DataFrame): A DataFrame containing the requested economic indicators.
 
         Raises:
-            ValueError: If the model associated with the model_id does not exist,
-            if the start_time or end_time are invalid,
-            or if one or more requested indicators are not available.
+            ValueError: If the model associated with the model_id does not exist, \\
+                if the start_time or end_time are invalid, \\
+                or if one or more requested indicators are not available.
         """
 
         # parameter validation
@@ -169,6 +174,7 @@ class ModelController:
                 f"One or more requested indicators are not available. Available indicators: {available_indicators}"
             )
         if model_id in self.models:
+
             indicators_df: pd.DataFrame = self.models[
                 model_id
             ].datacollector.get_model_vars_dataframe()
@@ -177,7 +183,7 @@ class ModelController:
             if end_time == 0:
                 end_time = self.models[model_id].get_week()
             indicators_df = indicators_df[
-                indicators_df["Week"].between(start_time, end_time)
+                indicators_df["Week"].between(start_time, end_time, inclusive="both")
             ]
 
             # filter by indicators
@@ -185,6 +191,5 @@ class ModelController:
                 indicators_df = indicators_df[list(indicators)]
 
             return indicators_df
-
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
