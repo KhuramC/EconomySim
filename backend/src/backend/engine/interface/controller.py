@@ -80,6 +80,22 @@ class ModelController:
         self.next_id = self.next_id + 1
         return model_id
 
+    def delete_model(self, model_id: int) -> None:
+        """
+        Delete the specified model.
+
+        Args:
+            model_id (int): The unique identifier for the model to delete.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist.
+        """
+
+        if model_id in self.models:
+            del self.models[model_id]
+        else:
+            raise ValueError(f"Model with ID {model_id} does not exist.")
+
     def step_model(self, model_id: int, time: int = 1) -> None:
         """
         Advance the specified model by the amount of steps.
@@ -98,44 +114,6 @@ class ModelController:
         if model_id in self.models:
             for i in range(time):
                 self.models[model_id].step()
-        else:
-            raise ValueError(f"Model with ID {model_id} does not exist.")
-
-    def get_model(self, model_id: int) -> EconomyModel:
-        """
-        Retrieve the specified model.
-
-        Args:
-            model_id (int): The unique identifier for the model to retrieve.
-
-        Returns:
-            EconomyModel: The requested EconomyModel instance.
-
-        Raises:
-            ValueError: If the model associated with the model_id does not exist.
-        """
-
-        if model_id in self.models:
-            return self.models[model_id]
-        else:
-            raise ValueError(f"Model with ID {model_id} does not exist.")
-
-        # TODO: engine interfaces:
-        # - get econ indicators (choose by time and/or category)
-
-    def delete_model(self, model_id: int) -> None:
-        """
-        Delete the specified model.
-
-        Args:
-            model_id (int): The unique identifier for the model to delete.
-
-        Raises:
-            ValueError: If the model associated with the model_id does not exist.
-        """
-
-        if model_id in self.models:
-            del self.models[model_id]
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
 
@@ -191,5 +169,24 @@ class ModelController:
                 indicators_df = indicators_df[list(indicators)]
 
             return indicators_df
+        else:
+            raise ValueError(f"Model with ID {model_id} does not exist.")
+
+    def get_model(self, model_id: int) -> EconomyModel:
+        """
+        Retrieve the specified model.
+
+        Args:
+            model_id (int): The unique identifier for the model to retrieve.
+
+        Returns:
+            EconomyModel: The requested EconomyModel instance.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist.
+        """
+
+        if model_id in self.models:
+            return self.models[model_id]
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
