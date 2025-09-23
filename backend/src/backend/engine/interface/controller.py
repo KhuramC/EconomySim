@@ -20,32 +20,34 @@ class ModelController:
     Controller class to manage multiple EconomyModel instances.
     """
 
-    models: dict[str, EconomyModel] = {}
+    models: dict[int, EconomyModel] = {}
     """A dictionary mapping model IDs to EconomyModel instances."""
+    # if necessary this might be moved to a database.
+
+    next_id: int = 1
+    """The next available model ID."""
 
     def __init__(self):
         self.models = {}
 
     def create_model(
         self,
-        model_id: str,
         city_template: CityTemplate | None,
         num_people: int,
         tax_rates: dict[str, float | dict[IndustryType, float]],
         random_events: bool = False,
-    ) -> EconomyModel:
+    ) -> int:
         """
         Create a new EconomyModel instance and store it in the models dictionary.
 
         Args:
-            model_id (str): The unique identifier for the model.
             city_template (CityTemplate): The city template to use for the model.
             num_people (int): The number of people to create in the model.
             tax_rates (dict): A dictionary of tax rates to apply in the model.
             random_events (bool): Whether to enable random events in the model.
 
         Returns:
-            EconomyModel: The newly created EconomyModel instance.
+            model_id: The unique ID associated with the model created.
 
         """
         # apply city template settings first
@@ -66,15 +68,19 @@ class ModelController:
         model = EconomyModel(
             num_people=num_people, tax_rates=tax_rates, random_events=random_events
         )
+        model_id = self.next_id
         self.models[model_id] = model
-        return model
 
-    def step_model(self, model_id: str, time: int = 1) -> None:
+        # increment next_id for future models
+        self.next_id = self.next_id + 1
+        return model_id
+
+    def step_model(self, model_id: int, time: int = 1) -> None:
         """
         Advance the specified model by the amount of steps.
 
         Args:
-            model_id (str): The unique identifier for the model to step.
+            model_id (int): The unique identifier for the model to step.
             time (int): The number of steps to advance the model.
 
         Raises:
@@ -90,12 +96,12 @@ class ModelController:
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
 
-    def get_model(self, model_id: str) -> EconomyModel:
+    def get_model(self, model_id: int) -> EconomyModel:
         """
         Retrieve the specified model.
 
         Args:
-            model_id (str): The unique identifier for the model to retrieve.
+            model_id (int): The unique identifier for the model to retrieve.
 
         Returns:
             EconomyModel: The requested EconomyModel instance.
@@ -112,12 +118,12 @@ class ModelController:
         # TODO: engine interfaces:
         # - get econ indicators (choose by time and/or category)
 
-    def delete_model(self, model_id: str) -> None:
+    def delete_model(self, model_id: int) -> None:
         """
         Delete the specified model.
 
         Args:
-            model_id (str): The unique identifier for the model to delete.
+            model_id (int): The unique identifier for the model to delete.
 
         Raises:
             ValueError: If the model associated with the model_id does not exist.
@@ -130,7 +136,7 @@ class ModelController:
 
     def get_indicators(
         self,
-        model_id: str,
+        model_id: int,
         start_time: int = 0,
         end_time: int = 0,
         indicators: Iterable[str] | None = None,
@@ -139,7 +145,7 @@ class ModelController:
         Retrieve economic indicators from the specified model.
 
         Args:
-            model_id (str): The unique identifier for the model to retrieve indicators from.
+            model_id (int): The unique identifier for the model to retrieve indicators from.
             start_time (int): The starting time period for the indicators.
             end_time (int): The ending time period for the indicators. An end_time of 0 goes to the current time.
             indicators (Iterable, optional): An interable of specific indicators to retrieve. If None, retrieves all indicators.
