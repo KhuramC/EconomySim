@@ -51,16 +51,24 @@ class ModelController:
         self.models[model_id] = model
         return model
 
-    def step_model(self, model_id: str):
+    def step_model(self, model_id: str, time: int = 1) -> None:
         """
-        Advance the specified model by one step.
+        Advance the specified model by the amount of steps.
 
         Args:
             model_id (str): The unique identifier for the model to step.
+            time (int): The number of steps to advance the model.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist or if time is less than 1
         """
+        if time < 1:
+            raise ValueError("Time must be a positive integer.")
+        # TODO: handle negative time for reverses. Need to define a negative step so to speak
 
         if model_id in self.models:
-            self.models[model_id].step()
+            for i in range(time):
+                self.models[model_id].step()
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
 
