@@ -1,10 +1,24 @@
+from typing import Iterable
+import pandas as pd
 from ..core.model import EconomyModel
 
 from ..types.IndustryType import IndustryType
 from ..types.city_template import CityTemplate
 
+available_indicators: tuple = (
+    "Unemployment",
+    "GDP",
+    "IncomePerCapita",
+    "MedianIncome",
+    "HooverIndex",
+    "LorenzCurve",
+)
+
 
 class ModelController:
+    """
+    Controller class to manage multiple EconomyModel instances.
+    """
 
     models: dict[str, EconomyModel] = {}
     """A dictionary mapping model IDs to EconomyModel instances."""
@@ -29,6 +43,10 @@ class ModelController:
             num_people (int): The number of people to create in the model.
             tax_rates (dict): A dictionary of tax rates to apply in the model.
             random_events (bool): Whether to enable random events in the model.
+
+        Returns:
+            EconomyModel: The newly created EconomyModel instance.
+
         """
         # apply city template settings first
         # TODO: Implement City Template logic
@@ -81,14 +99,16 @@ class ModelController:
 
         Returns:
             EconomyModel: The requested EconomyModel instance.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist.
         """
 
         if model_id in self.models:
             return self.models[model_id]
         else:
             raise ValueError(f"Model with ID {model_id} does not exist.")
-        
-        
+
         # TODO: engine interfaces:
         # - get econ indicators (choose by time and/or category)
 
