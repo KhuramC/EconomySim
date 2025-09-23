@@ -1,0 +1,31 @@
+name: Run Backend Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test_in_container:
+    runs-on: ubuntu-latest
+    container: python:3.11
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Poetry Install/Setup
+        run: |
+          pip install poetry==2.1.4
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+
+      - name: Install Python Dependencies
+        run: |
+          cd backend
+          poetry install
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          poetry run pytest -v --cov=./ --cov-report=xml
