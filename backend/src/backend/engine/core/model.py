@@ -9,6 +9,7 @@ from ..agents.industry import IndustryAgent
 from ..types.IndustryType import IndustryType
 from ..types.Demographic import Demographic
 
+
 taxes_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
     "personal_income_tax": None,
@@ -85,7 +86,12 @@ class EconomyModel(Model):
 
         # TODO: need to create with income based on demographics
         incomes = [random.uniform(0, 100) for _ in range(num_people)]
-        PersonAgent.create_agents(model=self, n=num_people, demographic=Demographic.MIDDLE_CLASS,income=incomes)
+        PersonAgent.create_agents(
+            model=self,
+            n=num_people,
+            demographic=Demographic.MIDDLE_CLASS,
+            income=incomes,
+        )
 
         # Create one instance of each industry type
         IndustryAgent.create_agents(
@@ -117,7 +123,7 @@ class EconomyModel(Model):
         for key, subschema in schema.items():
             if isinstance(subschema, dict):
                 self.validate_taxes(data[key], subschema, path=f"{path}[{key}]")
-    
+
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """
         Gets all employees that are employed to the specified industry.
@@ -129,7 +135,11 @@ class EconomyModel(Model):
             AgentSet: An AgentSet of PersonAgents employed in the specified industry.
         """
         peopleAgents = self.agents_by_type[PersonAgent]
-        return peopleAgents.select(lambda agent: (agent.employer is not None and agent.employer.industry_type == industry))
+        return peopleAgents.select(
+            lambda agent: (
+                agent.employer is not None and agent.employer.industry_type == industry
+            )
+        )
 
     def step(self):
         """
