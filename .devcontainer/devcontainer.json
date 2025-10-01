@@ -15,7 +15,9 @@
                 "donjayamanne.python-extension-pack",
                 "ms-toolsai.jupyter",
                 //formatting
-                "esbenp.prettier-vscode"
+                "esbenp.prettier-vscode",
+                //ci/cd
+                "github.vscode-github-actions",
             ]
        }
     }
