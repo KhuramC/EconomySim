@@ -38,7 +38,7 @@ class EconomyModel(Model):
     # Changeable by the user at any time
 
     tax_rates: dict[str, float | dict[IndustryType, float]]
-    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema.j"""
+    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema."""
 
     minimum_wage: float
     """The minimum wage an industry can give to employees."""
