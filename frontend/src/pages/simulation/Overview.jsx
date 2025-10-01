@@ -1,3 +1,4 @@
+// src/pages/simulation/overview.jsx
 import React from 'react';
 import {
   Box,
@@ -10,7 +11,6 @@ import {
 } from '@mui/material';
 import TimelinePanel from '../../components/TimelinePanel';
 import GraphSlot from '../../components/GraphSlot';
-import SidebarNav from '../../components/SidebarNav';
 import { Add as AddIcon } from '@mui/icons-material';
 
 export default function Overview() {
@@ -20,9 +20,10 @@ export default function Overview() {
   const totalWeeks = 52;
 
   return (
-    // Page container
-    <Box sx={{ p: 3 }}>
-      {/* Top-right date info (right aligned; title is in middle column) */}
+    // NOTE: No outer Paper or sidebar here.
+    // This component is rendered inside BaseSimView's shared Paper and layout.
+    <Box>
+      {/* Top-right date info */}
       <Box
         sx={{
           width: '100%',
@@ -37,37 +38,27 @@ export default function Overview() {
         </Typography>
       </Box>
 
-      {/* Three-column layout: left / middle / right */}
       <Grid container spacing={3}>
-        {/* LEFT COLUMN: sidebar */}
-        <Grid item xs={12} md={2} sx={{ display: 'flex', flexDirection: 'column' }}>
-          <SidebarNav active="Overview" />
-        </Grid>
-
-        {/* MIDDLE COLUMN */}
-        <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Page title at the top of the middle column */}
-          <Typography variant="h4" align="left" sx={{ mb: 1, fontWeight: 800 }}>
+        {/* MAIN COLUMN */}
+        <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Page title */}
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Overview
           </Typography>
 
-          {/* Key Performance Indicator row (GDP + Unemployment) */}
+          {/* KPI row (GDP + Unemployment) */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {/* GDP */}
             <Grid item xs={12} sm={6}>
               <Card sx={{ height: '100%' }}>
                 <CardContent>
-                  <Typography variant="h6" align="left" sx={{ fontWeight: 700 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     GDP
                   </Typography>
-                  <Typography variant="h4" align="left" sx={{ fontWeight: 800 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 800 }}>
                     $22,540
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    align="left"
-                    sx={{ color: 'success.main', fontWeight: 700 }}
-                  >
+                  <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 700 }}>
                     ↑ 0.3%
                   </Typography>
                 </CardContent>
@@ -78,17 +69,13 @@ export default function Overview() {
             <Grid item xs={12} sm={6}>
               <Card sx={{ height: '100%' }}>
                 <CardContent>
-                  <Typography variant="h6" align="left" sx={{ fontWeight: 700 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     Unemployment
                   </Typography>
-                  <Typography variant="h4" align="left" sx={{ fontWeight: 800 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 800 }}>
                     6.1%
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    align="left"
-                    sx={{ color: 'error.main', fontWeight: 700 }}
-                  >
+                  <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 700 }}>
                     ↓ 0.2%
                   </Typography>
                 </CardContent>
@@ -104,13 +91,13 @@ export default function Overview() {
           {/* Summary card */}
           <Card sx={{ mb: 2 }}>
             <CardContent>
-              <Typography variant="h6" align="left" sx={{ fontWeight: 800 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Summary
               </Typography>
-              <Typography variant="body2" align="left" sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 • GDP increased by 0.3%
               </Typography>
-              <Typography variant="body2" align="left" sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 • Unemployment rate decreased to 6.1%
               </Typography>
             </CardContent>
@@ -122,19 +109,19 @@ export default function Overview() {
           {/* Policies summary */}
           <Card sx={{ mb: 2 }}>
             <CardContent>
-              <Typography variant="h6" align="left" sx={{ fontWeight: 800 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Current Policies
               </Typography>
-              <Typography variant="body2" align="left" sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 Sales Tax: 5%
               </Typography>
-              <Typography variant="body2" align="left" sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 Corporate Tax: 20%
               </Typography>
-              <Typography variant="body2" align="left" sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 Property Tax: 12%
               </Typography>
-              <Typography variant="body2" align="left" sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 Tariffs: 4%
               </Typography>
               <Button
@@ -168,13 +155,13 @@ export default function Overview() {
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <AddIcon fontSize="large" />
-              <Typography variant="caption" color="text.secondary" align="center" sx={{ mt: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
                 Add widget
               </Typography>
             </Box>
           </Paper>
 
-          {/* Control bar */}
+          {/* Timeline / controls */}
           <TimelinePanel />
         </Grid>
       </Grid>
