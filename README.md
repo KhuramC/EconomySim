@@ -15,13 +15,13 @@ Although it does not need to be used, it is highly recommended, as issues could 
 1. The container will take some time to build for the first time, but it should build just fine.
 1. Everything necessary should be already within the devcontainer to start developing either the frontend or backend.
 
-# A Simple Git Cheat Sheet for Our Project
+## A Simple Git Cheat Sheet for Our Project
 
 The basic idea of Git is that you take "snapshots" of your work called **commits**. You do your work on a separate timeline called a **branch** to avoid messing up the main codebase. Then you share your commits by **pushing** your branch to a central online repository (like GitHub).
 
 ---
 
-### ## 1. Starting Your Day & Getting the Latest Updates ☀️
+### 1. Starting Your Day & Getting the Latest Updates ☀️
 This is the **first thing you should do every day** to make sure you have the most recent code from everyone else.
 
 1.  **Switch to the main branch.**
@@ -35,7 +35,7 @@ This is the **first thing you should do every day** to make sure you have the mo
 
 ---
 
-### ## 2. Saving and Sharing Your Work (The Core Loop) 💾
+### 2. Saving and Sharing Your Work (The Core Loop) 💾
 You've made some changes to the code and now you want to save them and share them with the team.
 
 1.  **Check what you've changed.** This shows you a list of modified files.
@@ -57,7 +57,7 @@ You've made some changes to the code and now you want to save them and share the
 
 ---
 
-### ## 3. Starting a New Feature or Task 🚀
+### 3. Starting a New Feature or Task 🚀
 Always create a new branch for each new task (e.g., building a new page, fixing a specific bug). This keeps your work isolated and safe from the main codebase.
 
 1.  **First, make sure your `main` branch is up-to-date.** (See Scenario 1).
@@ -73,7 +73,7 @@ Always create a new branch for each new task (e.g., building a new page, fixing 
 
 ---
 
-### ## 4. Combining Your Finished Feature into the Main Code ✅
+### 4. Combining Your Finished Feature into the Main Code ✅
 Once your feature is complete and pushed, the best practice is to create a **Pull Request** (or Merge Request) on the project's GitHub/GitLab page. This lets the team review your code before it's officially merged into the `main` branch.
 
 If you need to merge locally, follow these steps:
@@ -94,7 +94,7 @@ If you need to merge locally, follow these steps:
 
 ---
 
-### ## 5. "Oops!" - Undoing Mistakes 😬
+### 5. "Oops!" - Undoing Mistakes 😬
 Made a change you don't want? Here are some simple fixes.
 
 * **To undo changes in a file that you have *not* committed yet:** This will revert the file to how it was at the last commit.
@@ -108,12 +108,12 @@ Made a change you don't want? Here are some simple fixes.
 
 ---
 
-### ## 6. Getting the Project for the First Time (One-Time Setup) 💻
+### 6. Getting the Project for the First Time (One-Time Setup) 💻
 If you've never worked on the project before, you need to download it to your computer.
 
 1.  **Clone (download) the repository.** You only ever need to do this once per project. Get the URL from the project's GitHub page.
     ```bash
-    git clone <paste_the_repository_url_here>
+    git clone https://github.com/KhuramC/EconomySim.git
     ```
 2.  **Tell Git who you are.** This is important so your commits are attributed to you. You only need to do this once per computer.
     ```bash
@@ -121,5 +121,5 @@ If you've never worked on the project before, you need to download it to your co
     git config --global user.email "your.email@example.com"
     ```
 
-### ## Golden Rule ✨
+### Golden Rule ✨
 **Commit often** with clear messages. Before you `push`, always `pull` to get the latest changes and avoid conflicts.
