@@ -2,6 +2,7 @@ from mesa import Model
 import pytest
 from backend.engine.types.IndustryType import IndustryType
 
+
 class MockEconomyModel(Model):
     """
     A mock EconomyModel for unit testing.
@@ -21,4 +22,3 @@ class MockEconomyModel(Model):
 @pytest.fixture
 def mock_economy_model():
     return MockEconomyModel()
-

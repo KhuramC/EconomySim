@@ -18,10 +18,12 @@ def test_validate_taxes(model, tax_rates, delete_values, exception):
     with exception:
         model.validate_taxes(taxing_rates)
 
+
 @pytest.mark.parametrize("industry_type", list(IndustryType))
 def test_get_employees(model, industry_type: IndustryType):
-    assert len(model.get_employees(industry_type)) == 0 
+    assert len(model.get_employees(industry_type)) == 0
     # TODO: redo this whenever starting unemployment logic changes
+
 
 @mark.xfail(reason="Testing for the step function has not been considered quite yet.")
 def test_step():

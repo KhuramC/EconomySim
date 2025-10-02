@@ -26,10 +26,12 @@ def test_calculate_unemployment(model):
 def test_calculate_gdp():
     assert False
 
+
 @mark.xfail(reason="Demographic's Income feature not implemented yet.")
 def test_calculate_income_per_capita(model):
     # TODO: do whenever templates for demographic's distribution has been done.
     assert False
+
 
 @mark.xfail(reason="Demographic's Income feature  not implemented yet.")
 def test_calculate_median_income(model):

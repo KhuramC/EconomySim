@@ -20,7 +20,7 @@ def test_create_model(controller, tax_rates):
 )
 def test_delete_model(controller, tax_rates, model_id, exception):
     controller.create_model(None, 1, tax_rates)
-    
+
     with exception as e:
         controller.delete_model(model_id)
         assert model_id not in controller.models

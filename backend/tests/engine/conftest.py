@@ -9,6 +9,7 @@ TAX_RATES = {
     "tariffs": {itype.value: 0.0 for itype in IndustryType},
 }
 
+
 @pytest.fixture
 def tax_rates():
     return TAX_RATES

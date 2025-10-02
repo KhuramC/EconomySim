@@ -15,7 +15,7 @@ class PersonAgent(Agent):
         current_money (int): The current amount of money the person has; negative indicating debt.
     """
 
-    demographic:Demographic
+    demographic: Demographic
     """Economic class of the person."""
     income: int
     """Weekly income of the person."""

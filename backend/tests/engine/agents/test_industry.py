@@ -12,6 +12,7 @@ def test_get_tariffs(industry_type: IndustryType, mock_economy_model):
         i_agent.get_tariffs() == mock_economy_model.tax_rates["tariffs"][industry_type]
     )
 
+
 @mark.skip(reason="TODO.")
 def test_get_employees():
     pass
