@@ -1,3 +1,6 @@
 # Core
 
-This governs the actual model object, with the loop, the calculation of indicators, and the various parameters.
+This directory contains:
+
+- the model object with the simulation loop/step logic with parameters.
+- the calculation of economic indicators.

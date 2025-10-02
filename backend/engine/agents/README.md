@@ -7,3 +7,4 @@ There are two main agents:
 
 These files govern the different actions that the agents can take
 during timesteps in the simulation.
+There are other files governing different economic logic taken by the agents.
