@@ -19,6 +19,7 @@ function Navbar() {
         { label: "Home", path: "/" },
         { label: "About", path: "/about" },
         { label: "Settings", path: "/settings" },
+        { label: "Tutorial", path: "/Tutorial" },
     ];
 
 
