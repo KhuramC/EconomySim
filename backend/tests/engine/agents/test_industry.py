@@ -12,26 +12,26 @@ def test_get_tariffs(industry_type: IndustryType, mock_economy_model):
         i_agent.get_tariffs() == mock_economy_model.tax_rates["tariffs"][industry_type]
     )
 
-@mark.skip(reason="Function testing not necessary.")
+@mark.skip(reason="TODO.")
 def test_get_employees():
     pass
 
 
-@mark.xfail(reason="Feature not implemented yet.")
+@mark.xfail(reason="Function not implemented yet.")
 def test_determine_price():
     assert False
 
 
-@mark.xfail(reason="Feature not implemented yet.")
+@mark.xfail(reason="Function not implemented yet.")
 def test_produce_goods():
     assert False
 
 
-@mark.xfail(reason="Feature not implemented yet.")
+@mark.xfail(reason="Function not implemented yet.")
 def test_change_employment():
     assert False
 
 
-@mark.xfail(reason="Feature not implemented yet.")
+@mark.xfail(reason="Function not implemented yet.")
 def determine_wages():
     assert False
