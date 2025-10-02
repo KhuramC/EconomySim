@@ -1,6 +1,6 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
-from ..types.Demographic import Demographic
+from ..types.demographic import Demographic
 import logging
 
 

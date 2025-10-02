@@ -7,7 +7,7 @@ from mesa.datacollection import DataCollector
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.IndustryType import IndustryType
-from ..types.Demographic import Demographic
+from ..types.demographic import Demographic
 
 
 taxes_schema = {
