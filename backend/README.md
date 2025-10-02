@@ -22,7 +22,7 @@ ensures that all the python dependencies have been installed.
 1. Make sure one has poetry installed(it already is in the devcontainer).
 1. Cd into the backend directory.
 1. Run `poetry install` to install dependencies
-1. Run `poetry run start` to start the FastAPI server
+1. Run `poetry run dev` to start the FastAPI server
 1. Use jupyter notebooks to do easy dev testing (for more info see [run_sim.ipynb](./run_sim.ipynb))
 1. Use `pytest` for structured unit/integration tests
 
