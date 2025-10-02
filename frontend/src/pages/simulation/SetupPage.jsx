@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { Box, Grid, Typography, Button, Card, CardContent, Modal } from '@mui/material';
 import TopicCard from '../../components/TopicCard';
 import PageTitle from "../../components/PageTitle";
+import { useNavigate } from "react-router-dom";  
 
 function SetupPage({ onSetupComplete }) {
+
+    const navigate = useNavigate();  
     // Parameter popups
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTopic, setEditingTopic] = useState(null);
@@ -30,7 +33,10 @@ function SetupPage({ onSetupComplete }) {
     const handleBeginClick = () => {
         // When user clicks the button, call the function from the parent
         // and pass collected config data
-        onSetupComplete(config);
+        // onSetupComplete(config);
+        
+        // For now I will comment out the onSetupComplete()
+        navigate("/BaseSimView");
     };
 
     return (
@@ -150,7 +156,13 @@ function SetupPage({ onSetupComplete }) {
             </Modal>
 
 
-            <Button variant="contained" color="primary" sx={{ mt: 4 }} onClick={handleBeginClick}>Begin Simulation</Button>
+            <Button 
+                variant="contained" 
+                color="primary" sx={{ mt: 4 }} 
+                onClick={handleBeginClick}
+            >
+                Begin Simulation
+            </Button>
         </Box>
     );
 }
