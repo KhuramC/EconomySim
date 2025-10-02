@@ -5,7 +5,7 @@ from backend.engine.core.model import EconomyModel
 AGENT_COUNTS = [100, 1000, 10000, 100000, 1000000]
 
 
-@pytest.mark.parametrize("num_agents,threshold", AGENT_COUNTS)
+@pytest.mark.parametrize("num_agents", AGENT_COUNTS)
 def test_model_step_performance(benchmark, tax_rates, num_agents):
     """
     Benchmarks the performance of a single model.step() call
