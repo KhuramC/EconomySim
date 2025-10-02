@@ -1,5 +1,5 @@
 import pytest
-from backend.engine.interface.controller import ModelController
+from engine.interface.controller import ModelController
 
 
 @pytest.fixture

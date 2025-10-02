@@ -1,7 +1,7 @@
 import pytest
 from pytest import mark
-from backend.engine.agents.industry import IndustryAgent
-from backend.engine.types.industry_type import IndustryType
+from engine.agents.industry import IndustryAgent
+from engine.types.industry_type import IndustryType
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))

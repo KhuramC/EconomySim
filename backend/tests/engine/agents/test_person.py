@@ -1,5 +1,5 @@
 from pytest import mark
-from backend.engine.agents.person import PersonAgent
+from engine.agents.person import PersonAgent
 
 
 @mark.xfail(reason="Function not implemented yet.")

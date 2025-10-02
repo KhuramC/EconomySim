@@ -1,5 +1,5 @@
 import pytest
-from backend.engine.core.model import EconomyModel
+from engine.core.model import EconomyModel
 
 
 @pytest.fixture

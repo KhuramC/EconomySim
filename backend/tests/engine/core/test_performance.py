@@ -1,5 +1,5 @@
 import pytest
-from backend.engine.core.model import EconomyModel
+from engine.core.model import EconomyModel
 
 # Define the different numbers of agents you want to test
 AGENT_COUNTS = [100, 1000, 10000, 100000, 1000000]

@@ -1,6 +1,6 @@
 from mesa import Model
 import pytest
-from backend.engine.types.industry_type import IndustryType
+from engine.types.industry_type import IndustryType
 
 
 class MockEconomyModel(Model):

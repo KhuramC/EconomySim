@@ -1,6 +1,6 @@
 from pytest import mark
-from backend.engine.agents.person import PersonAgent
-from backend.engine.types.industry_type import IndustryType
+from engine.agents.person import PersonAgent
+from engine.types.industry_type import IndustryType
 
 
 def test_get_week(model):
