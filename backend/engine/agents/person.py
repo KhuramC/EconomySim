@@ -1,6 +1,6 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
-from ..types.Demographic import Demographic
+from ..types.demographic import Demographic
 import logging
 
 
@@ -15,7 +15,7 @@ class PersonAgent(Agent):
         current_money (int): The current amount of money the person has; negative indicating debt.
     """
 
-    demographic:Demographic
+    demographic: Demographic
     """Economic class of the person."""
     income: int
     """Weekly income of the person."""
@@ -41,6 +41,10 @@ class PersonAgent(Agent):
         self.income = income
         self.employer = employer
         self.current_money = current_money
+
+    def payday(self):
+        """Weekly payday for the agent based on their income."""
+        self.current_money = self.current_money + self.income
 
     def demand_func(self, preferences, prices, sigma, income):
         """
@@ -75,6 +79,7 @@ class PersonAgent(Agent):
         """
         How the person will try to purchase the goods available based on their preferences.
         """
+        self.payday()
 
         # TODO: implement CES utility function for spending behavior.
         # a somewhat base is given with demand_func
