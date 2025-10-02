@@ -1,5 +1,5 @@
 import pytest
-from backend.engine.types.IndustryType import IndustryType
+from backend.engine.types.industry_type import IndustryType
 
 TAX_RATES = {
     "corporate_income_tax": {itype.value: 0.0 for itype in IndustryType},

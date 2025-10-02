@@ -1,6 +1,6 @@
 from mesa import Agent
 from mesa import Model
-from ..types.IndustryType import IndustryType
+from ..types.industry_type import IndustryType
 import logging
 
 

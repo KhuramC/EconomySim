@@ -6,7 +6,7 @@ from mesa.datacollection import DataCollector
 
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
-from ..types.IndustryType import IndustryType
+from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
 

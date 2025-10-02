@@ -1,7 +1,7 @@
 import pytest
 from pytest import mark
 from contextlib import nullcontext
-from backend.engine.types.IndustryType import IndustryType
+from backend.engine.types.industry_type import IndustryType
 
 
 @mark.parametrize(
