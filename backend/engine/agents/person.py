@@ -42,6 +42,10 @@ class PersonAgent(Agent):
         self.employer = employer
         self.current_money = current_money
 
+    def payday(self):
+        """Weekly payday for the agent based on their income."""
+        self.current_money = self.current_money + self.income
+
     def demand_func(self, preferences, prices, sigma, income):
         """
         Demand function for a product given:
@@ -75,6 +79,7 @@ class PersonAgent(Agent):
         """
         How the person will try to purchase the goods available based on their preferences.
         """
+        self.payday()
 
         # TODO: implement CES utility function for spending behavior.
         # a somewhat base is given with demand_func
