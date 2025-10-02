@@ -141,11 +141,19 @@ class EconomyModel(Model):
             )
         )
 
+    def inflation(self):
+        # TODO: implement inflation logic.
+        # could have prices go up by inflation percentage and current_money go down by the same percentage
+        pass
+
     def step(self):
         """
         Advance the simulation by one week.
         """
         self.week += 1  # new week
+
+        # TODO: implement inflation logic
+        self.inflation()
 
         # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]

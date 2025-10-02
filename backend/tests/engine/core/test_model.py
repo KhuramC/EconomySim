@@ -24,6 +24,9 @@ def test_get_employees(model, industry_type: IndustryType):
     assert len(model.get_employees(industry_type)) == 0
     # TODO: redo this whenever starting unemployment logic changes
 
+@mark.xfail(reason="Function has not been implemented yet.")
+def test_inflation():
+    assert False
 
 @mark.xfail(reason="Testing for the step function has not been considered quite yet.")
 def test_step():
