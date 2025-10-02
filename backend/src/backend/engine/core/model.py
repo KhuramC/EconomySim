@@ -206,7 +206,7 @@ class EconomyModel(Model):
         or the average per step(weekly) income per person in the simulation.
 
         Returns:
-            average_income(float): The average income per person in the simulation.
+            average_income(float): The average income per person(capita) in the simulation.
         """
         peopleAgents = self.agents_by_type[PersonAgent]
         total = len(peopleAgents)
