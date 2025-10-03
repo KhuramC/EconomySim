@@ -9,7 +9,7 @@ def test_get_tariffs(industry_type: IndustryType, mock_economy_model):
 
     i_agent = IndustryAgent(mock_economy_model, industry_type=industry_type)
     assert (
-        i_agent.get_tariffs() == mock_economy_model.tax_rates["tariffs"][industry_type]
+        i_agent.get_tariffs() == mock_economy_model.policies["tariffs"][industry_type]
     )
 
 

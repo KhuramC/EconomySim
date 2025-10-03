@@ -10,14 +10,16 @@ from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
 
-taxes_schema = {
+policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
     "personal_income_tax": None,
     "sales_tax": {itype.value: None for itype in IndustryType},
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
+    "subsidies": {itype.value: None for itype in IndustryType},
+    "minimum_wage": None,
 }
-"""Schema for validating the tax_rates dictionary."""
+"""Schema for validating the policies dictionary."""
 
 
 class EconomyModel(Model):
@@ -26,7 +28,7 @@ class EconomyModel(Model):
 
     Attributes:
         week (int): The current week in the simulation.
-        tax_rates (dict): A dictionary of various tax rates in the simulation.
+        policies (dict): A dictionary of various tax rates in the simulation.
         minimum_wage (float): The minimum wage an industry can offer their employees.
         inflation_rate (float): The weekly inflation rate in the simulation.
         random_events (bool): Whether random events are enabled in the simulation.
@@ -37,11 +39,8 @@ class EconomyModel(Model):
 
     # Changeable by the user at any time
 
-    tax_rates: dict[str, float | dict[IndustryType, float]]
-    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema."""
-
-    minimum_wage: float
-    """The minimum wage an industry can give to employees."""
+    policies: dict[str, float | dict[IndustryType, float]]
+    """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
 
     # Set at the start of the simulation
 
@@ -54,8 +53,7 @@ class EconomyModel(Model):
     def __init__(
         self,
         num_people: int,
-        tax_rates: dict[str, float | dict[IndustryType, float]],
-        minimum_wage: float = 0,
+        starting_policies: dict[str, float | dict[IndustryType, float]],
         starting_unemployment_rate: float = 0.0,  # TODO: use variable to accurately start unemployment
         inflation_rate: float = 0.000001,
         random_events: bool = False,
@@ -63,10 +61,9 @@ class EconomyModel(Model):
         super().__init__()
         self.week = 0
 
-        # check tax_rates has all necessary keys
-        self.validate_taxes(tax_rates)
-        self.tax_rates = tax_rates
-        self.minimum_wage = minimum_wage
+        # check policies has all necessary keys
+        self.validate_policies(starting_policies)
+        self.policies = starting_policies
 
         self.inflation_rate = inflation_rate
         self.random_events = random_events
@@ -104,13 +101,13 @@ class EconomyModel(Model):
         # collect info for first week
         self.datacollector.collect(self)
 
-    def validate_taxes(self, data: dict, schema: dict = taxes_schema, path="tax_rates"):
+    def validate_policies(self, data: dict, schema: dict = policies_schema, path="policies"):
         """
-        Recursively validate the tax_rates dictionary against the taxes_schema.
+        Recursively validate the policies dictionary against the policies_schema.
 
         Args:
-            data (dict): The tax_rates dictionary to validate.
-            path (str, optional): Name of dict variable. Defaults to "tax_rates".
+            data (dict): The policies dictionary to validate.
+            path (str, optional): Name of dict variable. Defaults to "policies".
 
         Raises:
             ValueError: If the data dictionary does not match the schema.
@@ -122,7 +119,7 @@ class EconomyModel(Model):
 
         for key, subschema in schema.items():
             if isinstance(subschema, dict):
-                self.validate_taxes(data[key], subschema, path=f"{path}[{key}]")
+                self.validate_policies(data[key], subschema, path=f"{path}[{key}]")
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """

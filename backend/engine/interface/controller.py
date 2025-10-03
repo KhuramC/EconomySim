@@ -3,7 +3,6 @@ import pandas as pd
 from ..core.model import EconomyModel
 
 from ..types.industry_type import IndustryType
-from ..types.city_template import CityTemplate
 
 available_indicators: tuple = (
     "Unemployment",
@@ -37,41 +36,26 @@ class ModelController:
 
     def create_model(
         self,
-        city_template: CityTemplate | None,
         num_people: int,
-        tax_rates: dict[str, float | dict[IndustryType, float]],
+        starting_policies: dict[str, float | dict[IndustryType, float]],
         random_events: bool = False,
     ) -> int:
         """
         Create a new EconomyModel instance and store it in the models dictionary.
 
         Args:
-            city_template (CityTemplate): The city template to use for the model.
             num_people (int): The number of people to create in the model.
-            tax_rates (dict): A dictionary of tax rates to apply in the model.
+            starting_policies (dict): A dictionary of policies to apply in the model.
             random_events (bool): Whether to enable random events in the model.
 
         Returns:
             model_id: The unique ID associated with the model created.
 
         """
-        # apply city template settings first
-        # TODO: Implement City Template logic
-        match city_template:
-            case CityTemplate.SMALL:
-                pass
-            case CityTemplate.MEDIUM:
-                pass
-            case CityTemplate.LARGE:
-                pass
-            case None:
-                # what happens when no template is chosen. Use the other things passed in
-                pass
-            case _:
-                raise ValueError(f"Unknown city template: {city_template}")
+        
 
         model = EconomyModel(
-            num_people=num_people, tax_rates=tax_rates, random_events=random_events
+            num_people=num_people, starting_policies=starting_policies, random_events=random_events
         )
         model_id = self.next_id
         self.models[model_id] = model

@@ -3,8 +3,8 @@ from pytest import mark
 from contextlib import nullcontext
 
 
-def test_create_model(controller, tax_rates):
-    model_id = controller.create_model(None, 1, tax_rates)
+def test_create_model(controller, policies):
+    model_id = controller.create_model(1, policies)
     assert controller.next_id == model_id + 1
 
 
@@ -18,10 +18,10 @@ def test_create_model(controller, tax_rates):
         pytest.param(2, pytest.raises(ValueError), id="invalid_id"),
     ],
 )
-def test_delete_model(controller, tax_rates, model_id, exception):
-    controller.create_model(None, 1, tax_rates)
+def test_delete_model(controller, policies, model_id, exception):
+    controller.create_model(None, 1, policies)
 
-    with exception as e:
+    with exception:
         controller.delete_model(model_id)
         assert model_id not in controller.models
 
@@ -43,8 +43,8 @@ def test_get_indicators(controller):
         pytest.param(2, pytest.raises(ValueError), id="invalid_id"),
     ],
 )
-def test_get_model(controller, tax_rates, model_id, exception):
-    controller.create_model(None, 1, tax_rates)
+def test_get_model(controller, policies, model_id, exception):
+    controller.create_model(None, 1, policies)
     with exception as e:
         model = controller.get_model(model_id)
         assert model is controller.models[model_id]

@@ -3,8 +3,8 @@ from engine.core.model import EconomyModel
 
 
 @pytest.fixture
-def model(tax_rates):
-    model = EconomyModel(100, tax_rates)
+def model(policies):
+    model = EconomyModel(num_people=100, starting_policies=policies)
     # TODO: test demographics properly being created
 
     return model

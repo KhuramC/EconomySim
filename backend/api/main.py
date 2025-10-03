@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 from engine.interface.controller import ModelController
 from engine.types.industry_type import IndustryType
-from engine.types.city_template import CityTemplate, CITY_TEMPLATES_SETTINGS
+from .city_template import CityTemplate
 
 controller = ModelController()
 app = FastAPI()
@@ -13,7 +13,7 @@ app = FastAPI()
 # This ensures data sent to your API is valid
 class ModelCreateRequest(BaseModel):
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
-    tax_rates: dict[str, float | dict[IndustryType, float]] = Field(
+    policies: dict[str, float | dict[IndustryType, float]] = Field(
         ..., description="Tax rates for the simulation."
     )
 
@@ -25,22 +25,20 @@ class ModelCreateRequest(BaseModel):
 async def root():
     return {"message": "EconomySim API is running."}
 
+
 @app.get("/templates/{template_name}")
-async def get_city_template_settings(template_name: CityTemplate):
+async def get_city_template_config(template_name: CityTemplate):
     """
     Retrieves the predefined settings for a given city template.
     """
-    settings = CITY_TEMPLATES_SETTINGS.get(template_name)
-
-    if not settings:
-        # This case is unlikely because FastAPI validates the enum,
-        # but it's good practice for safety.
+    if template_name is not None:
+        config = template_name.config
+        return config
+    else:
         raise HTTPException(
-            status_code=404,
-            detail=f"Template '{template_name}' not found."
+            status_code=404, detail=f"City Template '{template_name}' not found."
         )
 
-    return settings
 
 @app.post("/models", status_code=201)
 async def create_model(request: ModelCreateRequest):
@@ -48,8 +46,8 @@ async def create_model(request: ModelCreateRequest):
     Creates a new simulation model.
     """
     try:
-        model_id = controller.create_model(None,
-            num_people=request.num_people, tax_rates=request.tax_rates
+        model_id = controller.create_model(
+            num_people=request.num_people, starting_policies=request.policies
         )
         return {"message": "Model created successfully", "model_id": model_id}
     except ValueError as e:
@@ -82,7 +80,8 @@ async def step_model(model_id: int):
         raise HTTPException(
             status_code=404, detail=f"Model with id {model_id} not found."
         )
-        
+
+
 @app.websocket("/ws/models/{model_id}/step")
 async def websocket_step_model(websocket, model_id: int):
     """
@@ -119,6 +118,3 @@ async def delete_model(model_id: int):
         raise HTTPException(
             status_code=404, detail=f"Model with id {model_id} not found."
         )
-
-
-

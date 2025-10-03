@@ -11,12 +11,12 @@ from engine.types.industry_type import IndustryType
         pytest.param(True, pytest.raises(ValueError), id="invalid"),
     ],
 )
-def test_validate_taxes(model, tax_rates, delete_values, exception):
-    taxing_rates = tax_rates.copy()
+def test_validate_policies(model, policies, delete_values, exception):
+    new_policies = policies.copy()
     if delete_values:
-        del taxing_rates["corporate_income_tax"]
+        del new_policies["corporate_income_tax"]
     with exception:
-        model.validate_taxes(taxing_rates)
+        model.validate_policies(new_policies)
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
