@@ -38,6 +38,8 @@ class ModelController:
         self,
         num_people: int,
         starting_policies: dict[str, float | dict[IndustryType, float]],
+        starting_unemployment_rate: float,
+        inflation_rate: float,
         random_events: bool = False,
     ) -> int:
         """
@@ -52,10 +54,13 @@ class ModelController:
             model_id: The unique ID associated with the model created.
 
         """
-        
 
         model = EconomyModel(
-            num_people=num_people, starting_policies=starting_policies, random_events=random_events
+            num_people=num_people,
+            starting_policies=starting_policies,
+            starting_unemployment_rate=starting_unemployment_rate,
+            inflation_rate=inflation_rate,
+            random_events=random_events,
         )
         model_id = self.next_id
         self.models[model_id] = model

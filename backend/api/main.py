@@ -14,8 +14,10 @@ app = FastAPI()
 class ModelCreateRequest(BaseModel):
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
     policies: dict[str, float | dict[IndustryType, float]] = Field(
-        ..., description="Tax rates for the simulation."
+        ..., description="Policies for the simulation."
     )
+    unemployment_rate: float = Field(..., ge=0.0, le=1.0, description="Starting unemployment rate.")
+    inflation_rate: float = Field(..., ge=0.0, description="Weekly inflation rate.")
 
 
 # --- 3. Create API Endpoints for the Controller ---
@@ -47,7 +49,10 @@ async def create_model(request: ModelCreateRequest):
     """
     try:
         model_id = controller.create_model(
-            num_people=request.num_people, starting_policies=request.policies
+            num_people=request.num_people,
+            starting_policies=request.policies,
+            starting_unemployment_rate=request.unemployment_rate,
+            inflation_rate=request.inflation_rate,
         )
         return {"message": "Model created successfully", "model_id": model_id}
     except ValueError as e:
