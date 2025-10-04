@@ -13,9 +13,9 @@ def test_get_tariffs(industry_type: IndustryType, mock_economy_model):
     )
 
 
-@mark.skip(reason="TODO.")
+@mark.xfail(reason="TODO.")
 def test_get_employees():
-    pass
+    assert False
 
 
 @mark.xfail(reason="Function not implemented yet.")
