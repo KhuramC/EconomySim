@@ -9,18 +9,6 @@ from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
-
-policies_schema = {
-    "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": None,
-    "sales_tax": {itype.value: None for itype in IndustryType},
-    "property_tax": None,
-    "tariffs": {itype.value: None for itype in IndustryType},
-    "subsidies": {itype.value: None for itype in IndustryType},
-    "minimum_wage": None,
-}
-"""Schema for validating the policies dictionary."""
-
 demographics_schema = {
     demo.value: {
         "income": {"mean": None, "sd": None},
@@ -32,6 +20,17 @@ demographics_schema = {
     for demo in Demographic
 }
 """Schema for validating the demographics dictionary."""
+
+policies_schema = {
+    "corporate_income_tax": {itype.value: None for itype in IndustryType},
+    "personal_income_tax": None,
+    "sales_tax": {itype.value: None for itype in IndustryType},
+    "property_tax": None,
+    "tariffs": {itype.value: None for itype in IndustryType},
+    "subsidies": {itype.value: None for itype in IndustryType},
+    "minimum_wage": None,
+}
+"""Schema for validating the policies dictionary."""
 
 
 class EconomyModel(Model):
@@ -76,7 +75,7 @@ class EconomyModel(Model):
         # check demographics/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
         self.validate_schema(starting_policies)
-        
+
         self.policies = starting_policies
 
         self.inflation_rate = inflation_rate
