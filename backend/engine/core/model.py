@@ -73,9 +73,10 @@ class EconomyModel(Model):
         super().__init__()
         self.week = 0
 
-        # check policies has all necessary keys
-        self.validate_schema(starting_policies)
+        # check demographics/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
+        self.validate_schema(starting_policies)
+        
         self.policies = starting_policies
 
         self.inflation_rate = inflation_rate
@@ -94,15 +95,7 @@ class EconomyModel(Model):
             agenttype_reporters={IndustryAgent: {"Price": "price"}},
         )
 
-        # TODO: need to create with income based on demographics
-        incomes = [random.uniform(0, 100) for _ in range(num_people)]
-        PersonAgent.create_agents(
-            model=self,
-            n=num_people,
-            demographic=Demographic.MIDDLE_CLASS,
-            income=incomes,
-        )
-        #TODO: set unemployment based on starting_unemployment_rate per demographic
+        self.setup_person_agents(num_people, demographics)
 
         # Create one instance of each industry type
         IndustryAgent.create_agents(
@@ -136,6 +129,20 @@ class EconomyModel(Model):
         for key, subschema in schema.items():
             if isinstance(subschema, dict):
                 self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
+
+    def setup_person_agents(
+        self, num_people: int, demographics: dict[Demographic, float | dict[str, float]]
+    ):
+        # TODO: need to create with income based on demographics
+        incomes = [random.uniform(0, 100) for _ in range(num_people)]
+        PersonAgent.create_agents(
+            model=self,
+            n=num_people,
+            demographic=Demographic.MIDDLE_CLASS,
+            income=incomes,
+        )
+
+        # TODO: set unemployment based on starting_unemployment_rate per demographic
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """
