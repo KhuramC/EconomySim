@@ -4,6 +4,7 @@ from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 
 # TODO: Adjust based on research for templates.
+# could also make these into small_config.json, medium_config.json, large_config.json files and load them in
 _SMALL_CONFIG = {
     "num_people": 1000,
     "demographics": {
