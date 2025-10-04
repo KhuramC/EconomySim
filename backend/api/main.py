@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 from engine.interface.controller import ModelController
 from engine.types.industry_type import IndustryType
+from engine.types.demographic import Demographic
 from .city_template import CityTemplate
 
 controller = ModelController()
@@ -13,11 +14,11 @@ class ModelCreateRequest(BaseModel):
     """Defines the expected structure for creating a new simulation model."""
 
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
+    demographics: dict[Demographic, float | dict[str, float]] = Field(
+        ..., description="Demographic distribution for the population."
+    )
     policies: dict[str, float | dict[IndustryType, float]] = Field(
         ..., description="Policies for the simulation."
-    )
-    unemployment_rate: float = Field(
-        ..., ge=0.0, le=1.0, description="Starting unemployment rate."
     )
     inflation_rate: float = Field(..., ge=0.0, description="Weekly inflation rate.")
 
@@ -48,8 +49,8 @@ async def create_model(request: ModelCreateRequest):
     try:
         model_id = controller.create_model(
             num_people=request.num_people,
+            demographics=request.demographics,
             starting_policies=request.policies,
-            starting_unemployment_rate=request.unemployment_rate,
             inflation_rate=request.inflation_rate,
         )
         return {"message": "Model created successfully", "model_id": model_id}

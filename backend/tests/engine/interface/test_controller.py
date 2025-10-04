@@ -3,8 +3,8 @@ from pytest import mark
 from contextlib import nullcontext
 
 
-def test_create_model(controller, policies):
-    model_id = controller.create_model(1, policies)
+def test_create_model(controller, demographics, policies):
+    model_id = controller.create_model(100, demographics, policies)
     assert controller.next_id == model_id + 1
 
 
@@ -18,8 +18,8 @@ def test_create_model(controller, policies):
         pytest.param(2, pytest.raises(ValueError), id="invalid_id"),
     ],
 )
-def test_delete_model(controller, policies, model_id, exception):
-    controller.create_model(None, 1, policies)
+def test_delete_model(controller, demographics, policies, model_id, exception):
+    controller.create_model(100, demographics, policies)
 
     with exception:
         controller.delete_model(model_id)
@@ -27,12 +27,12 @@ def test_delete_model(controller, policies, model_id, exception):
 
 
 @mark.xfail(reason="Feature not implemented yet.")
-def test_step_model(controller):
+def test_step_model(controller, demographics, policies):
     assert False
 
 
 @mark.xfail(reason="Feature not implemented yet.")
-def test_get_indicators(controller):
+def test_get_indicators(controller, demographics, policies):
     assert False
 
 
@@ -43,8 +43,8 @@ def test_get_indicators(controller):
         pytest.param(2, pytest.raises(ValueError), id="invalid_id"),
     ],
 )
-def test_get_model(controller, policies, model_id, exception):
-    controller.create_model(None, 1, policies)
+def test_get_model(controller, demographics, policies, model_id, exception):
+    controller.create_model(100, demographics, policies)
     with exception as e:
         model = controller.get_model(model_id)
         assert model is controller.models[model_id]

@@ -3,6 +3,7 @@ import pandas as pd
 from ..core.model import EconomyModel
 
 from ..types.industry_type import IndustryType
+from ..types.demographic import Demographic
 
 available_indicators: tuple = (
     "Unemployment",
@@ -37,9 +38,9 @@ class ModelController:
     def create_model(
         self,
         num_people: int,
+        demographics: dict[Demographic, float | dict[str, float]],
         starting_policies: dict[str, float | dict[IndustryType, float]],
-        starting_unemployment_rate: float,
-        inflation_rate: float,
+        inflation_rate: float = 0.000001,
         random_events: bool = False,
     ) -> int:
         """
@@ -47,7 +48,9 @@ class ModelController:
 
         Args:
             num_people (int): The number of people to create in the model.
+            demographics (dict): A dictionary defining the demographics of the population.
             starting_policies (dict): A dictionary of policies to apply in the model.
+            inflation_rate (float): The weekly inflation rate to apply in the model.
             random_events (bool): Whether to enable random events in the model.
 
         Returns:
@@ -57,8 +60,8 @@ class ModelController:
 
         model = EconomyModel(
             num_people=num_people,
+            demographics=demographics,
             starting_policies=starting_policies,
-            starting_unemployment_rate=starting_unemployment_rate,
             inflation_rate=inflation_rate,
             random_events=random_events,
         )

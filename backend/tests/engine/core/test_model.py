@@ -16,7 +16,7 @@ def test_validate_policies(model, policies, delete_values, exception):
     if delete_values:
         del new_policies["corporate_income_tax"]
     with exception:
-        model.validate_policies(new_policies)
+        model.validate_schema(new_policies)
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))

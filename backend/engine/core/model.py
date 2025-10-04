@@ -21,6 +21,18 @@ policies_schema = {
 }
 """Schema for validating the policies dictionary."""
 
+demographics_schema = {
+    demo.value: {
+        "income": {"mean": None, "sd": None},
+        "proportion": None,
+        "unemployment_rate": None,
+        "spending_behavior": {itype.value: None for itype in IndustryType},
+        "current_money": {"mean": None, "sd": None},
+    }
+    for demo in Demographic
+}
+"""Schema for validating the demographics dictionary."""
+
 
 class EconomyModel(Model):
     """
@@ -53,8 +65,8 @@ class EconomyModel(Model):
     def __init__(
         self,
         num_people: int,
+        demographics: dict[Demographic, float | dict[str, float]],
         starting_policies: dict[str, float | dict[IndustryType, float]],
-        starting_unemployment_rate: float = 0.0,  # TODO: use variable to accurately start unemployment
         inflation_rate: float = 0.000001,
         random_events: bool = False,
     ):
@@ -62,7 +74,8 @@ class EconomyModel(Model):
         self.week = 0
 
         # check policies has all necessary keys
-        self.validate_policies(starting_policies)
+        self.validate_schema(starting_policies)
+        self.validate_schema(demographics, demographics_schema, path="demographics")
         self.policies = starting_policies
 
         self.inflation_rate = inflation_rate
@@ -89,6 +102,7 @@ class EconomyModel(Model):
             demographic=Demographic.MIDDLE_CLASS,
             income=incomes,
         )
+        #TODO: set unemployment based on starting_unemployment_rate per demographic
 
         # Create one instance of each industry type
         IndustryAgent.create_agents(
@@ -101,12 +115,14 @@ class EconomyModel(Model):
         # collect info for first week
         self.datacollector.collect(self)
 
-    def validate_policies(self, data: dict, schema: dict = policies_schema, path="policies"):
+    def validate_schema(
+        self, data: dict, schema: dict = policies_schema, path="policies"
+    ):
         """
-        Recursively validate the policies dictionary against the policies_schema.
+        Recursively validate the dictionary against the schema.
 
         Args:
-            data (dict): The policies dictionary to validate.
+            data (dict): The dictionary to validate.
             path (str, optional): Name of dict variable. Defaults to "policies".
 
         Raises:
@@ -119,7 +135,7 @@ class EconomyModel(Model):
 
         for key, subschema in schema.items():
             if isinstance(subschema, dict):
-                self.validate_policies(data[key], subschema, path=f"{path}[{key}]")
+                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """
