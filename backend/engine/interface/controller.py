@@ -1,6 +1,7 @@
 from typing import Iterable
 import pandas as pd
 from ..core.model import EconomyModel
+from ..core.model import policies_schema
 
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
@@ -103,11 +104,42 @@ class ModelController:
             raise ValueError("Time must be a positive integer.")
         # TODO: handle negative time for reverses. Need to define a negative step so to speak
 
-        if model_id in self.models:
-            for i in range(time):
-                self.models[model_id].step()
-        else:
-            raise ValueError(f"Model with ID {model_id} does not exist.")
+        model = self.get_model(model_id)
+        for i in range(time):
+            model.step()
+
+    def get_policies(
+        self, model_id: int
+    ) -> dict[str, float | dict[IndustryType, float]]:
+        """
+        Retrieve the current policies from the specified model.
+
+        Args:
+            model_id (int): The unique identifier for the model to retrieve policies from.
+
+        Returns:
+            policies (dict): A dictionary containing the current policies of the model.
+        """
+        model = self.get_model(model_id)
+        return model.policies
+
+    def set_policies(
+        self, model_id: int, policies: dict[str, float | dict[IndustryType, float]]
+    ) -> None:
+        """
+        Update the policies in the specified model.
+
+        Args:
+            model_id (int): The unique identifier for the model to change policies in.
+            policies (dict): A dictionary of policies to apply in the model.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist
+            or if the policies are not in the correct format.
+        """
+
+        model = self.get_model(model_id)
+        model.validate_schema(policies, policies_schema)
 
     def get_indicators(
         self,
@@ -143,26 +175,24 @@ class ModelController:
             raise ValueError(
                 f"One or more requested indicators are not available. Available indicators: {available_indicators}"
             )
-        if model_id in self.models:
+        model = self.get_model(model_id)
 
-            indicators_df: pd.DataFrame = self.models[
-                model_id
-            ].datacollector.get_model_vars_dataframe()
+        indicators_df: pd.DataFrame = self.models[
+            model_id
+        ].datacollector.get_model_vars_dataframe()
 
-            # filter by time
-            if end_time == 0:
-                end_time = self.models[model_id].get_week()
-            indicators_df = indicators_df[
-                indicators_df["Week"].between(start_time, end_time, inclusive="both")
-            ]
+        # filter by time
+        if end_time == 0:
+            end_time = self.models[model_id].get_week()
+        indicators_df = indicators_df[
+            indicators_df["Week"].between(start_time, end_time, inclusive="both")
+        ]
 
-            # filter by indicators
-            if indicators is not None:
-                indicators_df = indicators_df[list(indicators)]
+        # filter by indicators
+        if indicators is not None:
+            indicators_df = indicators_df[list(indicators)]
 
-            return indicators_df
-        else:
-            raise ValueError(f"Model with ID {model_id} does not exist.")
+        return indicators_df
 
     def get_model(self, model_id: int) -> EconomyModel:
         """
