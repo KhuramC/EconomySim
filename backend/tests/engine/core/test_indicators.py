@@ -11,7 +11,7 @@ def test_get_week(model):
 
 def test_calculate_unemployment(model):
     assert model.calculate_unemployment() == 1.0
-    # TODO: redo whenever templates for whenever starting unemployment logic has been updated
+    # TODO: redo whenever starting unemployment logic has been updated
     peopleAgents = model.agents_by_type[PersonAgent]
     total = len(peopleAgents)
     employed = 5
@@ -29,13 +29,13 @@ def test_calculate_gdp():
 
 @mark.xfail(reason="Demographic's income feature not implemented yet.")
 def test_calculate_income_per_capita(model):
-    # TODO: do whenever templates for demographic's distribution has been done.
+    # TODO: do whenever templates/demographic's distribution has been done.
     assert False
 
 
 @mark.xfail(reason="Demographic's income feature not implemented yet.")
 def test_calculate_median_income(model):
-    # TODO: do whenever templates for demographic's distribution has been done.
+    # TODO: do whenever templates/demographic's distribution has been done.
     assert False
 
 
