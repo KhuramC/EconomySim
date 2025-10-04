@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket
 from pydantic import BaseModel, Field
 
 from engine.interface.controller import ModelController
@@ -14,9 +14,9 @@ class ModelCreateRequest(BaseModel):
     """Defines the expected structure for creating a new simulation model."""
 
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
-    demographics: dict[Demographic, float | dict[str, float]] = Field(
-        ..., description="Demographic distribution for the population."
-    )
+    demographics: dict[
+        Demographic, dict[str, float | dict[str | IndustryType, float]]
+    ] = Field(..., description="Demographic distribution for the population.")
     policies: dict[str, float | dict[IndustryType, float]] = Field(
         ..., description="Policies for the simulation."
     )
@@ -31,7 +31,7 @@ async def root():
     return {"message": "EconomySim API is running."}
 
 
-@app.get("/templates/{template_name}")
+@app.get("/templates/{template_name}", status_code=200)
 async def get_city_template_config(template_name: CityTemplate):
     """Retrieves the predefined configurations for a given city template."""
     if template_name is not None:
@@ -47,12 +47,14 @@ async def get_city_template_config(template_name: CityTemplate):
 async def create_model(request: ModelCreateRequest):
     """Creates a new simulation model."""
     try:
+
         model_id = controller.create_model(
             num_people=request.num_people,
             demographics=request.demographics,
             starting_policies=request.policies,
             inflation_rate=request.inflation_rate,
         )
+        print(model_id)
         return {"message": "Model created successfully", "model_id": model_id}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -84,12 +86,23 @@ async def set_model_policies(
         )
 
 
+from fastapi.responses import Response
+
+
+# Helper function to convert DataFrame to JSON, handling numpy types
+def dataframe_to_json_response(df):
+    # orient='records' creates the list of objects format you want
+    json_string = df.to_json(orient="records")
+    return Response(content=json_string, media_type="application/json")
+
+
 @app.get("/models/{model_id}/indicators")
+# TODO: add the ability to pass in what indicators and at what time point like in controller func
 async def get_model_indicators(model_id: int):
     """Retrieves the latest collected data for a specific model."""
     try:
         data = controller.get_indicators(model_id)
-        return data
+        return dataframe_to_json_response(data)
     except ValueError:
         raise HTTPException(
             status_code=404, detail=f"Model with id {model_id} not found."
@@ -109,15 +122,15 @@ async def step_model(model_id: int):
 
 
 @app.websocket("/ws/models/{model_id}/step")
-async def websocket_step_model(websocket, model_id: int):
+async def websocket_step_model(websocket: WebSocket, model_id: int):
     """Advances the simulation model by one step via WebSocket."""
     await websocket.accept()
     try:
         while True:
             await websocket.receive_text()  # Wait for a message from the client
             controller.step_model(model_id)
-            data = controller.get_indicators(model_id)
-            await websocket.send_json(data)  # Send updated data back to the client
+            data = controller.get_indicators(model_id).to_json(orient="records") # manuall turn into json
+            await websocket.send_text(data)  # Send updated data back to the client
 
     except ValueError:
         await websocket.send_json({"error": f"Model with id {model_id} not found."})

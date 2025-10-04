@@ -64,7 +64,9 @@ class EconomyModel(Model):
     def __init__(
         self,
         num_people: int,
-        demographics: dict[Demographic, float | dict[str, float]],
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
         starting_policies: dict[str, float | dict[IndustryType, float]],
         inflation_rate: float = 0.000001,
         random_events: bool = False,
@@ -130,7 +132,11 @@ class EconomyModel(Model):
                 self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
 
     def setup_person_agents(
-        self, num_people: int, demographics: dict[Demographic, float | dict[str, float]]
+        self,
+        num_people: int,
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
     ):
         # TODO: need to create with income based on demographics
         incomes = [random.uniform(0, 100) for _ in range(num_people)]

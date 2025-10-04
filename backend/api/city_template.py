@@ -19,7 +19,7 @@ _SMALL_CONFIG = {
         }
         for demo in Demographic
     },
-    "starting_policies": {
+    "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
         "personal_income_tax": 1,
         "sales_tax": {itype.value: 1 for itype in IndustryType},
@@ -44,7 +44,7 @@ _MEDIUM_CONFIG = {
         }
         for demo in Demographic
     },
-    "starting_policies": {
+    "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
         "personal_income_tax": 1,
         "sales_tax": {itype.value: 1 for itype in IndustryType},
@@ -69,7 +69,7 @@ _LARGE_CONFIG = {
         }
         for demo in Demographic
     },
-    "starting_policies": {
+    "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
         "personal_income_tax": 1,
         "sales_tax": {itype.value: 1 for itype in IndustryType},

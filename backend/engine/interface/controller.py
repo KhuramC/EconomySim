@@ -39,7 +39,9 @@ class ModelController:
     def create_model(
         self,
         num_people: int,
-        demographics: dict[Demographic, float | dict[str, float]],
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
         starting_policies: dict[str, float | dict[IndustryType, float]],
         inflation_rate: float = 0.000001,
         random_events: bool = False,
@@ -119,7 +121,7 @@ class ModelController:
 
         Returns:
             policies (dict): A dictionary containing the current policies of the model.
-        
+
         Raises:
             ValueError: If the model associated with the model_id does not exist.
         """
