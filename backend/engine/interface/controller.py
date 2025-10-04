@@ -139,7 +139,8 @@ class ModelController:
         """
 
         model = self.get_model(model_id)
-        model.validate_schema(policies, policies_schema)
+        model.validate_schema(policies)
+        model.policies = policies
 
     def get_indicators(
         self,
