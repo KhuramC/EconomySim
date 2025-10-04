@@ -58,13 +58,39 @@ async def create_model(request: ModelCreateRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/models/{model_id}")
+@app.get("/models/{model_id}/policies")
+async def get_model_policies(model_id: int):
+    """Retrieves the current policies for a specific model."""
+    try:
+        data = controller.get_policies(model_id)
+        return data
+    except ValueError:
+        raise HTTPException(
+            status_code=404, detail=f"Model with id {model_id} not found."
+        )
+
+
+@app.post("/models/{model_id}/set_policies")
+async def set_model_policies(
+    model_id: int, policies: dict[str, float | dict[IndustryType, float]]
+):
+    """Advances the simulation model by one step."""
+    try:
+        controller.set_policies(model_id, policies)
+        return {"message": f"Model {model_id} policies updated."}
+    except ValueError:
+        raise HTTPException(
+            status_code=404, detail=f"Model with id {model_id} not found."
+        )
+
+
+@app.get("/models/{model_id}/indicators")
 async def get_model_indicators(model_id: int):
     """Retrieves the latest collected data for a specific model."""
     try:
         data = controller.get_indicators(model_id)
         return data
-    except KeyError:
+    except ValueError:
         raise HTTPException(
             status_code=404, detail=f"Model with id {model_id} not found."
         )
@@ -76,7 +102,7 @@ async def step_model(model_id: int):
     try:
         controller.step_model(model_id)
         return {"message": f"Model {model_id} advanced to the next step."}
-    except KeyError:
+    except ValueError:
         raise HTTPException(
             status_code=404, detail=f"Model with id {model_id} not found."
         )

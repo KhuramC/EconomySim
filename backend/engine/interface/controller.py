@@ -119,6 +119,9 @@ class ModelController:
 
         Returns:
             policies (dict): A dictionary containing the current policies of the model.
+        
+        Raises:
+            ValueError: If the model associated with the model_id does not exist.
         """
         model = self.get_model(model_id)
         return model.policies
