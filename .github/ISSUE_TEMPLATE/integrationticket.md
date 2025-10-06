@@ -3,6 +3,10 @@ name: Integration Issue
 about: Tickets for integrating the frontend and backend
 title: ":airplane: Integrate ??? "
 assignees: ''
+projects:
+  - project: "EconomySim Capstone"
+    column: "Type"
+    value: "Integration"
 ---
 
 **Description:** As a user, I want to be able to ???
