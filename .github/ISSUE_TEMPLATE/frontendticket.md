@@ -1,7 +1,7 @@
 ---
 name: Frontend Issue
 about: Tickets for the frontend
-title: ":paintbrush: Implement ??? "
+title: ":art: Implement ??? "
 assignees: ''
 ---
 
