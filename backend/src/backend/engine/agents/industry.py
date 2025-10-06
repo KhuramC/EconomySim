@@ -115,9 +115,56 @@ class IndustryAgent(Agent):
         
         Allow industries to go into debt to pay for fixed and variable costs if needed?
         """
-        logging.info("Producing goods...NOT IMPLEMENTED")
-        # TODO: Implement industry goods production
-        self.inventory = self.inventory + 15  # placeholder logic
+        # New signature / behavior: optionally check funds and adjust production
+        # Keep default behavior for backward compatibility by using sensible defaults
+        employee_efficiency = 1.0  # placeholder for number of goods produced per employee
+        employees = self.get_employees()
+        num_employees = len(employees) if employees is not None else 0
+
+        # production capacity based on employees (fallback to placeholder if no employees)
+        employee_production_capacity = int(num_employees * employee_efficiency)
+        intended_qty = employee_production_capacity if employee_production_capacity > 0 else 15
+
+        # Compute variable cost per unit from agent state (fallbacks if unset)
+        variable_per_unit = self.variable_cost if getattr(self, 'variable_cost', None) is not None else 5.0
+
+        # Optional check: reduce production if fixed + variable costs exceed available funds
+        check_funds = True
+        available_funds = self.total_money if self.total_money is not None else 0.0
+        fixed_due = self.fixed_cost if getattr(self, 'fixed_cost', None) is not None else 0.0
+        total_variable_cost = variable_per_unit * intended_qty
+
+        adjusted_qty = intended_qty
+        if check_funds:
+            # reserve funds for fixed costs first
+            available_for_variable = available_funds - fixed_due
+            if available_for_variable <= 0:
+                # Not enough to cover fixed costs; cannot afford any variable production without going further into debt
+                logging.info(f"Insufficient funds to cover fixed costs (fixed_due={fixed_due:.2f}); adjusted production to 0")
+                adjusted_qty = 0
+            else:
+                if variable_per_unit <= 0:
+                    # Can't compute affordability if per-unit cost is nonpositive; leave unchanged
+                    adjusted_qty = intended_qty
+                else:
+                    affordable = int(available_for_variable // variable_per_unit)
+                    adjusted_qty = max(0, min(intended_qty, affordable))
+                    if adjusted_qty < intended_qty:
+                        logging.info(f"Adjusted production from {intended_qty} to {adjusted_qty} due to insufficient funds (fixed+variable)")
+
+        # Apply production and deduct both fixed cost and variable cost spent
+        self.inventory = self.inventory + adjusted_qty
+        spent_variable = variable_per_unit * adjusted_qty
+        spent_fixed = fixed_due
+        # Deduct fixed then variable (allowing debt if insufficient)
+        prior_funds = self.total_money if self.total_money is not None else 0.0
+        self.total_money = prior_funds - spent_fixed - spent_variable
+
+        # Log warnings if we went into debt
+        if self.total_money < 0:
+            logging.warning(f"Industry has negative funds after production: {self.total_money:.2f}")
+
+        logging.info(f"Produced {adjusted_qty} units; spent_variable={spent_variable:.2f}; spent_fixed={spent_fixed:.2f}; remaining funds {self.total_money:.2f}")
         pass
 
     def change_employment(self):
