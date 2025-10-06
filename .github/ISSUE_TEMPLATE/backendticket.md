@@ -3,6 +3,10 @@ name: Backend Issue
 about: Tickets for the backend
 title: ":robot: Implement ??? "
 assignees: ''
+projects:
+  - project: "EconomySim Capstone"
+    column: "Type"
+    value: "Backend"
 ---
 
 **Description:** As a user, I want to be able to ???

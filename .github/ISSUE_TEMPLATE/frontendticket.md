@@ -3,6 +3,10 @@ name: Frontend Issue
 about: Tickets for the frontend
 title: ":art: Implement ??? "
 assignees: ''
+projects:
+  - project: "EconomySim Capstone"
+    column: "Type"
+    value: "Frontend"
 ---
 
 **Description:** As a user, I want to be able to ???
