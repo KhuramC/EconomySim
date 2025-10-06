@@ -224,3 +224,33 @@ def linear_profit_max_DIAGNOSTIC(A, B, m, n, Q_max=None) -> Dict[str, Optional[f
         "MR_minus_MC": MR_at_Q - MC_at_Q
     })
     return result
+
+def variable_cost_per_unit(raw_mat: float, num_emp: int, wage: float, period: float, production_Q: int) -> float:
+    """
+    Calculate the variable cost per unit of production.
+    
+    Parameters:
+    - raw_mat: float, cost of raw materials per unit
+    - num_emp: int, number of employees
+    - wage: float, hourly wage per employee
+    - period: float, hours worked per period (e.g., 40 hours/week)
+    - production_Q: int, number of goods produced in that period
+    
+    Returns:
+    - float: variable cost per unit
+    """
+    if production_Q <= 0:
+        raise ValueError("Production quantity must be greater than zero.")
+    
+    # Labor cost for the period
+    total_labor_cost = num_emp * wage * period
+    
+    # Total raw materials cost
+    total_raw_material_cost = raw_mat * production_Q
+    
+    # Total variable cost
+    total_variable_cost = total_labor_cost + total_raw_material_cost
+    
+    # Variable cost per unit
+    cost_per_unit = total_variable_cost / production_Q
+    return cost_per_unit
