@@ -59,21 +59,26 @@ class ModelController:
         Returns:
             model_id: The unique ID associated with the model created.
 
+        Raises:
+            ValueError: if the policies or demographics were not validated.
+
         """
+        try:
+            model = EconomyModel(
+                num_people=num_people,
+                demographics=demographics,
+                starting_policies=starting_policies,
+                inflation_rate=inflation_rate,
+                random_events=random_events,
+            )
+            model_id = self.next_id
+            self.models[model_id] = model
 
-        model = EconomyModel(
-            num_people=num_people,
-            demographics=demographics,
-            starting_policies=starting_policies,
-            inflation_rate=inflation_rate,
-            random_events=random_events,
-        )
-        model_id = self.next_id
-        self.models[model_id] = model
-
-        # increment next_id for future models
-        self.next_id = self.next_id + 1
-        return model_id
+            # increment next_id for future models
+            self.next_id = self.next_id + 1
+            return model_id
+        except ValueError as e:
+            raise ValueError(f"Demographics/policies not validated: {str(e)}")
 
     def delete_model(self, model_id: int) -> None:
         """
@@ -100,15 +105,15 @@ class ModelController:
             time (int): The number of steps to advance the model.
 
         Raises:
-            ValueError: If the model associated with the model_id does not exist or if time is less than 1
+            ValueError: If the model associated with the model_id does not exist.
         """
-        if time < 1:
-            raise ValueError("Time must be a positive integer.")
-        # TODO: handle negative time for reverses. Need to define a negative step so to speak
-
         model = self.get_model(model_id)
-        for i in range(time):
-            model.step()
+        if time < 0:
+            for _ in range(abs(time)):
+                model.reverse_step()
+        else:
+            for _ in range(time):
+                model.step()
 
     def get_policies(
         self, model_id: int
@@ -161,10 +166,10 @@ class ModelController:
             model_id (int): The unique identifier for the model to retrieve indicators from.
             start_time (int): The starting time period for the indicators.
             end_time (int): The ending time period for the indicators. An end_time of 0 goes to the current time.
-            indicators (Iterable, optional): An interable of specific indicators to retrieve. If None, retrieves all indicators.
+            indicators (Iterable, optional): An iterable of specific indicators to retrieve. If None, retrieves all indicators.
 
         Returns:
-            dataframe (pd.DataFrame): A DataFrame containing the requested economic indicators.
+            dataframe (DataFrame): A DataFrame containing the requested economic indicators.
 
         Raises:
             ValueError: If the model associated with the model_id does not exist, \\
@@ -183,19 +188,17 @@ class ModelController:
             )
         model = self.get_model(model_id)
 
-        indicators_df: pd.DataFrame = self.models[
-            model_id
-        ].datacollector.get_model_vars_dataframe()
+        indicators_df: pd.DataFrame = model.datacollector.get_model_vars_dataframe()
 
         # filter by time
         if end_time == 0:
-            end_time = self.models[model_id].get_week()
+            end_time = model.get_week()
         indicators_df = indicators_df[
             indicators_df["Week"].between(start_time, end_time, inclusive="both")
         ]
 
         # filter by indicators
-        if indicators is not None:
+        if indicators:
             indicators_df = indicators_df[list(indicators)]
 
         return indicators_df

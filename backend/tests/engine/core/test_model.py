@@ -38,3 +38,7 @@ def test_inflation():
 @mark.xfail(reason="Testing for the step function has not been considered quite yet.")
 def test_step():
     assert False
+    
+@mark.xfail(reason="Function has not been implemented yet.")
+def test_reverse_step():
+    assert False

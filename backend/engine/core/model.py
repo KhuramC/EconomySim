@@ -72,17 +72,17 @@ class EconomyModel(Model):
         random_events: bool = False,
     ):
         super().__init__()
-        self.week = 0
 
+        if num_people <= 0:
+            raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
         self.validate_schema(starting_policies)
 
         self.policies = starting_policies
-
         self.inflation_rate = inflation_rate
         self.random_events = random_events
-
+        self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
                 "Week": self.get_week,
@@ -106,8 +106,6 @@ class EconomyModel(Model):
             starting_price=10.0,
         )
 
-        # collect info for first week
-        self.datacollector.collect(self)
 
     def validate_schema(
         self, data: dict, schema: dict = policies_schema, path="policies"
@@ -171,11 +169,11 @@ class EconomyModel(Model):
         # could have prices go up by inflation percentage and current_money go down by the same percentage
         pass
 
-    def step(self):
+    def step(self) -> None:
         """
-        Advance the simulation by one week.
+        Advance the simulation by one week, causing inflation, IndustryAgents and then PersonAgents to act.
         """
-        self.week += 1  # new week
+        self.week = self.week + 1  # new week
 
         # TODO: implement inflation logic
         self.inflation()
@@ -193,6 +191,14 @@ class EconomyModel(Model):
 
         # collect info for this week
         self.datacollector.collect(self)
+
+    def reverse_step(self) -> None:
+        """
+        Reverse the simulation by one week.
+        """
+        # TODO: Implement reversing simulation
+        # might want to add choice of how much to reverse.
+        pass
 
     # Economic indicators
 
@@ -230,7 +236,6 @@ class EconomyModel(Model):
         # TODO: Implement calculation of the GDP
         # see https://www.investopedia.com/terms/b/bea.asp for notes
         # It's from the project documentation back in the spring
-
         return 0
 
     def calculate_income_per_capita(self):

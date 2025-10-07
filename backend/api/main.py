@@ -1,11 +1,15 @@
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket, status
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
+import pandas as pd
+from typing import Any
 
 from engine.interface.controller import ModelController
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from .city_template import CityTemplate
 
+# these work like singletons here
 controller = ModelController()
 app = FastAPI()
 
@@ -26,111 +30,205 @@ class ModelCreateRequest(BaseModel):
 # API Endpoints
 
 
-@app.get("/")
+@app.get("/", status_code=status.HTTP_200_OK)
 async def root():
+    """Sanity check for the API."""
     return {"message": "EconomySim API is running."}
 
 
-@app.get("/templates/{template_name}", status_code=200)
-async def get_city_template_config(template_name: CityTemplate):
-    """Retrieves the predefined configurations for a given city template."""
-    if template_name is not None:
-        config = template_name.config
+@app.get("/templates/{template}", status_code=status.HTTP_200_OK)
+async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
+    """
+    Retrieves the simulation configuration associated with the template.
+    The default status code is 200 upon success.
+
+    Args:
+        template (CityTemplate): the template who's config is wanted.
+
+    Raises:
+        HTTPException(404): if the template does not exist.
+
+    Returns:
+        config (dict): A dictionary of the number of people, the demographics, the starting policies, and the inflation rate.
+    """
+    if template is not None:
+        config = template.config
         return config
     else:
         raise HTTPException(
-            status_code=404, detail=f"City Template '{template_name}' not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"City Template '{template}' not found.",
         )
 
 
-@app.post("/models", status_code=201)
-async def create_model(request: ModelCreateRequest):
-    """Creates a new simulation model."""
-    try:
+@app.post("/models/create", status_code=status.HTTP_201_CREATED)
+async def create_model(model_parameters: ModelCreateRequest) -> int:
+    """
+    Creates a model based on the given parameters.
 
+    Args:
+        model_parameters (ModelCreateRequest): The parameters for the model.
+
+    Raises:
+        HTTPException(400): If the arguments passed in were invalid.
+
+    Returns:
+        model_id(int): The id associated with the created model.
+    """
+    try:
         model_id = controller.create_model(
-            num_people=request.num_people,
-            demographics=request.demographics,
-            starting_policies=request.policies,
-            inflation_rate=request.inflation_rate,
+            num_people=model_parameters.num_people,
+            demographics=model_parameters.demographics,
+            starting_policies=model_parameters.policies,
+            inflation_rate=model_parameters.inflation_rate,
         )
-        print(model_id)
-        return {"message": "Model created successfully", "model_id": model_id}
+        return model_id
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.get("/models/{model_id}/policies")
-async def get_model_policies(model_id: int):
-    """Retrieves the current policies for a specific model."""
+@app.get("/models/{model_id}/get_policies", status_code=status.HTTP_200_OK)
+async def get_model_policies(
+    model_id: int,
+) -> dict[str, float | dict[IndustryType, float]]:
+    """
+    Returns all of the current policies associated with a model.
+
+    Args:
+        model_id (int): the id of the model.
+
+    Raises:
+        HTTPException(404): if the model was not found.
+
+    Returns:
+        policies (dict): A dictionary of all the policies associated with a model.
+    """
     try:
-        data = controller.get_policies(model_id)
-        return data
+        policies = controller.get_policies(model_id)
+        return policies
     except ValueError:
         raise HTTPException(
-            status_code=404, detail=f"Model with id {model_id} not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with id {model_id} not found.",
         )
 
 
-@app.post("/models/{model_id}/set_policies")
+@app.post("/models/{model_id}/set_policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
     model_id: int, policies: dict[str, float | dict[IndustryType, float]]
 ):
-    """Advances the simulation model by one step."""
+    """
+    Sets all of the current policies in a model.
+
+    Args:
+        model_id (int): the id of the model.
+        policies (dict[str, float  |  dict[IndustryType, float]]): the policies to update with.
+
+    Raises:
+        HTTPException(404): if the model could not be found, or the policies were not correctly formatted.
+    """
     try:
         controller.set_policies(model_id, policies)
-        return {"message": f"Model {model_id} policies updated."}
     except ValueError:
         raise HTTPException(
-            status_code=404, detail=f"Model with id {model_id} not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with id {model_id} not found, or policies were not in right format.",
         )
 
 
-from fastapi.responses import Response
+def dataframe_to_json_response(df: pd.DataFrame) -> Response:
+    """
+    Converts a pandas DataFrame to JSON, handling the underlying numpy types.
 
+    Args:
+        df (DataFrame): The dataframe to convert.
 
-# Helper function to convert DataFrame to JSON, handling numpy types
-def dataframe_to_json_response(df):
-    # orient='records' creates the list of objects format you want
-    json_string = df.to_json(orient="records")
+    Returns:
+        response (Response): A Response containing a JSON string of the dataframe.
+    """
+
+    json_string = df.to_json(orient="records")  # list of rows
     return Response(content=json_string, media_type="application/json")
 
 
-@app.get("/models/{model_id}/indicators")
-# TODO: add the ability to pass in what indicators and at what time point like in controller func
-async def get_model_indicators(model_id: int):
-    """Retrieves the latest collected data for a specific model."""
+@app.get("/models/{model_id}/indicators", status_code=status.HTTP_200_OK)
+async def get_model_indicators(
+    model_id: int,
+    start_time: int,
+    end_time: int,
+) -> Response:
+    """
+    Retrieves the indicators from a model at the timeframe desired.
+
+    Args:
+        model_id (int): the id of the model desired.
+        start_time (int): the starting time for the indicators
+        end_time (int): the ending time for the indicators. If 0, it goes to the current time
+
+    Raises:
+        HTTPException(404): if the model does not exist.
+
+    Returns:
+        Response: A Response containing a JSON string of the dataframe on a per row basis.
+    """
+
     try:
-        data = controller.get_indicators(model_id)
-        return dataframe_to_json_response(data)
+        indicators_df = controller.get_indicators(
+            model_id, start_time, end_time, indicators=None
+        )
+        return dataframe_to_json_response(indicators_df)
     except ValueError:
         raise HTTPException(
-            status_code=404, detail=f"Model with id {model_id} not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with id {model_id} not found.",
         )
 
 
-@app.post("/models/{model_id}/step")
+@app.post("/models/{model_id}/step", status_code=status.HTTP_204_NO_CONTENT)
 async def step_model(model_id: int):
-    """Advances the simulation model by one step."""
+    """
+    Steps the simulation for a given model once.
+
+    Args:
+        model_id (int): the model to step.
+
+    Raises:
+        HTTPException(404): if the model does not exist.
+    """
     try:
         controller.step_model(model_id)
-        return {"message": f"Model {model_id} advanced to the next step."}
     except ValueError:
         raise HTTPException(
-            status_code=404, detail=f"Model with id {model_id} not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with id {model_id} not found.",
         )
 
 
-@app.websocket("/ws/models/{model_id}/step")
-async def websocket_step_model(websocket: WebSocket, model_id: int):
-    """Advances the simulation model by one step via WebSocket."""
+@app.websocket("/models/{model_id}/websocket")
+async def step_model_websocket(websocket: WebSocket, model_id: int):
+    """
+    Sets up a websocket for consistent communication.
+    Allows for stepping with "step", and getting indicators with "indicators"
+
+    Args:
+        websocket (WebSocket): the websocket.
+        model_id (int): the model to step.
+    """
+
     await websocket.accept()
     try:
         while True:
-            await websocket.receive_text()  # Wait for a message from the client
-            controller.step_model(model_id)
-            data = controller.get_indicators(model_id).to_json(orient="records") # manuall turn into json
-            await websocket.send_text(data)  # Send updated data back to the client
+            text = await websocket.receive_text()  # Wait for a message from the client
+            if "step" in text:
+                controller.step_model(model_id)
+            elif "indicators" in text:
+                indicators = controller.get_indicators(model_id).to_json(
+                    orient="records"
+                )  # manually turn into json
+                await websocket.send_text(
+                    indicators
+                )  # Send indicators back to the client
+            # TODO: fleshout websocket, like with being able to set/get policies.
 
     except ValueError:
         await websocket.send_json({"error": f"Model with id {model_id} not found."})
@@ -141,13 +239,21 @@ async def websocket_step_model(websocket: WebSocket, model_id: int):
         print(f"WebSocket connection closed.")
 
 
-@app.delete("/models/{model_id}")
+@app.delete("/models/{model_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model(model_id: int):
-    """Deletes a simulation model."""
+    """
+    Deletes a model.
+
+    Args:
+        model_id (int): the id of the model to delete.
+
+    Raises:
+        HTTPException(404): if the model could not be found.
+    """
     try:
         controller.delete_model(model_id)
-        return {"message": f"Model {model_id} deleted."}
     except ValueError:
         raise HTTPException(
-            status_code=404, detail=f"Model with id {model_id} not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with id {model_id} not found.",
         )
