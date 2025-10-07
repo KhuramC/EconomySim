@@ -1,37 +1,39 @@
 // src/components/SidebarNav.jsx
 import React from 'react';
 import { Paper, List, ListItemButton, ListItemText, Typography, Box } from '@mui/material';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 
-export default function SidebarNav({ active = 'Overview' }) {
-  const items = [
-    'Overview',
-    'Industries',
-    'Policies',
-    'Demographics',
-    'Statistics',
-    'Settings',
-    'About',
+export default function SidebarNav({ basePath = '' }) {
+  // Keep the order exactly as requested (no extra items)
+  const ITEMS = [
+    { label: 'Overview', path: `${basePath}/overview` },
+    { label: 'Industries', path: `${basePath}/industries` },
+    { label: 'Policies', path: `${basePath}/policies` },
+    { label: 'Demographics', path: `${basePath}/demographics` },
+    { label: 'Statistics', path: `${basePath}/statistics` },
   ];
 
+  const { pathname } = useLocation();
+  const isSelected = (to) => pathname === to || pathname.startsWith(`${to}/`);
+
   return (
-    <Paper
-      variant="outlined"
-      sx={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
-    >
-      {/* Title section */}
+    <Paper variant="outlined" sx={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}>
+      {/* Sidebar title */}
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h6" fontWeight={800}>
           JellyBean Simulator
         </Typography>
       </Box>
 
-      {/* Navigation list */}
+      {/* Navigation items */}
       <List disablePadding>
-        {items.map((label) => {
-          const selected = label === active;
+        {ITEMS.map(({ label, path }) => {
+          const selected = isSelected(path);
           return (
             <ListItemButton
               key={label}
+              component={RouterLink}
+              to={path}
               selected={selected}
               sx={{
                 py: 1.25,
@@ -55,9 +57,8 @@ export default function SidebarNav({ active = 'Overview' }) {
             >
               <ListItemText
                 primary={label}
-                primaryTypographyProps={{
-                  fontWeight: selected ? 700 : 500,
-                }}
+                // Use slotProps instead of deprecated primaryTypographyProps
+                slotProps={{ primary: { sx: { fontWeight: selected ? 700 : 500 } } }}
               />
             </ListItemButton>
           );

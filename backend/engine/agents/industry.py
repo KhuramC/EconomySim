@@ -1,8 +1,8 @@
 from mesa import Agent
 from mesa import Model
-from ..types.IndustryType import IndustryType
+from ..types.industry_type import IndustryType
 from ..types.Pricing_Type import PricingType
-from ..logic.pricing import adjusted_marginal_cost_pricing, avg_cost, linear_profit_max, variable_cost_per_unit
+from pricing import adjusted_marginal_cost_pricing, avg_cost, linear_profit_max, variable_cost_per_unit
 import logging
 
 

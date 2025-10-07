@@ -2,7 +2,7 @@ from typing import Iterable
 import pandas as pd
 from ..core.model import EconomyModel
 
-from ..types.IndustryType import IndustryType
+from ..types.industry_type import IndustryType
 from ..types.city_template import CityTemplate
 
 available_indicators: tuple = (

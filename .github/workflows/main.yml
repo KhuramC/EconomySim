@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend_tests:
+    runs-on: ubuntu-latest
+    container: python:3.11 # same as devcontainer
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Poetry Install/Setup
+        run: |
+          pip install poetry==2.1.4
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+
+      - name: Install Python Dependencies
+        run: |
+          cd backend
+          poetry install
+
+      - name: Run Backend Pytests
+        run: |
+          cd backend
+          poetry run pytest -vvv --cov --cov-report=html --cov-report=term-missing
+      
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          # The path must be relative to the root of the repository.
+          name: backend-coverage-html
+          path: backend/htmlcov/
+          retention-days: 7

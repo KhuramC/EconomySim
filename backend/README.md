@@ -1,9 +1,16 @@
 # Backend
 
+## Structure
+
+There are three main subdirectories:
+- [api](./api/): where the FastAPI server runs. 
+- [engine](./engine/): where the logic of the simulation engine using Mesa is.
+- [tests](./tests/): where tests for the other two directories live.  
+
 ## Testing
 
-Because the backend is in Python, pytest will be used for testing anything in the backend.
-[httpx](https://fastapi.tiangolo.com/tutorial/testing/) has good integration with pytest, so that
+Because the backend is in Python, `pytest` will be used for testing anything in the backend.
+[httpx](https://fastapi.tiangolo.com/tutorial/testing/) has good integration with `pytest`, so that
 can be used for specifically testing the FastAPI part.
 
 ## Steps to Start Developing
@@ -16,7 +23,7 @@ ensures that all the python dependencies have been installed.
 1. Cd into the backend directory.
 1. Run `poetry install` to install dependencies
 1. Use jupyter notebooks to do easy dev testing (for more info see [run_sim.ipynb](./run_sim.ipynb))
-1. Use pytest for structured unit/integration tests
+1. Use `pytest` for structured unit/integration tests
 
 ### Important Poetry Commands
 
