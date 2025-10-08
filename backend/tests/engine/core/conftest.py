@@ -2,9 +2,21 @@ import pytest
 from engine.core.model import EconomyModel
 
 
-@pytest.fixture
-def model(tax_rates):
-    model = EconomyModel(100, tax_rates)
+@pytest.fixture()
+def model(demographics, policies) -> EconomyModel:
+    """
+    A fixture that provides a valid model.
+
+    Args:
+        demographics (dict): a valid demographics.
+        policies (dict): a valid policies.
+
+    Returns:
+        EconomyModel: a created model.
+    """
+    model = EconomyModel(
+        num_people=100, demographics=demographics, starting_policies=policies
+    )
     # TODO: test demographics properly being created
 
     return model

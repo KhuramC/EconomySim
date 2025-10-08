@@ -9,15 +9,28 @@ from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
+demographics_schema = {
+    demo.value: {
+        "income": {"mean": None, "sd": None},
+        "proportion": None,
+        "unemployment_rate": None,
+        "spending_behavior": {itype.value: None for itype in IndustryType},
+        "current_money": {"mean": None, "sd": None},
+    }
+    for demo in Demographic
+}
+"""Schema for validating the demographics dictionary."""
 
-taxes_schema = {
+policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
     "personal_income_tax": None,
     "sales_tax": {itype.value: None for itype in IndustryType},
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
+    "subsidies": {itype.value: None for itype in IndustryType},
+    "minimum_wage": None,
 }
-"""Schema for validating the tax_rates dictionary."""
+"""Schema for validating the policies dictionary."""
 
 
 class EconomyModel(Model):
@@ -26,7 +39,7 @@ class EconomyModel(Model):
 
     Attributes:
         week (int): The current week in the simulation.
-        tax_rates (dict): A dictionary of various tax rates in the simulation.
+        policies (dict): A dictionary of various tax rates in the simulation.
         minimum_wage (float): The minimum wage an industry can offer their employees.
         inflation_rate (float): The weekly inflation rate in the simulation.
         random_events (bool): Whether random events are enabled in the simulation.
@@ -37,11 +50,8 @@ class EconomyModel(Model):
 
     # Changeable by the user at any time
 
-    tax_rates: dict[str, float | dict[IndustryType, float]]
-    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema."""
-
-    minimum_wage: float
-    """The minimum wage an industry can give to employees."""
+    policies: dict[str, float | dict[IndustryType, float]]
+    """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
 
     # Set at the start of the simulation
 
@@ -54,23 +64,25 @@ class EconomyModel(Model):
     def __init__(
         self,
         num_people: int,
-        tax_rates: dict[str, float | dict[IndustryType, float]],
-        minimum_wage: float = 0,
-        starting_unemployment_rate: float = 0.0,  # TODO: use variable to accurately start unemployment
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
+        starting_policies: dict[str, float | dict[IndustryType, float]],
         inflation_rate: float = 0.000001,
         random_events: bool = False,
     ):
         super().__init__()
-        self.week = 0
 
-        # check tax_rates has all necessary keys
-        self.validate_taxes(tax_rates)
-        self.tax_rates = tax_rates
-        self.minimum_wage = minimum_wage
+        if num_people <= 0:
+            raise ValueError("A nonnegative amount of agents is required.")
+        # check demographics/policies has all necessary keys
+        self.validate_schema(demographics, demographics_schema, path="demographics")
+        self.validate_schema(starting_policies)
 
+        self.policies = starting_policies
         self.inflation_rate = inflation_rate
         self.random_events = random_events
-
+        self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
                 "Week": self.get_week,
@@ -84,14 +96,7 @@ class EconomyModel(Model):
             agenttype_reporters={IndustryAgent: {"Price": "price"}},
         )
 
-        # TODO: need to create with income based on demographics
-        incomes = [random.uniform(0, 100) for _ in range(num_people)]
-        PersonAgent.create_agents(
-            model=self,
-            n=num_people,
-            demographic=Demographic.MIDDLE_CLASS,
-            income=incomes,
-        )
+        self.setup_person_agents(num_people, demographics)
 
         # Create one instance of each industry type
         IndustryAgent.create_agents(
@@ -101,16 +106,16 @@ class EconomyModel(Model):
             starting_price=10.0,
         )
 
-        # collect info for first week
-        self.datacollector.collect(self)
 
-    def validate_taxes(self, data: dict, schema: dict = taxes_schema, path="tax_rates"):
+    def validate_schema(
+        self, data: dict, schema: dict = policies_schema, path="policies"
+    ):
         """
-        Recursively validate the tax_rates dictionary against the taxes_schema.
+        Recursively validate the dictionary against the schema.
 
         Args:
-            data (dict): The tax_rates dictionary to validate.
-            path (str, optional): Name of dict variable. Defaults to "tax_rates".
+            data (dict): The dictionary to validate.
+            path (str, optional): Name of dict variable. Defaults to "policies".
 
         Raises:
             ValueError: If the data dictionary does not match the schema.
@@ -122,7 +127,25 @@ class EconomyModel(Model):
 
         for key, subschema in schema.items():
             if isinstance(subschema, dict):
-                self.validate_taxes(data[key], subschema, path=f"{path}[{key}]")
+                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
+
+    def setup_person_agents(
+        self,
+        num_people: int,
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
+    ):
+        # TODO: need to create with income based on demographics
+        incomes = [random.uniform(0, 100) for _ in range(num_people)]
+        PersonAgent.create_agents(
+            model=self,
+            n=num_people,
+            demographic=Demographic.MIDDLE_CLASS,
+            income=incomes,
+        )
+
+        # TODO: set unemployment based on starting_unemployment_rate per demographic
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """
@@ -146,11 +169,11 @@ class EconomyModel(Model):
         # could have prices go up by inflation percentage and current_money go down by the same percentage
         pass
 
-    def step(self):
+    def step(self) -> None:
         """
-        Advance the simulation by one week.
+        Advance the simulation by one week, causing inflation, IndustryAgents and then PersonAgents to act.
         """
-        self.week += 1  # new week
+        self.week = self.week + 1  # new week
 
         # TODO: implement inflation logic
         self.inflation()
@@ -168,6 +191,14 @@ class EconomyModel(Model):
 
         # collect info for this week
         self.datacollector.collect(self)
+
+    def reverse_step(self) -> None:
+        """
+        Reverse the simulation by one week.
+        """
+        # TODO: Implement reversing simulation
+        # might want to add choice of how much to reverse.
+        pass
 
     # Economic indicators
 
@@ -205,7 +236,6 @@ class EconomyModel(Model):
         # TODO: Implement calculation of the GDP
         # see https://www.investopedia.com/terms/b/bea.asp for notes
         # It's from the project documentation back in the spring
-
         return 0
 
     def calculate_income_per_capita(self):

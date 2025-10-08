@@ -53,7 +53,7 @@ class IndustryAgent(Agent):
         Returns:
             float: The tariff rate for this industry.
         """
-        tariffs = self.model.tax_rates.get("tariffs", {})
+        tariffs = self.model.policies.get("tariffs", {})
         return tariffs.get(self.industry_type, 0.0)
 
     def get_employees(self):

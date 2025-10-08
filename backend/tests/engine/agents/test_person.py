@@ -4,7 +4,15 @@ from engine.types.demographic import Demographic
 
 
 @mark.parametrize("income", [0, 1, 5, 32])
-def test_payday(mock_economy_model, income):
+def test_payday(mock_economy_model, income: int):
+    """
+    Test for `payday`.
+    Tests that after a payday, the current money has correctly increased.
+
+    Args:
+        mock_economy_model: a mock model
+        income (int): the income of the agent.
+    """
     starting_money = 0
     person = PersonAgent(
         mock_economy_model,
