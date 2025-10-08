@@ -46,19 +46,14 @@ async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
         template (CityTemplate): the template who's config is wanted.
 
     Raises:
-        HTTPException(404): if the template does not exist.
+        HTTPException(422): if the template name is not a valid CityTemplate value.
 
     Returns:
         config (dict): A dictionary of the number of people, the demographics, the starting policies, and the inflation rate.
     """
-    if template is not None:
-        config = template.config
-        return config
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"City Template '{template}' not found.",
-        )
+
+    config = template.config
+    return config
 
 
 @app.post("/models/create", status_code=status.HTTP_201_CREATED)
@@ -70,7 +65,8 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
         model_parameters (ModelCreateRequest): The parameters for the model.
 
     Raises:
-        HTTPException(400): If the arguments passed in were invalid.
+        HTTPException(422): If the arguments passed in did not follow the structure of ModelCreateRequest.
+        HTTPException(404): If the demographics or policies, within the arguments were not validated.
 
     Returns:
         model_id(int): The id associated with the created model.
@@ -147,7 +143,7 @@ def dataframe_to_json_response(df: pd.DataFrame) -> Response:
         response (Response): A Response containing a JSON string of the dataframe.
     """
 
-    json_string = df.to_json(orient="records")  # list of rows
+    json_string = df.to_json(orient="records")  # list of dataframe rows
     return Response(content=json_string, media_type="application/json")
 
 
@@ -208,7 +204,7 @@ async def step_model(model_id: int):
 async def step_model_websocket(websocket: WebSocket, model_id: int):
     """
     Sets up a websocket for consistent communication.
-    Allows for stepping with "step", and getting indicators with "indicators"
+    Allows for stepping with "step", and getting indicators with "indicators".
 
     Args:
         websocket (WebSocket): the websocket.

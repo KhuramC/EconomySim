@@ -85,7 +85,7 @@ _LARGE_CONFIG = {
 class CityTemplate(Enum):
     """
     An enumeration of city templates, with associated settings.
-    The .value will be the string name, and .settings will be the dictionary.
+    The .value will be the string name, and .config will be the dictionary.
     """
 
     config: dict[str, Any]

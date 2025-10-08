@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from fastapi import status
 from typing import Iterator, Any
+import copy
 
 from engine.types.demographic import Demographic
 from engine.types.industry_type import IndustryType
@@ -57,6 +58,28 @@ def valid_config() -> dict[str, Any]:
 
 
 @pytest.fixture()
+def invalid_config(request, valid_config: dict[str, Any]) -> dict[str, Any]:
+    """
+    Deletes a specified key somewhere in the valid_config dictionary to make it invalid.
+
+    Args:
+        valid_config (dict[str, Any]): a valid configuration for the simulation.
+
+    Returns:
+        invalid_config (dict[str, Any]): The config after being modified.
+    """
+    invalid_config = copy.deepcopy(valid_config)
+    key_path = request.param
+
+    temp_dict = invalid_config
+    for key in key_path[:-1]:  # get to second last key
+        temp_dict = temp_dict[key]
+    del temp_dict[key_path[-1]]  # delete last key
+
+    return invalid_config
+
+
+@pytest.fixture()
 def created_model(api_client: TestClient, valid_config: dict) -> Iterator[int]:
     """
     A fixture to create a model and then delete it upon teardown.
@@ -88,10 +111,6 @@ def created_model(api_client: TestClient, valid_config: dict) -> Iterator[int]:
     response = api_client.delete(f"/models/{model_id}/delete")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    args = {
-        "start_time": 0,
-        "end_time": 0,
-        "indicators": None
-    }
+    args = {"start_time": 0, "end_time": 0, "indicators": None}
     response = api_client.get(f"/models/{model_id}/indicators", params=args)
     assert response.status_code == status.HTTP_404_NOT_FOUND

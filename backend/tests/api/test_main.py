@@ -1,75 +1,136 @@
 from fastapi.testclient import TestClient
 from fastapi import status
+import pytest
+from pytest import mark
+from typing import Any
+
+from api.city_template import CityTemplate
 from engine.types.demographic import Demographic
 from engine.interface.controller import available_indicators
 import json
 import copy
 
-# === Basic Endpoint Tests ===
+template_test_params = [
+    pytest.param(
+        template.value,
+        status.HTTP_200_OK,
+        template.config,
+        id=f"{template.value} template",
+    )
+    for template in list(CityTemplate)
+]
+template_test_params.append(
+    pytest.param(
+        "invalid", status.HTTP_422_UNPROCESSABLE_ENTITY, None, id="invalid template"
+    ),
+)
 
 
-def test_get_city_template_success(api_client: TestClient):
+@mark.parametrize(
+    "template,status_code,expected_config",
+    template_test_params,
+)
+def test_get_city_template_config(
+    api_client: TestClient,
+    template: str,
+    status_code: int,
+    expected_config: dict[str, Any] | None,
+):
     """
-    Reasoning: Tests the happy path for retrieving a valid city template.
-    Ensures the endpoint correctly fetches and returns the configuration data
-    associated with the enum member.
+    Parametrized test for `get_city_template_config`, an API endpoint.
+    Tests with all valid configs, and then with an invalid one.
+
+    Args:
+        api_client (TestClient): the test client to connect to the FastAPI server.
+        template (str): the city template string.
+        status_code (int): the expected return status code from calling the method.
+        expected_config (dict[str, Any] | None): The expected config, or nothing if it is meant to be invalid.
     """
-    response = api_client.get("/templates/small")
-    assert response.status_code == 200
-    config = response.json()
-    assert config["num_people"] > 0  # Check that it returns a valid config dict
-    print(config)
-    assert "policies" in config
+
+    response = api_client.get(f"/templates/{template}")
+    assert response.status_code == status_code
+    if status_code == status.HTTP_200_OK:
+        config = response.json()
+        assert config["num_people"] > 0  # Check that it returns a valid config dict
+        assert "policies" in config
+        assert config == expected_config
 
 
-def test_get_city_template_not_found(api_client: TestClient):
+@mark.parametrize(
+    "invalid_config,status_code",
+    [
+        pytest.param(
+            ("num_people",), status.HTTP_422_UNPROCESSABLE_ENTITY, id="invalid payload"
+        ),
+        pytest.param(
+            ("demographics", Demographic.LOWER_CLASS),
+            status.HTTP_400_BAD_REQUEST,
+            id="invalid_demographics",
+        ),
+        pytest.param(
+            ("policies", "corporate_income_tax"),
+            status.HTTP_400_BAD_REQUEST,
+            id="invalid_policies",
+        ),
+    ],
+    indirect=["invalid_config"],
+)
+def test_create_model_fail(
+    api_client: TestClient, invalid_config: dict[str, Any], status_code: int
+):
     """
-    Reasoning: Tests the failure case where the template name is invalid.
-    This confirms that FastAPI's automatic enum validation is working and
-    returns a 422 (Unprocessable Entity) error for invalid inputs.
+    Parametrized test for `test_create_model` failing, an API endpoint.
+    Tests against the ModelCreateRequest to ensure it works or against
+    the validation of policies/demographics, which result in slightly different status codes.
+
+    Args:
+        api_client (TestClient): the test client to connect to the FastAPI server.
+        invalid_config (dict[str, Any]): an invalid configuration for setting up a simulation.
+        status_code (int): the expected return status code from calling the method.
     """
-    response = api_client.get("/templates/nonexistent")
-    assert response.status_code == 422
+
+    response = api_client.post("/models/create", json=invalid_config)
+    assert response.status_code == status_code
 
 
-def test_create_model_validation_error(api_client: TestClient, valid_config: dict):
+def test_get_and_set_policies(
+    api_client: TestClient, created_model: int, valid_config: dict[str, Any]
+):
     """
-    Reasoning: Tests the API's validation for the creation payload.
-    By sending invalid data (num_people=0), we verify that the Pydantic
-    model validation is triggered, returning a 422 error.
-    """
-    invalid_payload = valid_config.copy()
-    invalid_payload["num_people"] = 0  # Invalid as per the ModelCreateRequest
-    response = api_client.post("/models/create", json=invalid_payload)
-    assert response.status_code == 422
+    Test for `get_model_policies` and `set_model_policies`, an API endpoint.
+    Tests that it gets the correct initial parameters, and then correctly sets/changes them.
 
-
-def test_create_model_validation_error_2(api_client: TestClient, valid_config: dict):
+    Args:
+        api_client (TestClient): the test client to connect to the FastAPI server.
+        created_model (int): the id of the model created.
+        valid_config (dict[str, Any]): a valid configuration that the created_model used.
     """
-    Reasoning: Tests the API's validation for the creation payload.
-    By sending invalid data (num_people=0), we verify that the model validation occurs, returning a 400 error.
-    """
-    invalid_payload = copy.deepcopy(valid_config)
-    del invalid_payload["demographics"][Demographic.LOWER_CLASS][
-        "unemployment_rate"
-    ]  # Invalid as per the ModelCreateRequest
-    response = api_client.post("/models/create", json=invalid_payload)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    # Get initial policies
+    response = api_client.get(f"/models/{created_model}/get_policies")
+    assert response.status_code == status.HTTP_200_OK
+    initial_policies = response.json()
+    assert (
+        initial_policies["personal_income_tax"]
+        == valid_config["policies"]["personal_income_tax"]
+    )
 
-def test_step_model(api_client: TestClient, created_model: int):
-    """
-    Reasoning: Tests the ability to advance a simulation. It uses the `created_model`
-    fixture to get a valid model ID, calls the step endpoint, and confirms
-    a successful response. Also tests that a non-existent model returns a 404.
-    """
-    # Happy path
-    response = api_client.post(f"/models/{created_model}/step")
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    # Set new policies
+    new_policies = copy.deepcopy(initial_policies)
+    new_policies["personal_income_tax"] = 0.5
+    new_policies["property_tax"] = 0.1
 
-    # Failure path
-    response = api_client.post("/models/999/step")
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    response_set = api_client.post(
+        f"/models/{created_model}/set_policies", json=new_policies
+    )
+    assert response_set.status_code == status.HTTP_204_NO_CONTENT
+
+    # Get new policies, confirm same as what was set.
+    response_get2 = api_client.get(f"/models/{created_model}/get_policies")
+    assert response_get2.status_code == status.HTTP_200_OK
+    updated_policies = response_get2.json()
+    assert updated_policies["personal_income_tax"] == 0.5
+    assert updated_policies["property_tax"] == 0.1
 
 
 def test_get_indicators(api_client: TestClient, created_model: int):
@@ -82,7 +143,7 @@ def test_get_indicators(api_client: TestClient, created_model: int):
         "start_time": 0,
         "end_time": 0,
     }
-    
+
     response = api_client.post(f"/models/{created_model}/step")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -94,48 +155,37 @@ def test_get_indicators(api_client: TestClient, created_model: int):
     assert "Week" in indicators[0]
     for indicator in available_indicators:
         assert indicator in indicators[0]
-    
 
 
-def test_get_and_set_policies(api_client: TestClient, created_model: int):
+def test_step_model(api_client: TestClient, created_model: int):
     """
-    Reasoning: Tests the full get/set cycle for policies. It first fetches
-    the initial policies, then updates them with a POST request, and finally
-    fetches them again to verify that the changes were applied correctly.
+    Test for `step_model`, an API endpoint.
+    Tests return codes for stepping with a valid and invalid model id.
+
+    Args:
+        api_client (TestClient): the test client to connect to the FastAPI server.
+        created_model (int): the id of the model created.
     """
-    # 1. Get initial policies
-    response_get1 = api_client.get(f"/models/{created_model}/get_policies")
-    assert response_get1.status_code == status.HTTP_200_OK
-    initial_policies = response_get1.json()
-    assert initial_policies["personal_income_tax"] == 0.15  # From fixture
 
-    # 2. Set new policies
-    new_policies = initial_policies.copy()
-    new_policies["personal_income_tax"] = 0.5
-    new_policies["property_tax"] = 0.1
+    # Successful path
+    response = api_client.post(f"/models/{created_model}/step")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    response_set = api_client.post(
-        f"/models/{created_model}/set_policies", json=new_policies
-    )
-    assert response_set.status_code == status.HTTP_204_NO_CONTENT
-
-    # 3. Get policies again to verify the change
-    response_get2 = api_client.get(f"/models/{created_model}/get_policies")
-    assert response_get2.status_code == status.HTTP_200_OK
-    updated_policies = response_get2.json()
-    assert updated_policies["personal_income_tax"] == 0.5
-    assert updated_policies["property_tax"] == 0.1
+    # Failure path
+    response = api_client.post("/models/999/step")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-# === WebSocket Test ===
-
-
-def test_websocket_step(api_client: TestClient, created_model: int):
+def test_step_model_websocket(api_client: TestClient, created_model: int):
     """
-    Reasoning: Tests the real-time WebSocket endpoint. It simulates a client
-    connecting, sending a message to trigger a step, and receiving the updated
-    data back. This ensures the asynchronous, real-time functionality works as expected.
+    Test for `step_model_websocket`, an API endpoint.
+    Tests that it can connect, simulating a possible use case and works as expected.
+    Args:
+        api_client (TestClient): the test client to connect to the FastAPI server.
+        created_model (int): the id of the model created.
     """
+
+    # TODO: fleshout testing this function as the actual function gets fleshed out.
     with api_client.websocket_connect(f"models/{created_model}/websocket") as websocket:
         # Send a message to the server to trigger a step
         websocket.send_text("step")
@@ -146,7 +196,6 @@ def test_websocket_step(api_client: TestClient, created_model: int):
         indicators = json.loads(json_string)
 
         # Assert that the data looks correct
-
         assert isinstance(indicators, list)
         assert len(indicators) == 1  # one step
         assert indicators[0]["Week"] == 1
