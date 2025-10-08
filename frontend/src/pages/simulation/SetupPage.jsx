@@ -32,7 +32,7 @@ export default function SetupPage() {
     spendingBehavior: 70,
     meanSavings: 10000,
     sdSavings: 5000,
-    unemploymentRate: 5,
+    unemploymentRate: .05,
 
     // Industry
     industryType: "Manufacturing",
