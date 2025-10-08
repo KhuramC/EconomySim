@@ -12,7 +12,7 @@ from api.main import app
 VALID_CONFIG = {
     "num_people": 100,
     "demographics": {
-        demo.value: {
+        demo: {
             "income": {"mean": 300 + (i * 500), "sd": 100},
             "proportion": 1 / len(Demographic),
             "unemployment_rate": 0.1 - (i * 0.02),

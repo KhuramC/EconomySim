@@ -3,7 +3,7 @@ from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 
 DEMOGRAPHICS = {
-    demo.value: {
+    demo: {
         "income": {
             # Weekly income, increases with class
             "mean": 300 + (i * 500),
@@ -13,7 +13,9 @@ DEMOGRAPHICS = {
         "proportion": [0.45, 0.40, 0.15][i],
         # Unemployment rate, decreases with class
         "unemployment_rate": 0.08 - (i * 0.02),
-        "spending_behavior": {itype.value: 1/len(list(IndustryType)) for itype in IndustryType},
+        "spending_behavior": {
+            itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
+        },
         "current_money": {
             # Starting cash on hand, increases with class
             "mean": 500 + (i * 2500),
@@ -22,6 +24,7 @@ DEMOGRAPHICS = {
     }
     for i, demo in enumerate(Demographic)
 }
+"""A sample demographics variable that should pass a validate_schema call by an EconomyModel."""
 
 POLICIES = {
     "corporate_income_tax": {itype.value: i for i, itype in enumerate(IndustryType)},
@@ -32,13 +35,22 @@ POLICIES = {
     "subsidies": {itype.value: i * -2 for i, itype in enumerate(IndustryType)},
     "minimum_wage": 7.25,
 }
+"""A sample policies variable that should pass a validate_schema call by an EconomyModel."""
 
 
-@pytest.fixture
-def demographics():
+@pytest.fixture()
+def demographics() -> (
+    dict[Demographic, dict[str, float | dict[str | IndustryType, float]]]
+):
+    """
+    A fixture that provides a valid demographics for starting a simulation.
+    """
     return DEMOGRAPHICS
 
 
-@pytest.fixture
-def policies():
+@pytest.fixture()
+def policies() -> dict[str, float | dict[IndustryType, float]]:
+    """
+    A fixture that provides a valid set of policies for starting a simulation.
+    """
     return POLICIES
