@@ -1,6 +1,5 @@
 from mesa import Model
 import pytest
-from engine.types.industry_type import IndustryType
 
 
 class MockEconomyModel(Model):
@@ -12,6 +11,16 @@ class MockEconomyModel(Model):
         super().__init__()
         self.policies = starting_policies
 
-@pytest.fixture
-def mock_economy_model(policies):
+
+@pytest.fixture()
+def mock_economy_model(policies) -> MockEconomyModel:
+    """
+    A fixture for providing a MockEconomyModel.
+
+    Args:
+        policies (dict): a valid policies.
+
+    Returns:
+        mock_moedle (MockEconomyModel): the model with the desired seting.
+    """
     return MockEconomyModel(policies)
