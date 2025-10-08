@@ -1,25 +1,30 @@
 {
-    "name": "EconSim DevContainer",
-    "image": "python:3.11",
-    "features":{
-            "./features/frontend_dependencies": {},
-            "./features/poetry_install": {}
-        },
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                //python extensions
-                "ms-python.python",
-                "ms-python.black-formatter",
-                "ms-python.isort",
-                "ms-python.vscode-pylance",
-                "donjayamanne.python-extension-pack",
-                "ms-toolsai.jupyter",
-                //formatting
-                "esbenp.prettier-vscode",
-                //ci/cd
-                "github.vscode-github-actions",
-            ]
-       }
+  "name": "EconSim DevContainer",
+  "image": "python:3.11",
+  "features": {
+    "./features/frontend_dependencies": {},
+    "./features/poetry_install": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.vscode-pylance",
+        "donjayamanne.python-extension-pack",
+        "ms-toolsai.jupyter",
+        "esbenp.prettier-vscode",
+        "github.vscode-github-actions"
+      ]
     }
+  },
+
+  // ← ここからSSHエージェント連携
+  "mounts": [
+    "type=bind,source=/run/host-services/ssh-auth.sock,target=/ssh-agent"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  }
 }
