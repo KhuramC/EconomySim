@@ -54,6 +54,9 @@ def test_step_model(controller: ModelController, demographics, policies):
     assert False
 
 
+# TODO: add tests for reverse stepping as well.
+
+
 def test_get_policies(controller: ModelController, demographics, policies):
     """
     Test for `get_policies`.
