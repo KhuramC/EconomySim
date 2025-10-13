@@ -2,7 +2,7 @@ from mesa import Agent
 from mesa import Model
 from ..types.industry_type import IndustryType
 from ..types.Pricing_Type import PricingType
-from pricing import adjusted_marginal_cost_pricing, avg_cost, linear_profit_max, variable_cost_per_unit
+from .pricing import adjusted_marginal_cost_pricing, avg_cost, linear_profit_max, variable_cost_per_unit
 import logging
 
 
@@ -30,6 +30,9 @@ class IndustryAgent(Agent):
     """The weekly wage offered by this industry."""
     fixed_cost: float
     """The fixed cost incurred by this industry per time step."""
+    raw_mat_cost: float
+    """The cost of raw materials per unit produced."""
+    
     variable_cost: float
     """The variable cost incurred by this industry per unit produced."""
     pricing_strategy: PricingType
@@ -44,7 +47,7 @@ class IndustryAgent(Agent):
         starting_money: float = 0.0,
         starting_offered_wage: float = 0.0,
         starting_fixed_cost: float = 0.0,
-        starting_variable_cost: float = 0.0,
+        starting_raw_mat_cost: float = 1.0,
         pricing_strategy: PricingType = PricingType,
     ):
         """
@@ -56,6 +59,7 @@ class IndustryAgent(Agent):
         self.inventory = starting_inventory
         self.total_money = starting_money
         self.offered_wage = starting_offered_wage
+        self.raw_mat_cost = starting_raw_mat_cost
         self.fixed_cost = starting_fixed_cost
         self.variable_cost = starting_variable_cost
         self.pricing_strategy = pricing_strategy
@@ -74,8 +78,8 @@ class IndustryAgent(Agent):
         """
         Gets all employees that are employed to this industry.
         """
-        return self.model.get_employees(self.industry_type)
-
+        employees = 5
+        return employees #placeholder for number of employees
     def determine_price(self):
         """
         Determine the price of goods/services in this industry based on market conditions.
@@ -119,7 +123,7 @@ class IndustryAgent(Agent):
         # Keep default behavior for backward compatibility by using sensible defaults
         employee_efficiency = 1.0  # placeholder for number of goods produced per employee
         employees = self.get_employees()
-        num_employees = len(employees) if employees is not None else 0
+        num_employees = employees if employees is not None else 0
 
         # production capacity based on employees (fallback to placeholder if no employees)
         employee_production_capacity = int(num_employees * employee_efficiency)
@@ -186,3 +190,9 @@ class IndustryAgent(Agent):
         wages = 5
         return wages
         # TODO: Implement industry wage logic
+    def determine_variable_cost(self):
+        """
+        How the industry will determine what to set their variable costs at.
+        """
+        employees = self.get_employees()
+        return var_cost
