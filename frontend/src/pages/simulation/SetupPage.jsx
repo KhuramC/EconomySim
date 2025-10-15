@@ -1,195 +1,375 @@
-import React, { useState } from 'react';
-import { Box, Grid, Typography, Button, Card, CardContent, Modal } from '@mui/material';
-import TopicCard from '../../components/TopicCard';
-import PageTitle from "../../components/PageTitle";
+import React, { useState } from "react";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  TextField,
+  Switch,
+  FormControlLabel,
+  Slider,
+  Button,
+  MenuItem,
+  Grid,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";  
 
-function SetupPage({ onSetupComplete }) {
+export default function SetupPage() {
 
-    const navigate = useNavigate();  
-    // Parameter popups
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTopic, setEditingTopic] = useState(null);
+  const navigate = useNavigate();  
+  const [params, setParams] = useState({
+    // Environmental
+    maxSimulationLength: 100,
+    randomEvents: false,
+    inflationRate: 2.0,
+    priceIncreaseRate: 1.5,
 
-    const handleOpenModal = (topic) => {
-        setEditingTopic(topic);
-        setIsModalOpen(true);
-    };
+    // Demographic
+    meanIncome: 50000,
+    sdIncome: 15000,
+    populationDistribution: 100,
+    spendingBehavior: 70,
+    meanSavings: 10000,
+    sdSavings: 5000,
+    unemploymentRate: .05,
 
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setEditingTopic(null);
-    };
+    // Industry
+    industryType: "Manufacturing",
+    startingInventory: 1000,
+    startingPrice: 10,
+    industrySavings: 50000,
+    employees: 50,
+    offeredWage: 15,
 
-    console.log("Current topic to edit:", editingTopic);
+    // Government Policy
+    salesTax: 7,
+    corporateTax: 21,
+    personalIncomeTax: 15,
+    propertyTax: 1000,
+    tariffs: 5,
+    subsidies: 2000,
+    rentCap: 2000,
+    minimumWage: 10,
+  });
 
-    // Simulation settings state
-    const [config, setConfig] = useState({
-        demographics: { },
-        industries: { },
-        policies: { }
-    });
+  const handleChange = (key) => (event) => {
+    const value =
+      event.target.type === "checkbox"
+        ? event.target.checked
+        : event.target.value;
+    setParams((prev) => ({ ...prev, [key]: value }));
+  };
 
-    const handleBeginClick = () => {
-        // When user clicks the button, call the function from the parent
-        // and pass collected config data
-        // onSetupComplete(config);
-        
-        // For now I will comment out the onSetupComplete()
-        navigate("/BaseSimView");
-    };
+  const handleSliderChange = (key) => (_, value) => {
+    setParams((prev) => ({ ...prev, [key]: value }));
+  };
 
-    return (
-        // Container with padding
-        <Box sx={{ p: 3}}>
-            <PageTitle text="Simulation Set-Up" />
+  const handleBegin = () => {
+    console.log("Simulation parameters:", params);
+    navigate("/BaseSimView");
+  };
 
-            {/* Handles overall layout */}
-            <Grid container spacing={3} sx={{ display: 'flex' }}>
+  return (
+    <div style={{ maxWidth: 800, margin: "2rem auto", padding: "1rem" }}>
+      <Typography variant="h4" gutterBottom>
+        Simulation Setup
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Configure the starting parameters for your simulation. These values
+        affect how the environment, demographics, industries, and policies
+        behave when the simulation begins.
+      </Typography>
 
-                {/* Defines a single column */}
-                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant='h5'>Demographics</Typography>
-
-                    <TopicCard
-                        title="Upper Class"
-                        description="Percentage of Pop: 5%, Avg Household Income: $500,000"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Middle Class"
-                        description="Percentage of Pop: 55%, Avg Household Income: $80,000"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Lower Class"
-                        description="Percentage of Pop: 40%, Avg Household Income: $30,000"
-                        onEdit={handleOpenModal}
-                    />                  
-                </Grid>
-
-                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant="h5">Industries</Typography>
-
-                    <TopicCard
-                        title="Utilities"
-                        description="Avg. Price of Electricity: $200 / kwH"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Housing"
-                        description="Avg. Rent: $500 / month"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Groceries"
-                        description="Avg. Price of Goods: $200"
-                        onEdit={handleOpenModal}
-                    />  
-
-                    <TopicCard
-                        title="Entertainment"
-                        description="Avg. Price of Goods: $200"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Luxury Goods"
-                        description="Avg. Price of Goods: $800"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Gas"
-                        description="Avg. Price Per Gallon: $4.00"
-                        onEdit={handleOpenModal}
-                    /> 
-                </Grid>
-
-                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant="h5">Policies</Typography>
-
-                    <TopicCard
-                        title="Taxes"
-                        description="Tax Structure: Progressive Tax"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Tariffs"
-                        description="Current rate on imports: 5%"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Subsidies"
-                        description="Current Goods Subsidized: Electric cars, food stamps"
-                        onEdit={handleOpenModal}
-                    /> 
-                </Grid>
+      {/* Environmental */}
+      <Accordion defaultExpanded>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6">Environmental Parameters</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                label="Max Simulation Length"
+                type="number"
+                fullWidth
+                value={params.maxSimulationLength}
+                onChange={handleChange("maxSimulationLength")}
+              />
             </Grid>
+            
+            <Grid item xs={6}>
+              <TextField
+                label="National Inflation Rate (%)"
+                type="number"
+                fullWidth
+                value={params.inflationRate}
+                onChange={handleChange("inflationRate")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Rate of Price Increases (%)"
+                type="number"
+                fullWidth
+                value={params.priceIncreaseRate}
+                onChange={handleChange("priceIncreaseRate")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={params.randomEvents}
+                    onChange={handleChange("randomEvents")}
+                  />
+                }
+                label="Random Events"
+              />
+            </Grid>
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
 
+      {/* Demographic */}
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6">Demographic Parameters</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                label="Mean Income ($)"
+                type="number"
+                fullWidth
+                value={params.meanIncome}
+                onChange={handleChange("meanIncome")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Income Std. Deviation ($)"
+                type="number"
+                fullWidth
+                value={params.sdIncome}
+                onChange={handleChange("sdIncome")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Population Distribution (%)"
+                type="number"
+                fullWidth
+                value={params.populationDistribution}
+                onChange={handleChange("populationDistribution")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Spending Behavior (% Income)"
+                type="number"
+                fullWidth
+                value={params.spendingBehavior}
+                onChange={handleChange("spendingBehavior")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Mean Savings ($)"
+                type="number"
+                fullWidth
+                value={params.meanSavings}
+                onChange={handleChange("meanSavings")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Savings Std. Deviation ($)"
+                type="number"
+                fullWidth
+                value={params.sdSavings}
+                onChange={handleChange("sdSavings")}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Starting Unemployment Rate (%)"
+                type="number"
+                fullWidth
+                value={params.unemploymentRate}
+                onChange={handleChange("unemploymentRate")}
+              />
+            </Grid>
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
 
-            {/* Modal (popup) for ediiting simulation configuration by topic. */}
-            <Modal open={isModalOpen} onClose={handleCloseModal} aria-labelledby="modal-title">
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 400,
-                    bgcolor: 'background.paper',
-                    border: '2px solid #000',
-                    boxShadow: 24,
-                    p: 4,
-                }}>
-                    <Typography id="modal-title" variant="h6" component="h2" >Editing {editingTopic}</Typography>
+      {/* Industry */}
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6">Industry Parameters</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                select
+                label="Industry Type"
+                fullWidth
+                value={params.industryType}
+                onChange={handleChange("industryType")}
+              >
+                <MenuItem value="Manufacturing">Manufacturing</MenuItem>
+                <MenuItem value="Technology">Technology</MenuItem>
+                <MenuItem value="Retail">Retail</MenuItem>
+                <MenuItem value="Agriculture">Agriculture</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Starting Inventory"
+                type="number"
+                fullWidth
+                value={params.startingInventory}
+                onChange={handleChange("startingInventory")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Starting Price ($)"
+                type="number"
+                fullWidth
+                value={params.startingPrice}
+                onChange={handleChange("startingPrice")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Industry Savings ($)"
+                type="number"
+                fullWidth
+                value={params.industrySavings}
+                onChange={handleChange("industrySavings")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Number of Employees"
+                type="number"
+                fullWidth
+                value={params.employees}
+                onChange={handleChange("employees")}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Offered Wage ($/hr)"
+                type="number"
+                fullWidth
+                value={params.offeredWage}
+                onChange={handleChange("offeredWage")}
+              />
+            </Grid>
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
 
-                    {renderModalContent(editingTopic)}
+      {/* Policy */}
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6">Government Policy Parameters</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                label="Sales Tax (%)"
+                type="number"
+                fullWidth
+                value={params.salesTax}
+                onChange={handleChange("salesTax")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Corporate Income Tax (%)"
+                type="number"
+                fullWidth
+                value={params.corporateTax}
+                onChange={handleChange("corporateTax")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Personal Income Tax (%)"
+                type="number"
+                fullWidth
+                value={params.personalIncomeTax}
+                onChange={handleChange("personalIncomeTax")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Property Tax ($)"
+                type="number"
+                fullWidth
+                value={params.propertyTax}
+                onChange={handleChange("propertyTax")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Tariffs (%)"
+                type="number"
+                fullWidth
+                value={params.tariffs}
+                onChange={handleChange("tariffs")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Subsidies ($)"
+                type="number"
+                fullWidth
+                value={params.subsidies}
+                onChange={handleChange("subsidies")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Rent Cap ($)"
+                type="number"
+                fullWidth
+                value={params.rentCap}
+                onChange={handleChange("rentCap")}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Minimum Wage ($/hr)"
+                type="number"
+                fullWidth
+                value={params.minimumWage}
+                onChange={handleChange("minimumWage")}
+              />
+            </Grid>
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
 
-                    <Button onClick={handleCloseModal} sx={{ mt: 2 }}>Save and Close</Button>
-                </Box>
-            </Modal>
-
-
-            <Button 
-                variant="contained" 
-                color="primary" sx={{ mt: 4 }} 
-                onClick={handleBeginClick}
-            >
-                Begin Simulation
-            </Button>
-        </Box>
-    );
+      {/* Begin Simulation Button */}
+      <div style={{ marginTop: "2rem" }}>
+        <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handleBegin}
+            sx={{ mt: 3, borderRadius: 2 }}
+          >
+            Begin Simulation
+          </Button>
+      </div>
+    </div>
+  );
 }
-
-const renderModalContent = (topic) => {
-    switch (topic) {
-        case 'Upper Class':
-        case 'Middle Class':
-        case 'Lower Class':
-            return (
-                <Box>
-                    <Typography >Adjust Demographics:</Typography>
-                    {/* Add sliders and input fields for demographics here */}
-                </Box>
-            );
-        case 'Utilities':
-        case 'Housing':
-        case 'Entertainment':
-        case 'Groceries':
-        case 'Luxury Goods':
-        case 'Gas':
-        case 'Taxes':
-        case 'Tariffs':
-        case 'Subsidies':
-        default:
-            return <Typography>No settings available for this topic.</Typography>;
-    }
-};
-
-export default SetupPage;
