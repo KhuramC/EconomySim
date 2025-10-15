@@ -9,7 +9,7 @@ import Overview from "./overview.jsx";
 import Industries from "./industries.jsx";
 import Policies from "./policies.jsx";
 import Demographics from "./demographics.jsx";
-import Statistics from "./statistics.jsx";
+import Statistics from "./Statistics.jsx";
 
 export default function BaseSimView() {
   const basePath = "/BaseSimView";

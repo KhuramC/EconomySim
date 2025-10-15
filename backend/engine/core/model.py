@@ -6,8 +6,8 @@ from mesa.datacollection import DataCollector
 
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
-from ..types.IndustryType import IndustryType
-from ..types.Demographic import Demographic
+from ..types.industry_type import IndustryType
+from ..types.demographic import Demographic
 
 
 taxes_schema = {
@@ -38,7 +38,7 @@ class EconomyModel(Model):
     # Changeable by the user at any time
 
     tax_rates: dict[str, float | dict[IndustryType, float]]
-    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema.j"""
+    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema."""
 
     minimum_wage: float
     """The minimum wage an industry can give to employees."""
@@ -141,11 +141,19 @@ class EconomyModel(Model):
             )
         )
 
+    def inflation(self):
+        # TODO: implement inflation logic.
+        # could have prices go up by inflation percentage and current_money go down by the same percentage
+        pass
+
     def step(self):
         """
         Advance the simulation by one week.
         """
         self.week += 1  # new week
+
+        # TODO: implement inflation logic
+        self.inflation()
 
         # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]
@@ -206,7 +214,7 @@ class EconomyModel(Model):
         or the average per step(weekly) income per person in the simulation.
 
         Returns:
-            average_income(float): The average income per person in the simulation.
+            average_income(float): The average income per person(capita) in the simulation.
         """
         peopleAgents = self.agents_by_type[PersonAgent]
         total = len(peopleAgents)
