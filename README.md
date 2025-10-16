@@ -12,6 +12,7 @@ Although it does not need to be used, it is highly recommended, as issues could 
 
     1. If in Windows, clone the repo in WSL.
 
+1.  Ensure that the ssh agent is running (so one can make commits in the dev container).
 1.  Ensure the docker engine exists, like by installing [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 1.  Install the dev container extension in VSCode.
 1.  Open the VSCode Command Pallete(Ctrl+Shift+P) to open the folder in the container.
@@ -20,4 +21,3 @@ Although it does not need to be used, it is highly recommended, as issues could 
     ![image](./pictures/folderToOpenDevContainerIn.png)
 1.  The container will take some time to build for the first time, but it should build just fine.
 1.  Everything necessary should be already within the dev container to start developing either the frontend or backend.
-
