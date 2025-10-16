@@ -9,7 +9,7 @@ on:
 jobs:
   backend_tests:
     runs-on: ubuntu-latest
-    container: python:3.11 # same as devcontainer
+    container: python:3.11 # same as dev container
 
     steps:
       - name: Checkout repository
