@@ -13,11 +13,11 @@ import {
   Grid,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useNavigate } from "react-router-dom";  
+import { useNavigate } from "react-router-dom";
+import { IndustryType } from "../../types/IndustryType.ts";
 
 export default function SetupPage() {
-
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
   const [params, setParams] = useState({
     // Environmental
     maxSimulationLength: 100,
@@ -32,10 +32,10 @@ export default function SetupPage() {
     spendingBehavior: 70,
     meanSavings: 10000,
     sdSavings: 5000,
-    unemploymentRate: .05,
+    unemploymentRate: 0.05,
 
     // Industry
-    industryType: "Manufacturing",
+    industryType: Object.values(IndustryType)[0], // Default to first IndustryType,
     startingInventory: 1000,
     startingPrice: 10,
     industrySavings: 50000,
@@ -97,7 +97,7 @@ export default function SetupPage() {
                 onChange={handleChange("maxSimulationLength")}
               />
             </Grid>
-            
+
             <Grid item xs={6}>
               <TextField
                 label="National Inflation Rate (%)"
@@ -220,10 +220,12 @@ export default function SetupPage() {
                 value={params.industryType}
                 onChange={handleChange("industryType")}
               >
-                <MenuItem value="Manufacturing">Manufacturing</MenuItem>
-                <MenuItem value="Technology">Technology</MenuItem>
-                <MenuItem value="Retail">Retail</MenuItem>
-                <MenuItem value="Agriculture">Agriculture</MenuItem>
+                {Object.entries(IndustryType).map(([key, value]) => (
+                  // 3. Create a MenuItem for each IndustryType
+                  <MenuItem key={value} value={value}>
+                    <span style={{ textTransform: "capitalize" }}>{value}</span>
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
             <Grid item xs={6}>
@@ -361,14 +363,14 @@ export default function SetupPage() {
       {/* Begin Simulation Button */}
       <div style={{ marginTop: "2rem" }}>
         <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            onClick={handleBegin}
-            sx={{ mt: 3, borderRadius: 2 }}
-          >
-            Begin Simulation
-          </Button>
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={handleBegin}
+          sx={{ mt: 3, borderRadius: 2 }}
+        >
+          Begin Simulation
+        </Button>
       </div>
     </div>
   );

@@ -10,6 +10,6 @@ class IndustryType(StrEnum):
     UTILITIES = "utilities"
     AUTOMOBILES = "automobiles"
     HOUSING = "housing"
-    HOUSEHOLD_GOODS = "household_goods"
+    HOUSEHOLD_GOODS = "household goods"
     ENTERTAINMENT = "entertainment"
     LUXURY = "luxury"
