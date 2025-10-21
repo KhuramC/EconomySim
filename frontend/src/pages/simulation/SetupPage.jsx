@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Accordion,
   AccordionSummary,
@@ -8,6 +8,7 @@ import {
   Switch,
   FormControlLabel,
   Slider,
+  Alert,
   Button,
   MenuItem,
   Grid,
@@ -17,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 
+//Function to generate default parameters for one demographic
 const getDefaultDemographicParams = () => ({
   meanIncome: 50000,
   sdIncome: 15000,
@@ -75,6 +77,15 @@ export default function SetupPage() {
   const [selectedIndustry, setSelectedIndustry] = useState(
     Object.values(IndustryType)[0]
   );
+
+  const proportionSum = useMemo(() => {
+    return Object.values(params.demoParams).reduce((sum, demoData) => {
+      // Ensure proportion is treated as a number, default to 0 if invalid
+      return sum + demoData.proportion;
+    }, 0);
+  }, [params.demoParams]); // Recalculate only when demoParams changes
+
+  const isProportionSumValid = proportionSum === 100;
 
   const handleChange = (key) => (event) => {
     const value =
@@ -253,6 +264,17 @@ export default function SetupPage() {
                   selectedDemographic,
                   "proportion"
                 )}
+                error={
+                  !isProportionSumValid &&
+                  params.demoParams[selectedDemographic]?.proportion !== ""
+                }
+                slotProps={{
+                  input: {
+                    min: 0,
+                    max: 100,
+                    step: 1,
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={6}>
@@ -475,15 +497,24 @@ export default function SetupPage() {
 
       {/* Begin Simulation Button */}
       <div style={{ marginTop: "2rem" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={handleBegin}
-          sx={{ mt: 3, borderRadius: 2 }}
-        >
-          Begin Simulation
-        </Button>
+        {isProportionSumValid ? (
+          // Render the button if the sum is valid
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handleBegin}
+            sx={{ mt: 3, borderRadius: 2 }}
+          >
+            Begin Simulation
+          </Button>
+        ) : (
+          // Render an error message if the proprtion sum is invalid
+          <Alert severity="error" sx={{ mt: 3 }}> {/* Use Alert with error severity */}
+            Demographic proportions must add up to 100%. Current sum: {proportionSum.toFixed(1)}%
+            {' (' + (100 - proportionSum).toFixed(1)}% remaining).
+          </Alert>
+        )}
       </div>
     </div>
   );
