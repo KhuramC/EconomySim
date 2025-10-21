@@ -1,5 +1,6 @@
 import statistics
 import random
+import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
 from mesa.datacollection import DataCollector
@@ -106,7 +107,6 @@ class EconomyModel(Model):
             starting_price=10.0,
         )
 
-
     def validate_schema(
         self, data: dict, schema: dict = policies_schema, path="policies"
     ):
@@ -129,23 +129,90 @@ class EconomyModel(Model):
             if isinstance(subschema, dict):
                 self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
 
+    def generate_lognormal(self, log_mean: float, log_std: float, size: int):
+        """
+        Generates n observations from a lognormal distribution.
+
+        Args:
+            log_mean (float): The desired mean of the lognormal distribution.
+            log_std (float): The desired standard deviation of the lognormal distribution.
+            size (int): The number of observations to generate (n).
+
+        Returns:
+            np.ndarray: An array of random samples.
+        """
+        # Convert to the parameters of the underlying normal distribution
+        mu_underlying = np.log(log_mean**2 / np.sqrt(log_std**2 + log_mean**2))
+        sigma_underlying = np.sqrt(np.log(1 + (log_std**2 / log_mean**2)))
+
+        # Generate the samples
+        return np.random.lognormal(
+            mean=mu_underlying, sigma=sigma_underlying, size=size
+        )
+
     def setup_person_agents(
         self,
-        num_people: int,
+        total_people: int,
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
-    ):
-        # TODO: need to create with income based on demographics
-        incomes = [random.uniform(0, 100) for _ in range(num_people)]
-        PersonAgent.create_agents(
-            model=self,
-            n=num_people,
-            demographic=Demographic.MIDDLE_CLASS,
-            income=incomes,
-        )
+    ) -> None:
+        """
+        Creates the PersonAgents based on the demographics dictionary.
 
-        # TODO: set unemployment based on starting_unemployment_rate per demographic
+        Args:
+            total_people (int): the total number of PersonAgents to create.
+            demographics (dict): the information about each demographics to create.
+
+        Raises:
+            ValueError: if the demographics dictionary is invalid.
+        """
+        # do same thing for each demographic
+        for demographic, demo_info in demographics.items():
+
+            proportion = demo_info.get("proportion", 0)
+            unemployment_rate = demo_info.get("unemployment_rate", 0)
+            # TODO: set unemployment based on starting_unemployment_rate per demographic
+            # actually do something with unemployment rate
+            spending_behavior_info = demo_info.get("spending_behavior", {})
+            # TODO: acutally use spending behavior when creating agents
+            income_info = demo_info.get("income", {})
+            current_money_info = demo_info.get("current_money", {})
+
+            # param checking
+            if (
+                isinstance(proportion, float)
+                and proportion < 1
+                and proportion > 0
+                and isinstance(income_info, dict)
+                and isinstance(current_money_info, dict)
+            ):
+                num_demo_people = round(int(proportion * total_people))
+
+                # uses lognormal distribution; sd represents right skew
+                incomes = self.generate_lognormal(
+                    log_mean=income_info.get("mean", 0),
+                    log_std=income_info.get("sd", 0),
+                    size=num_demo_people,
+                )
+                starting_moneys = self.generate_lognormal(
+                    log_mean=current_money_info.get("mean", 0),
+                    log_std=current_money_info.get("sd", 0),
+                    size=num_demo_people,
+                )
+
+                PersonAgent.create_agents(
+                    model=self,
+                    n=num_demo_people,
+                    demographic=demographic,
+                    income=incomes,
+                    current_money=starting_moneys,
+                )
+
+            else:
+                raise ValueError(
+                    f"Invalid proportion for demographic {demographic}: {proportion}"
+                )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """
