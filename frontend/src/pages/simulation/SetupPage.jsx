@@ -14,7 +14,18 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";
+import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
+
+const getDefaultDemographicParams = () => ({
+  meanIncome: 50000,
+  sdIncome: 15000,
+  proportion: 33,
+  spendingBehavior: 70,
+  meanSavings: 10000,
+  sdSavings: 5000,
+  unemploymentRate: 0.05,
+});
 
 //Function to generate default parameters for one industry
 const getDefaultIndustryParams = () => ({
@@ -34,16 +45,13 @@ export default function SetupPage() {
     inflationRate: 2.0,
     priceIncreaseRate: 1.5,
 
-    // Demographic
-    meanIncome: 50000,
-    sdIncome: 15000,
-    populationDistribution: 100,
-    spendingBehavior: 70,
-    meanSavings: 10000,
-    sdSavings: 5000,
-    unemploymentRate: 0.05,
+    demoParams: Object.fromEntries(
+      Object.values(Demographic).map((value) => [
+        value,
+        getDefaultDemographicParams(),
+      ])
+    ),
 
-    // Industry
     industryParams: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
@@ -61,6 +69,9 @@ export default function SetupPage() {
     rentCap: 2000,
     minimumWage: 10,
   });
+  const [selectedDemographic, setSelectedDemographic] = useState(
+    Object.values(Demographic)[0]
+  );
   const [selectedIndustry, setSelectedIndustry] = useState(
     Object.values(IndustryType)[0]
   );
@@ -73,7 +84,24 @@ export default function SetupPage() {
     setParams((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Industry-specific handler (no changes needed)
+  // Demographic-specific handler
+  const handleDemographicChange = (demographicValue, prop) => (event) => {
+    const { value } = event.target;
+    setParams((prevParams) => ({
+      ...prevParams,
+      demoParams: {
+        ...prevParams.demoParams,
+        [demographicValue]: {
+          ...prevParams.demoParams[demographicValue],
+          // Convert numbers, handle percentages/rates appropriately
+          [prop]:
+            event.target.type === "number" ? parseFloat(value) || 0 : value,
+        },
+      },
+    }));
+  };
+
+  // Industry-specific handler
   const handleIndustryChange = (industryValue, prop) => (event) => {
     const { value } = event.target;
     setParams((prevParams) => ({
@@ -89,7 +117,11 @@ export default function SetupPage() {
     }));
   };
 
-  // Handler for the industry selector dropdown (no changes needed)
+  // Handler for demographic selector
+  const handleSelectedDemographicChange = (event) => {
+    setSelectedDemographic(event.target.value);
+  };
+  // Handler for industry selector dropdown
   const handleSelectedIndustryChange = (event) => {
     setSelectedIndustry(event.target.value);
   };
@@ -171,13 +203,32 @@ export default function SetupPage() {
         </AccordionSummary>
         <AccordionDetails>
           <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                select
+                label="Demographic"
+                fullWidth
+                value={selectedDemographic}
+                onChange={handleSelectedDemographicChange}
+              >
+                {Object.entries(Demographic).map(([key, value]) => (
+                  // 3. Create a MenuItem for each Demographic
+                  <MenuItem key={value} value={value}>
+                    <span style={{ textTransform: "capitalize" }}>{value}</span>
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
             <Grid item xs={6}>
               <TextField
-                label="Mean Income ($)"
+                label="Mean Income ($/week)"
                 type="number"
                 fullWidth
-                value={params.meanIncome}
-                onChange={handleChange("meanIncome")}
+                value={params.demoParams[selectedDemographic].meanIncome}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "meanIncome"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -185,8 +236,11 @@ export default function SetupPage() {
                 label="Income Std. Deviation ($)"
                 type="number"
                 fullWidth
-                value={params.sdIncome}
-                onChange={handleChange("sdIncome")}
+                value={params.demoParams[selectedDemographic].sdIncome}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "sdIncome"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -194,8 +248,11 @@ export default function SetupPage() {
                 label="Population Distribution (%)"
                 type="number"
                 fullWidth
-                value={params.populationDistribution}
-                onChange={handleChange("populationDistribution")}
+                value={params.demoParams[selectedDemographic].proportion}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "proportion"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -203,8 +260,11 @@ export default function SetupPage() {
                 label="Spending Behavior (% Income)"
                 type="number"
                 fullWidth
-                value={params.spendingBehavior}
-                onChange={handleChange("spendingBehavior")}
+                value={params.demoParams[selectedDemographic].spendingBehavior}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "spendingBehavior"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -212,8 +272,11 @@ export default function SetupPage() {
                 label="Mean Savings ($)"
                 type="number"
                 fullWidth
-                value={params.meanSavings}
-                onChange={handleChange("meanSavings")}
+                value={params.demoParams[selectedDemographic].meanSavings}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "meanSavings"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -221,8 +284,11 @@ export default function SetupPage() {
                 label="Savings Std. Deviation ($)"
                 type="number"
                 fullWidth
-                value={params.sdSavings}
-                onChange={handleChange("sdSavings")}
+                value={params.demoParams[selectedDemographic].sdSavings}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "sdSavings"
+                )}
               />
             </Grid>
             <Grid item xs={12}>
@@ -230,8 +296,11 @@ export default function SetupPage() {
                 label="Starting Unemployment Rate (%)"
                 type="number"
                 fullWidth
-                value={params.unemploymentRate}
-                onChange={handleChange("unemploymentRate")}
+                value={params.demoParams[selectedDemographic].unemploymentRate}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "unemploymentRate"
+                )}
               />
             </Grid>
           </Grid>
