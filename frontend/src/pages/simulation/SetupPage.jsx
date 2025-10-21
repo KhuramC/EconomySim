@@ -14,7 +14,16 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";
-import { IndustryType } from "../../types/IndustryType.ts";
+import { IndustryType } from "../../types/IndustryType.js";
+
+//Function to generate default parameters for one industry
+const getDefaultIndustryParams = () => ({
+  startingInventory: 1000,
+  startingPrice: 10,
+  industrySavings: 50000,
+  employees: 0,
+  offeredWage: 7.25,
+});
 
 export default function SetupPage() {
   const navigate = useNavigate();
@@ -35,12 +44,12 @@ export default function SetupPage() {
     unemploymentRate: 0.05,
 
     // Industry
-    industryType: Object.values(IndustryType)[0], // Default to first IndustryType,
-    startingInventory: 1000,
-    startingPrice: 10,
-    industrySavings: 50000,
-    employees: 50,
-    offeredWage: 15,
+    industryParams: Object.fromEntries(
+      Object.values(IndustryType).map((value) => [
+        value,
+        getDefaultIndustryParams(),
+      ])
+    ),
 
     // Government Policy
     salesTax: 7,
@@ -52,6 +61,9 @@ export default function SetupPage() {
     rentCap: 2000,
     minimumWage: 10,
   });
+  const [selectedIndustry, setSelectedIndustry] = useState(
+    Object.values(IndustryType)[0]
+  );
 
   const handleChange = (key) => (event) => {
     const value =
@@ -59,6 +71,27 @@ export default function SetupPage() {
         ? event.target.checked
         : event.target.value;
     setParams((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Industry-specific handler (no changes needed)
+  const handleIndustryChange = (industryValue, prop) => (event) => {
+    const { value } = event.target;
+    setParams((prevParams) => ({
+      ...prevParams,
+      industryParams: {
+        ...prevParams.industryParams,
+        [industryValue]: {
+          ...prevParams.industryParams[industryValue],
+          [prop]:
+            event.target.type === "number" ? parseFloat(value) || 0 : value,
+        },
+      },
+    }));
+  };
+
+  // Handler for the industry selector dropdown (no changes needed)
+  const handleSelectedIndustryChange = (event) => {
+    setSelectedIndustry(event.target.value);
   };
 
   const handleSliderChange = (key) => (_, value) => {
@@ -215,10 +248,10 @@ export default function SetupPage() {
             <Grid item xs={12}>
               <TextField
                 select
-                label="Industry Type"
+                label="Industry"
                 fullWidth
-                value={params.industryType}
-                onChange={handleChange("industryType")}
+                value={selectedIndustry}
+                onChange={handleSelectedIndustryChange}
               >
                 {Object.entries(IndustryType).map(([key, value]) => (
                   // 3. Create a MenuItem for each IndustryType
@@ -233,8 +266,13 @@ export default function SetupPage() {
                 label="Starting Inventory"
                 type="number"
                 fullWidth
-                value={params.startingInventory}
-                onChange={handleChange("startingInventory")}
+                value={
+                  params.industryParams[selectedIndustry].startingInventory
+                }
+                onChange={handleIndustryChange(
+                  selectedIndustry,
+                  "startingInventory"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -242,8 +280,11 @@ export default function SetupPage() {
                 label="Starting Price ($)"
                 type="number"
                 fullWidth
-                value={params.startingPrice}
-                onChange={handleChange("startingPrice")}
+                value={params.industryParams[selectedIndustry].startingPrice}
+                onChange={handleIndustryChange(
+                  selectedIndustry,
+                  "startingPrice"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -251,8 +292,11 @@ export default function SetupPage() {
                 label="Industry Savings ($)"
                 type="number"
                 fullWidth
-                value={params.industrySavings}
-                onChange={handleChange("industrySavings")}
+                value={params.industryParams[selectedIndustry].industrySavings}
+                onChange={handleIndustryChange(
+                  selectedIndustry,
+                  "industrySavings"
+                )}
               />
             </Grid>
             <Grid item xs={6}>
@@ -260,8 +304,8 @@ export default function SetupPage() {
                 label="Number of Employees"
                 type="number"
                 fullWidth
-                value={params.employees}
-                onChange={handleChange("employees")}
+                value={params.industryParams[selectedIndustry].employees}
+                onChange={handleIndustryChange(selectedIndustry, "employees")}
               />
             </Grid>
             <Grid item xs={12}>
@@ -269,8 +313,8 @@ export default function SetupPage() {
                 label="Offered Wage ($/hr)"
                 type="number"
                 fullWidth
-                value={params.offeredWage}
-                onChange={handleChange("offeredWage")}
+                value={params.industryParams[selectedIndustry].offeredWage}
+                onChange={handleIndustryChange(selectedIndustry, "offeredWage")}
               />
             </Grid>
           </Grid>
