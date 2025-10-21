@@ -129,6 +129,12 @@ class EconomyModel(Model):
             if isinstance(subschema, dict):
                 self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
 
+    def num_prop(self, ratio, N):
+        """Calculate numbers of total N in proportion to ratio"""
+        ratio = np.asarray(ratio)
+        p = np.cumsum(np.insert(ratio.ravel(), 0, 0))  # cumulative proportion
+        return np.diff(np.round(N / p[-1] * p).astype(int)).reshape(ratio.shape)
+
     def generate_lognormal(self, log_mean: float, log_std: float, size: int):
         """
         Generates n observations from a lognormal distribution.
@@ -168,9 +174,22 @@ class EconomyModel(Model):
             ValueError: if the demographics dictionary is invalid.
         """
         # do same thing for each demographic
+
+        # get number of people per demographic
+        demo_people = self.num_prop(
+            [
+                demographics[demographic]["proportion"] * 100
+                for demographic in demographics.keys()
+            ],
+            total_people,
+        )
+        demo_people = {
+            demographic: demo_people[i]
+            for i, demographic in enumerate(demographics.keys())
+        }
+
         for demographic, demo_info in demographics.items():
 
-            proportion = demo_info.get("proportion", 0)
             unemployment_rate = demo_info.get("unemployment_rate", 0)
             # TODO: set unemployment based on starting_unemployment_rate per demographic
             # actually do something with unemployment rate
@@ -180,14 +199,8 @@ class EconomyModel(Model):
             current_money_info = demo_info.get("current_money", {})
 
             # param checking
-            if (
-                isinstance(proportion, float)
-                and proportion < 1
-                and proportion > 0
-                and isinstance(income_info, dict)
-                and isinstance(current_money_info, dict)
-            ):
-                num_demo_people = round(int(proportion * total_people))
+            if isinstance(income_info, dict) and isinstance(current_money_info, dict):
+                num_demo_people = demo_people[demographic]
 
                 # uses lognormal distribution; sd represents right skew
                 incomes = self.generate_lognormal(
@@ -211,7 +224,7 @@ class EconomyModel(Model):
 
             else:
                 raise ValueError(
-                    f"Invalid proportion for demographic {demographic}: {proportion}"
+                    f"Income and current_money must be dictionaries at demographics[{demographic}]."
                 )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
