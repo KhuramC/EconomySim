@@ -23,7 +23,7 @@ class PersonAgent(Agent):
     """The employer of this person, or None if unemployed."""
     current_money: int
     """The total money held by this person. Negative indicates debt."""
-    # TODO: define preferences as dict. see lower TODO in demand_func
+    # TODO: define preferences/spending behavior as dict. see lower TODO in demand_func
 
     def __init__(
         self,
