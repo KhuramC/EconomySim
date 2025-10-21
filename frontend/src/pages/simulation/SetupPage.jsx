@@ -232,6 +232,41 @@ export default function SetupPage() {
             </Grid>
             <Grid item xs={6}>
               <TextField
+                label="Proportion of Population (%)"
+                type="number"
+                fullWidth
+                value={params.demoParams[selectedDemographic].proportion}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "proportion"
+                )}
+                error={
+                  !isProportionSumValid &&
+                  params.demoParams[selectedDemographic]?.proportion !== ""
+                }
+                slotProps={{
+                  input: {
+                    min: 0,
+                    max: 100,
+                    step: 1,
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Starting Unemployment Rate (%)"
+                type="number"
+                fullWidth
+                value={params.demoParams[selectedDemographic].unemploymentRate}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  "unemploymentRate"
+                )}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
                 label="Mean Income ($/week)"
                 type="number"
                 fullWidth
@@ -254,41 +289,7 @@ export default function SetupPage() {
                 )}
               />
             </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Population Distribution (%)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].proportion}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "proportion"
-                )}
-                error={
-                  !isProportionSumValid &&
-                  params.demoParams[selectedDemographic]?.proportion !== ""
-                }
-                slotProps={{
-                  input: {
-                    min: 0,
-                    max: 100,
-                    step: 1,
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Spending Behavior (% Income)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].spendingBehavior}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "spendingBehavior"
-                )}
-              />
-            </Grid>
+
             <Grid item xs={6}>
               <TextField
                 label="Mean Savings ($)"
@@ -313,15 +314,15 @@ export default function SetupPage() {
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
-                label="Starting Unemployment Rate (%)"
+                label="Spending Behavior (% Income)"
                 type="number"
                 fullWidth
-                value={params.demoParams[selectedDemographic].unemploymentRate}
+                value={params.demoParams[selectedDemographic].spendingBehavior}
                 onChange={handleDemographicChange(
                   selectedDemographic,
-                  "unemploymentRate"
+                  "spendingBehavior"
                 )}
               />
             </Grid>
@@ -510,9 +511,12 @@ export default function SetupPage() {
           </Button>
         ) : (
           // Render an error message if the proprtion sum is invalid
-          <Alert severity="error" sx={{ mt: 3 }}> {/* Use Alert with error severity */}
-            Demographic proportions must add up to 100%. Current sum: {proportionSum.toFixed(1)}%
-            {' (' + (100 - proportionSum).toFixed(1)}% remaining).
+          <Alert severity="error" sx={{ mt: 3 }}>
+            {" "}
+            {/* Use Alert with error severity */}
+            Demographic proportions must add up to 100%. Current sum:{" "}
+            {proportionSum.toFixed(1)}%{" (" + (100 - proportionSum).toFixed(1)}
+            % remaining).
           </Alert>
         )}
       </div>
