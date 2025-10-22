@@ -34,6 +34,7 @@ class PersonAgent(Agent):
         model: Model,
         demographic: Demographic,
         preferences: dict[str, float],
+        savings_rate: float = 0.10,
         sigma: float = 1,
         income: int = 0,
         employer: IndustryAgent | None = None,
@@ -49,6 +50,7 @@ class PersonAgent(Agent):
         self.current_money = current_money
         self.preferences = preferences
         self.sigma = sigma
+        self.savings_rate = savings_rate
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
@@ -91,6 +93,14 @@ class PersonAgent(Agent):
 
         return demands
 
+    def determine_budget(self):
+        """
+        Determines the agent's spending budget for the week based on their
+        income and savings rate.
+        """
+        budget = self.income * (1 - self.savings_rate)
+        return max(0, budget)  # Must be non-negative
+
     def purchase_goods(self):
         """
         The person receives their weekly income and then attempts to purchase goods
@@ -110,12 +120,9 @@ class PersonAgent(Agent):
             for industryAgent in self.model.agents_by_type[IndustryAgent]
         }  # Retrieve price data for each industry
 
-        # TODO: Implement decision for how much of weekly income/total balance to spend.
-        # For simplicity, I will assume every agent allocates ALL of their weekly income.
-
         # Calculate desired purchases
         desired_quantities = self.demand_func(
-            budget=self.income, prefs=self.preferences, prices=prices
+            budget=self.determine_budget(), prefs=self.preferences, prices=prices
         )
 
         # Attempt to purchase goods

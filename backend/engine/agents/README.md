@@ -25,7 +25,7 @@ TODO: Implement a demographic-specific value. This adds a layer of realism for e
 
 **How much of weekly income/total balance to spend?**
 
-Currently, the agent allocates all of their weekly income to purchasing goods (wow! look at that participation in the economy!).
+The agent allocates their weekly income minus their `savings_rate` to their spending budget.
 
 
 ### Shortage Handling
