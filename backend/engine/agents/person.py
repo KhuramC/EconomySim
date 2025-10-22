@@ -98,6 +98,10 @@ class PersonAgent(Agent):
         Determines the agent's spending budget for the week based on their
         income and savings rate.
         """
+        
+        # TODO: How does this savings_rate get updated?
+        # Is it based off of demographic?
+        
         budget = self.income * (1 - self.savings_rate)
         return max(0, budget)  # Must be non-negative
 

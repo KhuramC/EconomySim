@@ -109,6 +109,8 @@ class IndustryAgent(Agent):
         Args:
             quantity: The amount of goods sold.
         """
+        if quantity <= 0:
+            return
 
         if quantity > self.inventory:
             logging.error(
