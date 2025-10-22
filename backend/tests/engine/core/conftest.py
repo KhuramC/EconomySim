@@ -15,7 +15,7 @@ def model(demographics, policies) -> EconomyModel:
         EconomyModel: a created model.
     """
     model = EconomyModel(
-        num_people=100, demographics=demographics, starting_policies=policies
+        max_simulation_length=52, num_people=100, demographics=demographics, starting_policies=policies
     )
     # TODO: test demographics properly being created
 

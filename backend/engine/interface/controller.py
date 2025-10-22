@@ -38,18 +38,20 @@ class ModelController:
 
     def create_model(
         self,
+        max_simulation_length: int,
         num_people: int,
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         starting_policies: dict[str, float | dict[IndustryType, float]],
-        inflation_rate: float = 0.000001,
+        inflation_rate: float = 0.0001,
         random_events: bool = False,
     ) -> int:
         """
         Create a new EconomyModel instance and store it in the models dictionary.
 
         Args:
+            max_simulation_length (int): The maximum length of the simulation in weeks.
             num_people (int): The number of people to create in the model.
             demographics (dict): A dictionary defining the demographics of the population.
             starting_policies (dict): A dictionary of policies to apply in the model.
@@ -65,6 +67,7 @@ class ModelController:
         """
         try:
             model = EconomyModel(
+                max_simulation_length=max_simulation_length,
                 num_people=num_people,
                 demographics=demographics,
                 starting_policies=starting_policies,

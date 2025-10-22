@@ -16,7 +16,12 @@ def test_create_model(controller: ModelController, demographics, policies):
         policies (dict): a valid policies.
     """
 
-    model_id = controller.create_model(100, demographics, policies)
+    model_id = controller.create_model(
+        max_simulation_length=52,
+        num_people=100,
+        demographics=demographics,
+        starting_policies=policies,
+    )
     assert controller.models[model_id].policies == policies
     assert controller.next_id == model_id + 1
 
@@ -42,7 +47,12 @@ def test_delete_model(
         model_id (int): the id of the model to delete.
         exception: the expected exception.
     """
-    controller.create_model(100, demographics, policies)
+    controller.create_model(
+        max_simulation_length=52,
+        num_people=100,
+        demographics=demographics,
+        starting_policies=policies,
+    )
 
     with exception:
         controller.delete_model(model_id)
@@ -68,7 +78,12 @@ def test_get_policies(controller: ModelController, demographics, policies):
         policies (dict): a valid policies.
     """
 
-    model_id = controller.create_model(100, demographics, policies)
+    model_id = controller.create_model(
+        max_simulation_length=52,
+        num_people=100,
+        demographics=demographics,
+        starting_policies=policies,
+    )
     retrieved_policies = controller.get_policies(model_id)
     assert retrieved_policies == policies
 
@@ -84,7 +99,12 @@ def test_set_policies(controller: ModelController, demographics, policies):
         policies (dict): a valid policies.
     """
 
-    model_id = controller.create_model(100, demographics, policies)
+    model_id = controller.create_model(
+        max_simulation_length=52,
+        num_people=100,
+        demographics=demographics,
+        starting_policies=policies,
+    )
 
     new_policies = policies.copy()
     new_policies["corporate_income_tax"][IndustryType.AUTOMOBILES] = 0.25
@@ -120,7 +140,12 @@ def test_get_model(
         model_id (int): the id of the model to get.
         exception: the expected exception.
     """
-    controller.create_model(100, demographics, policies)
+    controller.create_model(
+        max_simulation_length=52,
+        num_people=100,
+        demographics=demographics,
+        starting_policies=policies,
+    )
     with exception:
         model = controller.get_model(model_id)
         assert model is controller.models[model_id]

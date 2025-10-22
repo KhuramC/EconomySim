@@ -18,7 +18,7 @@ def test_model_step_performance(benchmark, demographics, policies, num_agents: i
     """
 
     model = EconomyModel(
-        num_people=num_agents, demographics=demographics, starting_policies=policies
+        max_simulation_length=52, num_people=num_agents, demographics=demographics, starting_policies=policies
     )
 
     # pytest-benchmark will call model.step() many times and record the timings

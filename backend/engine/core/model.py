@@ -39,22 +39,19 @@ class EconomyModel(Model):
     The main model for the economic simulation.
 
     Attributes:
-        week (int): The current week in the simulation.
-        policies (dict): A dictionary of various tax rates in the simulation.
-        minimum_wage (float): The minimum wage an industry can offer their employees.
+        max_simulation_length (int): The maximum length of the simulation in weeks.
         inflation_rate (float): The weekly inflation rate in the simulation.
         random_events (bool): Whether random events are enabled in the simulation.
+        policies (dict): A dictionary of various tax rates in the simulation.
+        week (int): The current week in the simulation.
+
+
     """
 
-    week: int
-    """The current week in the simulation."""
-
-    # Changeable by the user at any time
-
-    policies: dict[str, float | dict[IndustryType, float]]
-    """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
-
     # Set at the start of the simulation
+
+    max_simulation_length: int
+    """The maximum length of the simulation in weeks."""
 
     inflation_rate: float
     """The weekly inflation rate in the simulation."""
@@ -62,27 +59,40 @@ class EconomyModel(Model):
     random_events: bool
     """Whether random events are enabled in the simulation."""
 
+    # Changeable by the user at any time
+
+    policies: dict[str, float | dict[IndustryType, float]]
+    """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
+
+    week: int
+    """The current week in the simulation."""
+
     def __init__(
         self,
+        max_simulation_length: int,
         num_people: int,
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         starting_policies: dict[str, float | dict[IndustryType, float]],
-        inflation_rate: float = 0.000001,
+        inflation_rate: float = 0.001,
         random_events: bool = False,
     ):
         super().__init__()
 
+        if max_simulation_length <= 0:
+            raise ValueError("Maximum simulation length must be positive.")
         if num_people <= 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
         self.validate_schema(starting_policies)
 
-        self.policies = starting_policies
+        self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
         self.random_events = random_events
+        self.policies = starting_policies
+
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
@@ -253,6 +263,8 @@ class EconomyModel(Model):
         """
         Advance the simulation by one week, causing inflation, IndustryAgents and then PersonAgents to act.
         """
+        if self.week >= self.max_simulation_length:
+            return  # do not step past maximum simulation length
         self.week = self.week + 1  # new week
 
         # TODO: implement inflation logic

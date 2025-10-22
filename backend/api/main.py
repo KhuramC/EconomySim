@@ -17,14 +17,20 @@ app = FastAPI()
 class ModelCreateRequest(BaseModel):
     """Defines the expected structure for creating a new simulation model."""
 
+    max_simulation_length: int = Field(
+        ..., ge=1, description="Maximum length of the simulation in weeks."
+    )
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
+    inflation_rate: float = Field(..., ge=0.0, description="Weekly inflation rate.")
+    random_events: bool = Field(
+        ..., description="Whether to enable random events in the simulation."
+    )
     demographics: dict[
         Demographic, dict[str, float | dict[str | IndustryType, float]]
     ] = Field(..., description="Demographic distribution for the population.")
     policies: dict[str, float | dict[IndustryType, float]] = Field(
         ..., description="Policies for the simulation."
     )
-    inflation_rate: float = Field(..., ge=0.0, description="Weekly inflation rate.")
 
 
 # API Endpoints
@@ -60,6 +66,7 @@ async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
 async def create_model(model_parameters: ModelCreateRequest) -> int:
     """
     Creates a model based on the given parameters.
+    The default status code is 201 upon success.
 
     Args:
         model_parameters (ModelCreateRequest): The parameters for the model.
@@ -73,10 +80,12 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
     """
     try:
         model_id = controller.create_model(
+            max_simulation_length=model_parameters.max_simulation_length,
             num_people=model_parameters.num_people,
+            inflation_rate=model_parameters.inflation_rate,
+            random_events=model_parameters.random_events,
             demographics=model_parameters.demographics,
             starting_policies=model_parameters.policies,
-            inflation_rate=model_parameters.inflation_rate,
         )
         return model_id
     except ValueError as e:
@@ -89,6 +98,7 @@ async def get_model_policies(
 ) -> dict[str, float | dict[IndustryType, float]]:
     """
     Returns all of the current policies associated with a model.
+    The default status code is 200 upon success.
 
     Args:
         model_id (int): the id of the model.
@@ -115,6 +125,7 @@ async def set_model_policies(
 ):
     """
     Sets all of the current policies in a model.
+    The default status code is 204 upon success.
 
     Args:
         model_id (int): the id of the model.
@@ -155,6 +166,7 @@ async def get_model_indicators(
 ) -> Response:
     """
     Retrieves the indicators from a model at the timeframe desired.
+    The default status code is 200 upon success.
 
     Args:
         model_id (int): the id of the model desired.
@@ -184,6 +196,7 @@ async def get_model_indicators(
 async def step_model(model_id: int):
     """
     Steps the simulation for a given model once.
+    The default status code is 204 upon success.
 
     Args:
         model_id (int): the model to step.
@@ -239,6 +252,7 @@ async def step_model_websocket(websocket: WebSocket, model_id: int):
 async def delete_model(model_id: int):
     """
     Deletes a model.
+    The default status code is 204 upon success.
 
     Args:
         model_id (int): the id of the model to delete.
