@@ -53,44 +53,51 @@ class PersonAgent(Agent):
         """Weekly payday for the agent based on their income."""
         self.current_money = self.current_money + self.income
 
-    def demand_func(self, preferences, prices, sigma, income):
+    def demand_func(
+        self, budget: float, prefs: dict[str, float], prices: dict[str, float]
+    ) -> dict[str, float]:
         """
-        Demand function for a product given:
+        Calculates the quantity of each good to purchase based on the CES demand function.
+
         Args:
-            preferences (_type_): A list of prefrences for each product.
-            prices (_type_): A list of prices for each product.
-            sigma (_type_): Elasticity of subsitution between products.
-            income (_type_): The total money available to spend on the products.
+            budget: The total money available to spend.
+            prefs: The preference werights for the available goods.
+            prices: The prices of the available goods.
+        Returns:
+            A dictionary mapping each good's name to the desired quantity.
         """
 
-        ## TODO: update demand func to use preferences and prices as dictionaries with keys
-        # being the industry type. Should sigma be a bigger model variable?
-        # how do we determine how much money the user uses out of the potential they have now?
-        # how do we determine what happens if they want more than is available to buy?
+        ## TODO: Should sigma be a bigger model variable?
         # see this for CES utility function: https://www.econgraphs.org/textbooks/intermediate_micro/scarcity_and_choice/preferences_and_utility/ces
 
-        numerators = [
-            (a_i**sigma) * (p_i**sigma)  # top part of formula (excluding income)
-            for a_i, p_i in zip(preferences, prices)
-        ]
-
-        denominator = (
-            (a_j**sigma) * (p_j ** (1 - sigma))  # bottom part of formula
-            for a_j, p_j in zip(preferences, prices)
+        valid_goods = [name for name in prefs if name in prices]
+        
+        denominator = sum(
+            (prefs[name] ** self.sigma) * (prices[name] ** (1 - self.sigma))
+            for name in valid_goods
         )
-
-        demands = [(num / denominator) * income for num in numerators]
+        
+        if denominator == 0:
+            return {name: 0 for name in valid_goods}
+        
+        demands = {}
+        for name in valid_goods:
+            numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
+            quantity = (numerator / denominator) * budget / prices[name] # The good's share of the budget, divided by its price
+            demands[name] = quantity
+        
         return demands
 
     def purchase_goods(self):
         """
-        How the person will try to purchase the goods available based on their preferences.
+        The person receives their weekly income and then attempts to purchase goods
+        from various industries based on their CES utility function.
         """
         self.payday()
 
         # TODO: implement CES utility function for spending behavior.
-        # a somewhat base is given with demand_func
-        # need to have solution for if they want 3 of one type of good and only 2 are available.
+        # how do we determine how much money the user uses out of the potential they have now?
+        # how do we determine what happens if they want more than is available to buy?
         pass
 
     def change_employment(self):
