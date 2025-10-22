@@ -45,7 +45,6 @@ export default function SetupPage() {
     maxSimulationLength: 100,
     randomEvents: false,
     inflationRate: 2.0,
-    priceIncreaseRate: 1.5,
 
     demoParams: Object.fromEntries(
       Object.values(Demographic).map((value) => [
@@ -166,30 +165,20 @@ export default function SetupPage() {
           <Grid container spacing={2}>
             <Grid item xs={6}>
               <TextField
-                label="Max Simulation Length"
+                label="Max Simulation Length (weeks)"
                 type="number"
                 fullWidth
                 value={params.maxSimulationLength}
                 onChange={handleChange("maxSimulationLength")}
               />
             </Grid>
-
             <Grid item xs={6}>
               <TextField
-                label="National Inflation Rate (%)"
+                label="National Inflation Rate (%/week)"
                 type="number"
                 fullWidth
                 value={params.inflationRate}
                 onChange={handleChange("inflationRate")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Rate of Price Increases (%)"
-                type="number"
-                fullWidth
-                value={params.priceIncreaseRate}
-                onChange={handleChange("priceIncreaseRate")}
               />
             </Grid>
             <Grid item xs={6}>
