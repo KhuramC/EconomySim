@@ -9,12 +9,15 @@ import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
+import { buildCreatePayload } from "../../api/payloadBuilder.js";
+import { SimulationAPI } from "../../api/SimulationAPI.js";
 
 //Function to generate default parameters for one demographic
 const getDefaultDemographicParams = () => ({
   meanIncome: 50000,
   sdIncome: 15000,
   proportion: 33,
+  // TODO: update once spending behavior is finalized in backend
   spendingBehavior: 70,
   meanSavings: 10000,
   sdSavings: 5000,
@@ -26,23 +29,22 @@ const getDefaultIndustryParams = () => ({
   startingInventory: 1000,
   startingPrice: 10,
   industrySavings: 50000,
-  employees: 0,
   offeredWage: 15,
 });
 
 export default function SetupPage() {
   const navigate = useNavigate();
 
-
+  const [backendError, setBackendError] = useState(null);
 
   const [formErrors, setFormErrors] = useState({});
 
   const [params, setParams] = useState({
     envParams: {
-    numPeople: 1000,
-    maxSimulationLength: 100,
-      inflationRate: 0.1,
-    randomEvents: false,
+      numPeople: 1000,
+      maxSimulationLength: 100,
+      inflationRate: 1.0,
+      randomEvents: false,
     },
 
     demoParams: Object.fromEntries(
@@ -61,14 +63,14 @@ export default function SetupPage() {
 
     policyParams: {
       // TODO: update to be industry and demographic specific
-    salesTax: 7,
-    corporateTax: 21,
-    personalIncomeTax: 15,
-    propertyTax: 1000,
-    tariffs: 5,
-    subsidies: 2000,
-    rentCap: 2000,
-    minimumWage: 7.25,
+      salesTax: 7,
+      corporateTax: 21,
+      personalIncomeTax: 15,
+      propertyTax: 10,
+      tariffs: 5,
+      subsidies: 20,
+      rentCap: 20,
+      minimumWage: 7.25,
     },
   });
 
@@ -79,7 +81,7 @@ export default function SetupPage() {
     // Demographic Validations //
     const proportionSum = Object.values(params.demoParams).reduce(
       (sum, demoData) => {
-      return sum + demoData.proportion;
+        return sum + demoData.proportion;
       },
       0
     );
@@ -156,9 +158,24 @@ export default function SetupPage() {
 
   // Send parameters to backend and navigate to simulation view
   const handleBegin = async () => {
-    
+    setBackendError(null);
     console.log("Simulation parameters:", params);
-    navigate("/BaseSimView");
+    const payload = buildCreatePayload(params);
+
+    console.log(
+      "Sending payload to backend:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    try {
+      const modelId = await SimulationAPI.createModel(payload);
+      console.log("Model created with ID:", modelId);
+      // Navigate to simulation view with the new model ID
+      navigate(`/BaseSimView`);
+    } catch (error) {
+      console.error("Error creating model:", error.message);
+      setBackendError(error.message);
+    }
   };
 
   return (
@@ -182,7 +199,7 @@ export default function SetupPage() {
         demoParams={params.demoParams}
         handleDemographicChange={handleDemographicChange}
         formErrors={formErrors}
-        />
+      />
 
       <IndustryAccordion
         industryParams={params.industryParams}
@@ -194,9 +211,17 @@ export default function SetupPage() {
         policyParams={params.policyParams}
         handlePolicyChange={handlePolicyChange}
         formErrors={formErrors}
-        />
+      />
 
-      
+      {backendError && (
+        <Alert
+          severity="error"
+          sx={{ mt: 3 }}
+          onClose={() => setBackendError(null)} // Allow user to dismiss
+        >
+          {backendError}
+        </Alert>
+      )}
 
       <div style={{ marginTop: "2rem" }}>
         {Object.keys(formErrors).length == 0 ? (

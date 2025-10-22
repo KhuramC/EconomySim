@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, WebSocket, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 import pandas as pd
@@ -12,6 +13,19 @@ from .city_template import CityTemplate
 # these work like singletons here
 controller = ModelController()
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",  # React dev server
+    "http://127.0.0.1:5173",  # React dev server pt.2
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allows all headers (like Content-Type)
+)
 
 
 class ModelCreateRequest(BaseModel):
