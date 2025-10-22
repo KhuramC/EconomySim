@@ -93,12 +93,50 @@ class PersonAgent(Agent):
         The person receives their weekly income and then attempts to purchase goods
         from various industries based on their CES utility function.
         """
+        
+        # Receive periodic income
         self.payday()
-
-        # TODO: implement CES utility function for spending behavior.
-        # how do we determine how much money the user uses out of the potential they have now?
-        # how do we determine what happens if they want more than is available to buy?
-        pass
+                
+        # Get industry and pricing info
+        all_industries = [] # API call to get available industries.
+        prices = {} # Retrieve price data for each industry
+        
+        # TODO: Implement decision for how much of weekly income/total balance to spend.
+        # For simplicity, I will assume every agent allocates ALL of their weekly income.
+        
+        # Calculate desired purchases
+        desired_quantities = self.demand_func(
+            budget=self.income,
+            prefs=self.preferences,
+            prices=prices
+        )
+        
+        # Attempt to purchase goods
+        for industry in all_industries:
+            if industry not in desired_quantities:
+                continue
+            
+            desired_quantity = desired_quantities[industry]
+            if desired_quantity <= 0:
+                continue
+            
+            # TODO: Shortage Handling
+            # how do we determine what happens if they want more than is available to buy?
+            # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
+            # This unspent money is effectively saved for the next cycle.
+            
+            available_quantity = industry.inventory # REPLACE this with actual API call
+            quantity_to_buy = min(desired_quantity, available_quantity)
+            
+            cost = quantity_to_buy * industry.price # REPLACE
+            
+            if self.current_money >= cost:
+                # Execute transaction
+                self.current_money -= cost
+                industry.inventory -= quantity_to_buy # REPLACE
+                logging.info(f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry}")
+            else:
+                logging.warning(f"Agent {self.unique_id} has insufficient funds for {industry}")
 
     def change_employment(self):
         """
