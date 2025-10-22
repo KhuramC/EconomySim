@@ -1,20 +1,17 @@
 import React, { useState, useMemo } from "react";
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Typography,
   TextField,
   Switch,
   FormControlLabel,
-  Slider,
   Alert,
   Button,
   MenuItem,
   Grid,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";
+
+import ParameterAccordion from "../../components/ParameterAccordion.jsx";
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 
@@ -157,333 +154,291 @@ export default function SetupPage() {
       </Typography>
 
       {/* Environmental */}
-      <Accordion defaultExpanded>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Environmental Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                label="Max Simulation Length (weeks)"
-                type="number"
-                fullWidth
-                value={params.maxSimulationLength}
-                onChange={handleChange("maxSimulationLength")}
+      <ParameterAccordion title="Environmental Parameters" defaultExpanded>
+        <Grid item xs={6}>
+          <TextField
+            label="Max Simulation Length (weeks)"
+            type="number"
+            fullWidth
+            value={params.maxSimulationLength}
+            onChange={handleChange("maxSimulationLength")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="National Inflation Rate (%/week)"
+            type="number"
+            fullWidth
+            value={params.inflationRate}
+            onChange={handleChange("inflationRate")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={params.randomEvents}
+                onChange={handleChange("randomEvents")}
               />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="National Inflation Rate (%/week)"
-                type="number"
-                fullWidth
-                value={params.inflationRate}
-                onChange={handleChange("inflationRate")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={params.randomEvents}
-                    onChange={handleChange("randomEvents")}
-                  />
-                }
-                label="Random Events"
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+            }
+            label="Random Events"
+          />
+        </Grid>
+      </ParameterAccordion>
 
       {/* Demographic */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Demographic Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                select
-                label="Demographic"
-                fullWidth
-                value={selectedDemographic}
-                onChange={handleSelectedDemographicChange}
-              >
-                {Object.entries(Demographic).map(([key, value]) => (
-                  // 3. Create a MenuItem for each Demographic
-                  <MenuItem key={value} value={value}>
-                    <span style={{ textTransform: "capitalize" }}>{value}</span>
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Proportion of Population (%)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].proportion}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "proportion"
-                )}
-                error={
-                  !isProportionSumValid &&
-                  params.demoParams[selectedDemographic]?.proportion !== ""
-                }
-                slotProps={{
-                  input: {
-                    min: 0,
-                    max: 100,
-                    step: 1,
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Starting Unemployment Rate (%)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].unemploymentRate}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "unemploymentRate"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Mean Income ($/week)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].meanIncome}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "meanIncome"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Income Std. Deviation ($)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].sdIncome}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "sdIncome"
-                )}
-              />
-            </Grid>
+      <ParameterAccordion title="Demographic Parameters">
+        <Grid item xs={12}>
+          <TextField
+            select
+            label="Demographic"
+            fullWidth
+            value={selectedDemographic}
+            onChange={handleSelectedDemographicChange}
+          >
+            {Object.entries(Demographic).map(([key, value]) => (
+              // 3. Create a MenuItem for each Demographic
+              <MenuItem key={value} value={value}>
+                <span style={{ textTransform: "capitalize" }}>{value}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Proportion of Population (%)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].proportion}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "proportion"
+            )}
+            error={
+              !isProportionSumValid &&
+              params.demoParams[selectedDemographic]?.proportion !== ""
+            }
+            slotProps={{
+              input: {
+                min: 0,
+                max: 100,
+                step: 1,
+              },
+            }}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Starting Unemployment Rate (%)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].unemploymentRate}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "unemploymentRate"
+            )}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Mean Income ($/week)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].meanIncome}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "meanIncome"
+            )}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Income Std. Deviation ($)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].sdIncome}
+            onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
+          />
+        </Grid>
 
-            <Grid item xs={6}>
-              <TextField
-                label="Mean Savings ($)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].meanSavings}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "meanSavings"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Savings Std. Deviation ($)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].sdSavings}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "sdSavings"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Spending Behavior (% Income)"
-                type="number"
-                fullWidth
-                value={params.demoParams[selectedDemographic].spendingBehavior}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  "spendingBehavior"
-                )}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+        <Grid item xs={6}>
+          <TextField
+            label="Mean Savings ($)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].meanSavings}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "meanSavings"
+            )}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Savings Std. Deviation ($)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].sdSavings}
+            onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Spending Behavior (% Income)"
+            type="number"
+            fullWidth
+            value={params.demoParams[selectedDemographic].spendingBehavior}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "spendingBehavior"
+            )}
+          />
+        </Grid>
+      </ParameterAccordion>
 
       {/* Industry */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Industry Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                select
-                label="Industry"
-                fullWidth
-                value={selectedIndustry}
-                onChange={handleSelectedIndustryChange}
-              >
-                {Object.entries(IndustryType).map(([key, value]) => (
-                  // 3. Create a MenuItem for each IndustryType
-                  <MenuItem key={value} value={value}>
-                    <span style={{ textTransform: "capitalize" }}>{value}</span>
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Starting Inventory"
-                type="number"
-                fullWidth
-                value={
-                  params.industryParams[selectedIndustry].startingInventory
-                }
-                onChange={handleIndustryChange(
-                  selectedIndustry,
-                  "startingInventory"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Starting Price ($)"
-                type="number"
-                fullWidth
-                value={params.industryParams[selectedIndustry].startingPrice}
-                onChange={handleIndustryChange(
-                  selectedIndustry,
-                  "startingPrice"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Industry Savings ($)"
-                type="number"
-                fullWidth
-                value={params.industryParams[selectedIndustry].industrySavings}
-                onChange={handleIndustryChange(
-                  selectedIndustry,
-                  "industrySavings"
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Number of Employees"
-                type="number"
-                fullWidth
-                value={params.industryParams[selectedIndustry].employees}
-                onChange={handleIndustryChange(selectedIndustry, "employees")}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Offered Wage ($/hr)"
-                type="number"
-                fullWidth
-                value={params.industryParams[selectedIndustry].offeredWage}
-                onChange={handleIndustryChange(selectedIndustry, "offeredWage")}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+      <ParameterAccordion title="Industry Parameters">
+        <Grid item xs={12}>
+          <TextField
+            select
+            label="Industry"
+            fullWidth
+            value={selectedIndustry}
+            onChange={handleSelectedIndustryChange}
+          >
+            {Object.entries(IndustryType).map(([key, value]) => (
+              // 3. Create a MenuItem for each IndustryType
+              <MenuItem key={value} value={value}>
+                <span style={{ textTransform: "capitalize" }}>{value}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Starting Inventory"
+            type="number"
+            fullWidth
+            value={params.industryParams[selectedIndustry].startingInventory}
+            onChange={handleIndustryChange(
+              selectedIndustry,
+              "startingInventory"
+            )}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Starting Price ($)"
+            type="number"
+            fullWidth
+            value={params.industryParams[selectedIndustry].startingPrice}
+            onChange={handleIndustryChange(selectedIndustry, "startingPrice")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Industry Savings ($)"
+            type="number"
+            fullWidth
+            value={params.industryParams[selectedIndustry].industrySavings}
+            onChange={handleIndustryChange(selectedIndustry, "industrySavings")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Number of Employees"
+            type="number"
+            fullWidth
+            value={params.industryParams[selectedIndustry].employees}
+            onChange={handleIndustryChange(selectedIndustry, "employees")}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Offered Wage ($/hr)"
+            type="number"
+            fullWidth
+            value={params.industryParams[selectedIndustry].offeredWage}
+            onChange={handleIndustryChange(selectedIndustry, "offeredWage")}
+          />
+        </Grid>
+      </ParameterAccordion>
 
       {/* Policy */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Government Policy Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                label="Sales Tax (%)"
-                type="number"
-                fullWidth
-                value={params.salesTax}
-                onChange={handleChange("salesTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Corporate Income Tax (%)"
-                type="number"
-                fullWidth
-                value={params.corporateTax}
-                onChange={handleChange("corporateTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Personal Income Tax (%)"
-                type="number"
-                fullWidth
-                value={params.personalIncomeTax}
-                onChange={handleChange("personalIncomeTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Property Tax ($)"
-                type="number"
-                fullWidth
-                value={params.propertyTax}
-                onChange={handleChange("propertyTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Tariffs (%)"
-                type="number"
-                fullWidth
-                value={params.tariffs}
-                onChange={handleChange("tariffs")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Subsidies ($)"
-                type="number"
-                fullWidth
-                value={params.subsidies}
-                onChange={handleChange("subsidies")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Rent Cap ($)"
-                type="number"
-                fullWidth
-                value={params.rentCap}
-                onChange={handleChange("rentCap")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Minimum Wage ($/hr)"
-                type="number"
-                fullWidth
-                value={params.minimumWage}
-                onChange={handleChange("minimumWage")}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+      <ParameterAccordion title="Starting Government Policies">
+        <Grid item xs={6}>
+          <TextField
+            label="Sales Tax (%)"
+            type="number"
+            fullWidth
+            value={params.salesTax}
+            onChange={handleChange("salesTax")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Corporate Income Tax (%)"
+            type="number"
+            fullWidth
+            value={params.corporateTax}
+            onChange={handleChange("corporateTax")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Personal Income Tax (%)"
+            type="number"
+            fullWidth
+            value={params.personalIncomeTax}
+            onChange={handleChange("personalIncomeTax")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Property Tax ($)"
+            type="number"
+            fullWidth
+            value={params.propertyTax}
+            onChange={handleChange("propertyTax")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Tariffs (%)"
+            type="number"
+            fullWidth
+            value={params.tariffs}
+            onChange={handleChange("tariffs")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Subsidies ($)"
+            type="number"
+            fullWidth
+            value={params.subsidies}
+            onChange={handleChange("subsidies")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Rent Cap ($)"
+            type="number"
+            fullWidth
+            value={params.rentCap}
+            onChange={handleChange("rentCap")}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Minimum Wage ($/hr)"
+            type="number"
+            fullWidth
+            value={params.minimumWage}
+            onChange={handleChange("minimumWage")}
+          />
+        </Grid>
+      </ParameterAccordion>
 
       {/* Begin Simulation Button */}
       <div style={{ marginTop: "2rem" }}>
