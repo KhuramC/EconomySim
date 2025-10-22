@@ -7,6 +7,7 @@ from engine.types.demographic import Demographic
 # could also make these into small_config.json, medium_config.json, large_config.json files and load them in
 _SMALL_CONFIG = {
     "num_people": 1000,
+    "inflation_rate": 0.001,
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -19,6 +20,15 @@ _SMALL_CONFIG = {
         }
         for demo in Demographic
     },
+    "industries": {
+        itype: {
+            "price": 10.0 + i * 5.0,
+            "inventory": 1000 + i * 500,
+            "money": 50000 + i * 10000,
+            "offered_wage": 15.0 + i * 2.5,
+        }
+        for i, itype in enumerate(IndustryType)
+    },
     "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
         "personal_income_tax": 1,
@@ -26,12 +36,14 @@ _SMALL_CONFIG = {
         "property_tax": 1,
         "tariffs": {itype.value: 1 for itype in IndustryType},
         "subsidies": {itype.value: 1 for itype in IndustryType},
+        "rent_cap": 0.0,
         "minimum_wage": 1,
     },
-    "inflation_rate": 0.001,
+    
 }
 _MEDIUM_CONFIG = {
     "num_people": 10000,
+    "inflation_rate": 0.001,
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -44,6 +56,15 @@ _MEDIUM_CONFIG = {
         }
         for demo in Demographic
     },
+    "industries": {
+        itype: {
+            "price": 10.0 + i * 5.0,
+            "inventory": 1000 + i * 500,
+            "money": 50000 + i * 10000,
+            "offered_wage": 15.0 + i * 2.5,
+        }
+        for i, itype in enumerate(IndustryType)
+    },
     "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
         "personal_income_tax": 1,
@@ -51,12 +72,14 @@ _MEDIUM_CONFIG = {
         "property_tax": 1,
         "tariffs": {itype.value: 1 for itype in IndustryType},
         "subsidies": {itype.value: 1 for itype in IndustryType},
+        "rent_cap": 0.0,
         "minimum_wage": 1,
     },
-    "inflation_rate": 0.001,
+    
 }
 _LARGE_CONFIG = {
     "num_people": 100000,
+    "inflation_rate": 0.001,
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -69,6 +92,15 @@ _LARGE_CONFIG = {
         }
         for demo in Demographic
     },
+    "industries": {
+        itype: {
+            "price": 10.0 + i * 5.0,
+            "inventory": 1000 + i * 500,
+            "money": 50000 + i * 10000,
+            "offered_wage": 15.0 + i * 2.5,
+        }
+        for i, itype in enumerate(IndustryType)
+    },
     "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
         "personal_income_tax": 1,
@@ -76,9 +108,10 @@ _LARGE_CONFIG = {
         "property_tax": 1,
         "tariffs": {itype.value: 1 for itype in IndustryType},
         "subsidies": {itype.value: 1 for itype in IndustryType},
+        "rent_cap": 0.0,
         "minimum_wage": 1,
     },
-    "inflation_rate": 0.001,
+    
 }
 
 

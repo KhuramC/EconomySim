@@ -42,6 +42,7 @@ VALID_CONFIG = {
         "property_tax": 0.02,
         "tariffs": {itype.value: 0.03 for itype in IndustryType},
         "subsidies": {itype.value: 0.0 for itype in IndustryType},
+        "rent_cap": 0.0,
         "minimum_wage": 15.0,
     },
 }
