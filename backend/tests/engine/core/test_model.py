@@ -31,19 +31,20 @@ def test_validate_schema(model: EconomyModel, policies, delete_values: bool, exc
     with exception:
         model.validate_schema(new_policies)
 
+
 @pytest.mark.parametrize(
     "mean, std",
     [
-        (100, 10),    # Low variance
-        (5000, 1500), # High variance
-        (800, 300)    # Medium variance
-    ]
+        (100, 10),  # Low variance
+        (5000, 1500),  # High variance
+        (800, 300),  # Medium variance
+    ],
 )
 def test_generate_lognormal_statistics(model: EconomyModel, mean, std):
     """
     Tests that the generated distribution has approximately the
     mean and standard deviation that were requested.
-    
+
     This is a stochastic test, so it uses a large sample size
     and pytest.approx for assertions.
     """
@@ -55,8 +56,14 @@ def test_generate_lognormal_statistics(model: EconomyModel, mean, std):
     assert np.mean(results) == pytest.approx(mean, rel=0.01)
     assert np.std(results) == pytest.approx(std, rel=0.01)
 
+
 @mark.xfail(reason="Function has not been implemented yet.")
 def test_setup_person_agents(model: EconomyModel):
+    assert False
+
+
+@mark.xfail(reason="Function has not been implemented yet.")
+def test_setup_industry_agents(model: EconomyModel):
     assert False
 
 

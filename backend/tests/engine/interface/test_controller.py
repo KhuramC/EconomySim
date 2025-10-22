@@ -5,7 +5,7 @@ from engine.types.industry_type import IndustryType
 from engine.interface.controller import ModelController
 
 
-def test_create_model(controller: ModelController, demographics, policies):
+def test_create_model(controller: ModelController, demographics, industries, policies):
     """
     Test for `create_model`.
     Ensures that the controller is correctly making a new model.
@@ -13,6 +13,7 @@ def test_create_model(controller: ModelController, demographics, policies):
     Args:
         controller (ModelController): the controller being used.
         demographics (dict): a valid demographics.
+        industries (dict): a valid industries.
         policies (dict): a valid policies.
     """
 
@@ -20,6 +21,7 @@ def test_create_model(controller: ModelController, demographics, policies):
         max_simulation_length=52,
         num_people=100,
         demographics=demographics,
+        industries=industries,
         starting_policies=policies,
     )
     assert controller.models[model_id].policies == policies
@@ -34,7 +36,12 @@ def test_create_model(controller: ModelController, demographics, policies):
     ],
 )
 def test_delete_model(
-    controller: ModelController, demographics, policies, model_id: int, exception
+    controller: ModelController,
+    demographics,
+    industries,
+    policies,
+    model_id: int,
+    exception,
 ):
     """
     Test for `delete_model`.
@@ -43,6 +50,7 @@ def test_delete_model(
     Args:
         controller (ModelController): the controller being used.
         demographics (dict): a valid demographics.
+        industries (dict): a valid industries.
         policies (dict): a valid policies.
         model_id (int): the id of the model to delete.
         exception: the expected exception.
@@ -51,6 +59,7 @@ def test_delete_model(
         max_simulation_length=52,
         num_people=100,
         demographics=demographics,
+        industries=industries,
         starting_policies=policies,
     )
 
@@ -67,7 +76,7 @@ def test_step_model(controller: ModelController, demographics, policies):
 # TODO: add tests for reverse stepping as well.
 
 
-def test_get_policies(controller: ModelController, demographics, policies):
+def test_get_policies(controller: ModelController, demographics, industries, policies):
     """
     Test for `get_policies`.
     Tests that one can correctly retrieve the current policies of a model.
@@ -75,6 +84,7 @@ def test_get_policies(controller: ModelController, demographics, policies):
     Args:
         controller (ModelController): the controller being used.
         demographics (dict): a valid demographics.
+        industries (dict): a valid industries.
         policies (dict): a valid policies.
     """
 
@@ -82,13 +92,14 @@ def test_get_policies(controller: ModelController, demographics, policies):
         max_simulation_length=52,
         num_people=100,
         demographics=demographics,
+        industries=industries,
         starting_policies=policies,
     )
     retrieved_policies = controller.get_policies(model_id)
     assert retrieved_policies == policies
 
 
-def test_set_policies(controller: ModelController, demographics, policies):
+def test_set_policies(controller: ModelController, demographics, industries, policies):
     """
     Test for `set_policies`.
     Tests that one can correctly set the current policies of a model.
@@ -96,6 +107,7 @@ def test_set_policies(controller: ModelController, demographics, policies):
     Args:
         controller (ModelController): the controller being used.
         demographics (dict): a valid demographics.
+        industries (dict): a valid industries.
         policies (dict): a valid policies.
     """
 
@@ -103,6 +115,7 @@ def test_set_policies(controller: ModelController, demographics, policies):
         max_simulation_length=52,
         num_people=100,
         demographics=demographics,
+        industries=industries,
         starting_policies=policies,
     )
 
@@ -127,7 +140,12 @@ def test_get_indicators(controller: ModelController, demographics, policies):
     ],
 )
 def test_get_model(
-    controller: ModelController, demographics, policies, model_id: int, exception
+    controller: ModelController,
+    demographics,
+    industries,
+    policies,
+    model_id: int,
+    exception,
 ):
     """
     Parametrized test for `get_model`.
@@ -136,6 +154,7 @@ def test_get_model(
     Args:
         controller (ModelController): the controller being used.
         demographics (dict): a valid demographics.
+        industries (dict): a valid industries.
         policies (dict): a valid policies.
         model_id (int): the id of the model to get.
         exception: the expected exception.
@@ -144,6 +163,7 @@ def test_get_model(
         max_simulation_length=52,
         num_people=100,
         demographics=demographics,
+        industries=industries,
         starting_policies=policies,
     )
     with exception:

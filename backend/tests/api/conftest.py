@@ -26,6 +26,15 @@ VALID_CONFIG = {
         }
         for i, demo in enumerate(Demographic)
     },
+    "industries": {
+        itype: {
+            "price": 10.0 + i * 5.0,
+            "inventory": 1000 + i * 500,
+            "money": 50000 + i * 10000,
+            "offered_wage": 15.0 + i * 2.5,
+        }
+        for i, itype in enumerate(IndustryType)
+    },
     "policies": {
         "corporate_income_tax": {itype.value: 0.2 for itype in IndustryType},
         "personal_income_tax": 0.15,

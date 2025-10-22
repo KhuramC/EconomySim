@@ -28,6 +28,9 @@ class ModelCreateRequest(BaseModel):
     demographics: dict[
         Demographic, dict[str, float | dict[str | IndustryType, float]]
     ] = Field(..., description="Demographic distribution for the population.")
+    industries: dict[IndustryType, dict[str, float | int]] = Field(
+        ..., description="Information about every industry."
+    )
     policies: dict[str, float | dict[IndustryType, float]] = Field(
         ..., description="Policies for the simulation."
     )
@@ -73,7 +76,7 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
 
     Raises:
         HTTPException(422): If the arguments passed in did not follow the structure of ModelCreateRequest.
-        HTTPException(404): If the demographics or policies, within the arguments were not validated.
+        HTTPException(404): If the demographics, industries, or policies within the arguments were not validated.
 
     Returns:
         model_id(int): The id associated with the created model.
@@ -85,6 +88,7 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
             inflation_rate=model_parameters.inflation_rate,
             random_events=model_parameters.random_events,
             demographics=model_parameters.demographics,
+            industries=model_parameters.industries,
             starting_policies=model_parameters.policies,
         )
         return model_id

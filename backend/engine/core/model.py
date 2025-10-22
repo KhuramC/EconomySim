@@ -22,6 +22,11 @@ demographics_schema = {
 }
 """Schema for validating the demographics dictionary."""
 
+industries_schema = {
+    itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
+    for itype in IndustryType
+}
+
 policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
     "personal_income_tax": None,
@@ -44,8 +49,6 @@ class EconomyModel(Model):
         random_events (bool): Whether random events are enabled in the simulation.
         policies (dict): A dictionary of various tax rates in the simulation.
         week (int): The current week in the simulation.
-
-
     """
 
     # Set at the start of the simulation
@@ -74,6 +77,7 @@ class EconomyModel(Model):
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
+        industries: dict[IndustryType, dict[str, float | int]],
         starting_policies: dict[str, float | dict[IndustryType, float]],
         inflation_rate: float = 0.001,
         random_events: bool = False,
@@ -84,8 +88,9 @@ class EconomyModel(Model):
             raise ValueError("Maximum simulation length must be positive.")
         if num_people <= 0:
             raise ValueError("A nonnegative amount of agents is required.")
-        # check demographics/policies has all necessary keys
+        # check demographics/industries/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
+        self.validate_schema(industries, industries_schema, path="industries")
         self.validate_schema(starting_policies)
 
         self.max_simulation_length = max_simulation_length
@@ -108,14 +113,7 @@ class EconomyModel(Model):
         )
 
         self.setup_person_agents(num_people, demographics)
-
-        # Create one instance of each industry type
-        IndustryAgent.create_agents(
-            model=self,
-            n=len(IndustryType),
-            industry_type=list(IndustryType),
-            starting_price=10.0,
-        )
+        self.setup_industry_agents(industries)
 
     def validate_schema(
         self, data: dict, schema: dict = policies_schema, path="policies"
@@ -236,6 +234,39 @@ class EconomyModel(Model):
                 raise ValueError(
                     f"Income and current_money must be dictionaries at demographics[{demographic}]."
                 )
+
+    def setup_industry_agents(
+        self,
+        industries: dict[IndustryType, dict[str, float | int]],
+    ) -> None:
+        """
+        Creates the IndustryAgents based on the industries dictionary.
+
+        Args:
+            industries (dict): the information about each industry to create.
+
+        Raises:
+            ValueError: if the industries dictionary is invalid.
+        """
+        for industry_type, industry_info in industries.items():
+            if not isinstance(industry_info, dict):
+                raise ValueError(
+                    f"Industry info must be a dictionary at industries[{industry_type}]."
+                )
+            starting_price = industry_info.get("price", 0.0)
+            starting_inventory = industry_info.get("inventory", 0)
+            starting_money = industry_info.get("money", 0.0)
+            starting_offered_wage = industry_info.get("offered_wage", 0.0)
+
+            IndustryAgent.create_agents(
+                model=self,
+                n=1,
+                industry_type=industry_type,
+                starting_price=starting_price,
+                starting_inventory=starting_inventory,
+                starting_money=starting_money,
+                starting_offered_wage=starting_offered_wage,
+            )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """

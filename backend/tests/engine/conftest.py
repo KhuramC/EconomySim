@@ -26,6 +26,17 @@ DEMOGRAPHICS = {
 }
 """A sample demographics variable that should pass a validate_schema call by an EconomyModel."""
 
+INDUSTRIES = {
+    itype: {
+        "price": 10.0 + i * 5.0,
+        "inventory": 1000 + i * 500,
+        "money": 50000 + i * 10000,
+        "offered_wage": 15.0 + i * 2.5,
+    }
+    for i, itype in enumerate(IndustryType)
+}
+"""A sample industries variable that should pass a validate_schema call by an EconomyModel."""
+
 POLICIES = {
     "corporate_income_tax": {itype.value: i for i, itype in enumerate(IndustryType)},
     "personal_income_tax": 2.0,
@@ -46,6 +57,14 @@ def demographics() -> (
     A fixture that provides a valid demographics for starting a simulation.
     """
     return DEMOGRAPHICS
+
+
+@pytest.fixture()
+def industries() -> dict[IndustryType, dict[str, float | int]]:
+    """
+    A fixture that provides a valid set of industries for starting a simulation.
+    """
+    return INDUSTRIES
 
 
 @pytest.fixture()

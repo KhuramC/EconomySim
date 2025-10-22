@@ -49,11 +49,6 @@ export default function IndustryAccordion({
         onChange={handleIndustryChange(selectedIndustry, "industrySavings")}
       />
       <ParameterNumInput
-        label="Number of Employees"
-        value={industryParams[selectedIndustry].employees}
-        onChange={handleIndustryChange(selectedIndustry, "employees")}
-      />
-      <ParameterNumInput
         label="Offered Wage ($/hr)"
         value={industryParams[selectedIndustry].offeredWage}
         onChange={handleIndustryChange(selectedIndustry, "offeredWage")}

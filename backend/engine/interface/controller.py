@@ -43,6 +43,7 @@ class ModelController:
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
+        industries: dict[IndustryType, dict[str, float | int]],
         starting_policies: dict[str, float | dict[IndustryType, float]],
         inflation_rate: float = 0.0001,
         random_events: bool = False,
@@ -55,6 +56,7 @@ class ModelController:
             num_people (int): The number of people to create in the model.
             demographics (dict): A dictionary defining the demographics of the population.
             starting_policies (dict): A dictionary of policies to apply in the model.
+            industries (dict): A dictionary defining the industries in the model.
             inflation_rate (float): The weekly inflation rate to apply in the model.
             random_events (bool): Whether to enable random events in the model.
 
@@ -68,11 +70,12 @@ class ModelController:
         try:
             model = EconomyModel(
                 max_simulation_length=max_simulation_length,
+                inflation_rate=inflation_rate,
                 num_people=num_people,
+                random_events=random_events,
                 demographics=demographics,
                 starting_policies=starting_policies,
-                inflation_rate=inflation_rate,
-                random_events=random_events,
+                industries=industries,
             )
             model_id = self.next_id
             self.models[model_id] = model
@@ -81,7 +84,7 @@ class ModelController:
             self.next_id = self.next_id + 1
             return model_id
         except ValueError as e:
-            raise ValueError(f"Demographics/policies not validated: {str(e)}")
+            raise ValueError(f"Demographics/industries/policies not validated: {str(e)}")
 
     def delete_model(self, model_id: int) -> None:
         """
