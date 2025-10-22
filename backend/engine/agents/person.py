@@ -23,12 +23,17 @@ class PersonAgent(Agent):
     """The employer of this person, or None if unemployed."""
     current_money: int
     """The total money held by this person. Negative indicates debt."""
-    # TODO: define preferences/spending behavior as dict. see lower TODO in demand_func
+    preferences: dict[str, float]
+    """Spending preferences, mapping industry name to a weight. Must sum to 1."""
+    sigma: float
+    """The elasticity of substitution for the agent's CES utility function."""
 
     def __init__(
         self,
         model: Model,
-        demographic,
+        demographic: Demographic,
+        preferences: dict[str, float],
+        sigma: float = 1,
         income: int = 0,
         employer: IndustryAgent | None = None,
         current_money: int = 0,
@@ -41,6 +46,8 @@ class PersonAgent(Agent):
         self.income = income
         self.employer = employer
         self.current_money = current_money
+        self.preferences = preferences
+        self.sigma = sigma
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
