@@ -39,6 +39,7 @@ export default function SetupPage() {
   const navigate = useNavigate();
   const [params, setParams] = useState({
     // Environmental
+    numPeople: 1000,
     maxSimulationLength: 100,
     randomEvents: false,
     inflationRate: 2.0,
@@ -67,6 +68,7 @@ export default function SetupPage() {
     rentCap: 2000,
     minimumWage: 7.25,
   });
+
   const [selectedDemographic, setSelectedDemographic] = useState(
     Object.values(Demographic)[0]
   );
@@ -80,7 +82,6 @@ export default function SetupPage() {
       return sum + demoData.proportion;
     }, 0);
   }, [params.demoParams]); // Recalculate only when demoParams changes
-
   const isProportionSumValid = proportionSum === 100;
 
   const handleChange = (key) => (event) => {
@@ -159,15 +160,16 @@ export default function SetupPage() {
           label="Max Simulation Length (weeks)"
           value={params.maxSimulationLength}
           onChange={handleChange("maxSimulationLength")}
-          min={1}
-          step={1}
+        />
+        <ParameterNumInput
+          label="Total People"
+          value={params.numPeople}
+          onChange={handleChange("numPeople")}
         />
         <ParameterNumInput
           label="National Inflation Rate (%/week)"
           value={params.inflationRate}
           onChange={handleChange("inflationRate")}
-          min={0}
-          step={0.01}
         />
 
         <FormControlLabel
@@ -200,9 +202,6 @@ export default function SetupPage() {
           label="Proportion of Population (%)"
           value={params.demoParams[selectedDemographic].proportion}
           onChange={handleDemographicChange(selectedDemographic, "proportion")}
-          min={0}
-          max={100}
-          step={1}
           error={
             !isProportionSumValid &&
             params.demoParams[selectedDemographic]?.proportion !== ""
@@ -215,33 +214,26 @@ export default function SetupPage() {
             selectedDemographic,
             "unemploymentRate"
           )}
-          min={0}
-          max={100}
-          step={0.1}
         />
         <ParameterNumInput
           label="Mean Income ($/week)"
           value={params.demoParams[selectedDemographic].meanIncome}
           onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
-          min={0}
         />
         <ParameterNumInput
           label="Income Std. Deviation ($)"
           value={params.demoParams[selectedDemographic].sdIncome}
           onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
-          min={0}
         />
         <ParameterNumInput
           label="Mean Savings ($)"
           value={params.demoParams[selectedDemographic].meanSavings}
           onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
-          min={0}
         />
         <ParameterNumInput
           label="Savings Std. Deviation ($)"
           value={params.demoParams[selectedDemographic].sdSavings}
           onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
-          min={0}
         />
         <ParameterNumInput
           label="Spending Behavior (% Income)"
@@ -250,8 +242,6 @@ export default function SetupPage() {
             selectedDemographic,
             "spendingBehavior"
           )}
-          min={0}
-          max={100}
         />
       </ParameterAccordion>
 
@@ -274,25 +264,21 @@ export default function SetupPage() {
           label="Starting Inventory"
           value={params.industryParams[selectedIndustry].startingInventory}
           onChange={handleIndustryChange(selectedIndustry, "startingInventory")}
-          min={0}
         />
         <ParameterNumInput
           label="Starting Price ($)"
           value={params.industryParams[selectedIndustry].startingPrice}
           onChange={handleIndustryChange(selectedIndustry, "startingPrice")}
-          min={1}
         />
         <ParameterNumInput
           label="Industry Savings ($)"
           value={params.industryParams[selectedIndustry].industrySavings}
           onChange={handleIndustryChange(selectedIndustry, "industrySavings")}
-          min={0}
         />
         <ParameterNumInput
           label="Number of Employees"
           value={params.industryParams[selectedIndustry].employees}
           onChange={handleIndustryChange(selectedIndustry, "employees")}
-          min={0}
         />
         <ParameterNumInput
           label="Offered Wage ($/hr)"
@@ -308,61 +294,41 @@ export default function SetupPage() {
           label="Sales Tax (%)"
           value={params.salesTax}
           onChange={handleChange("salesTax")}
-          min={0}
-          max={100}
-          step={0.1}
         />
         <ParameterNumInput
           label="Corporate Income Tax (%)"
           value={params.corporateTax}
           onChange={handleChange("corporateTax")}
-          min={0}
-          max={100}
-          step={0.1}
         />
         <ParameterNumInput
           label="Personal Income Tax (%)"
           value={params.personalIncomeTax}
           onChange={handleChange("personalIncomeTax")}
-          min={0}
-          max={100}
-          step={0.1}
         />
         <ParameterNumInput
-          label="Property Tax ($)"
+          label="Property Tax (%)"
           value={params.propertyTax}
           onChange={handleChange("propertyTax")}
-          min={0}
-          step={1}
         />
         <ParameterNumInput
           label="Tariffs (%)"
           value={params.tariffs}
           onChange={handleChange("tariffs")}
-          min={0}
-          max={100}
-          step={0.1}
         />
         <ParameterNumInput
-          label="Subsidies ($)"
+          label="Subsidies (%)"
           value={params.subsidies}
           onChange={handleChange("subsidies")}
-          min={0}
-          step={1}
         />
         <ParameterNumInput
           label="Rent Cap ($)"
           value={params.rentCap}
           onChange={handleChange("rentCap")}
-          min={0}
-          step={1}
         />
         <ParameterNumInput
           label="Minimum Wage ($/hr)"
           value={params.minimumWage}
           onChange={handleChange("minimumWage")}
-          min={0}
-          step={0.25}
         />
       </ParameterAccordion>
 

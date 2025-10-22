@@ -1,4 +1,3 @@
-import { MenuItem } from "@mui/material";
 import ParameterInput from "./ParameterInput";
 
 const ParameterMenuInput = ({
