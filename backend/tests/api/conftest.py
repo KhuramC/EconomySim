@@ -10,7 +10,10 @@ from api.main import app
 
 
 VALID_CONFIG = {
+    "max_simulation_length": 52,
     "num_people": 100,
+    "inflation_rate": 0.001,
+    "random_events": False,
     "demographics": {
         demo: {
             "income": {"mean": 300 + (i * 500), "sd": 100},
@@ -23,6 +26,15 @@ VALID_CONFIG = {
         }
         for i, demo in enumerate(Demographic)
     },
+    "industries": {
+        itype: {
+            "price": 10.0 + i * 5.0,
+            "inventory": 1000 + i * 500,
+            "money": 50000 + i * 10000,
+            "offered_wage": 15.0 + i * 2.5,
+        }
+        for i, itype in enumerate(IndustryType)
+    },
     "policies": {
         "corporate_income_tax": {itype.value: 0.2 for itype in IndustryType},
         "personal_income_tax": 0.15,
@@ -30,11 +42,11 @@ VALID_CONFIG = {
         "property_tax": 0.02,
         "tariffs": {itype.value: 0.03 for itype in IndustryType},
         "subsidies": {itype.value: 0.0 for itype in IndustryType},
+        "rent_cap": 0.0,
         "minimum_wage": 15.0,
     },
-    "inflation_rate": 0.001,
 }
-"""A payload/config that should pass a validate_schema call by an EconomyModel."""
+"""A payload/config that should pass validate_schema calls by an EconomyModel."""
 
 
 @pytest.fixture(scope="module")  # do not need a completely new client per function.

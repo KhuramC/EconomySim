@@ -1,73 +1,181 @@
-import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-  TextField,
-  Switch,
-  FormControlLabel,
-  Slider,
-  Button,
-  MenuItem,
-  Grid,
-} from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useNavigate } from "react-router-dom";  
+import { useState, useEffect } from "react";
+import { Typography, Alert, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
+import EnvironmentalAccordion from "../../components/SimSetup/EnvironmentalAccordion.jsx";
+import DemographicAccordion from "../../components/SimSetup/DemographicAccordion.jsx";
+import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
+import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
+
+import { Demographic } from "../../types/Demographic.js";
+import { IndustryType } from "../../types/IndustryType.js";
+import { buildCreatePayload } from "../../api/payloadBuilder.js";
+import { SimulationAPI } from "../../api/SimulationAPI.js";
+
+//Function to generate default parameters for one demographic
+const getDefaultDemographicParams = () => ({
+  meanIncome: 50000,
+  sdIncome: 15000,
+  proportion: 33,
+  // TODO: update once spending behavior is finalized in backend
+  spendingBehavior: 70,
+  meanSavings: 10000,
+  sdSavings: 5000,
+  unemploymentRate: 0.05,
+});
+
+//Function to generate default parameters for one industry
+const getDefaultIndustryParams = () => ({
+  startingInventory: 1000,
+  startingPrice: 10,
+  industrySavings: 50000,
+  offeredWage: 15,
+});
 
 export default function SetupPage() {
+  const navigate = useNavigate();
 
-  const navigate = useNavigate();  
+  const [backendError, setBackendError] = useState(null);
+
+  const [formErrors, setFormErrors] = useState({});
+
   const [params, setParams] = useState({
-    // Environmental
-    maxSimulationLength: 100,
-    randomEvents: false,
-    inflationRate: 2.0,
-    priceIncreaseRate: 1.5,
+    envParams: {
+      numPeople: 1000,
+      maxSimulationLength: 100,
+      inflationRate: 1.0,
+      randomEvents: false,
+    },
 
-    // Demographic
-    meanIncome: 50000,
-    sdIncome: 15000,
-    populationDistribution: 100,
-    spendingBehavior: 70,
-    meanSavings: 10000,
-    sdSavings: 5000,
-    unemploymentRate: .05,
+    demoParams: Object.fromEntries(
+      Object.values(Demographic).map((value) => [
+        value,
+        getDefaultDemographicParams(),
+      ])
+    ),
 
-    // Industry
-    industryType: "Manufacturing",
-    startingInventory: 1000,
-    startingPrice: 10,
-    industrySavings: 50000,
-    employees: 50,
-    offeredWage: 15,
+    industryParams: Object.fromEntries(
+      Object.values(IndustryType).map((value) => [
+        value,
+        getDefaultIndustryParams(),
+      ])
+    ),
 
-    // Government Policy
-    salesTax: 7,
-    corporateTax: 21,
-    personalIncomeTax: 15,
-    propertyTax: 1000,
-    tariffs: 5,
-    subsidies: 2000,
-    rentCap: 2000,
-    minimumWage: 10,
+    policyParams: {
+      // TODO: update to be industry and demographic specific
+      salesTax: 7,
+      corporateTax: 21,
+      personalIncomeTax: 15,
+      propertyTax: 10,
+      tariffs: 5,
+      subsidies: 20,
+      rentCap: 20,
+      minimumWage: 7.25,
+    },
   });
 
-  const handleChange = (key) => (event) => {
+  // Validate form inputs whenever params change
+  useEffect(() => {
+    const errors = {};
+
+    // Demographic Validations //
+    const proportionSum = Object.values(params.demoParams).reduce(
+      (sum, demoData) => {
+        return sum + demoData.proportion;
+      },
+      0
+    );
+    // Clear error message when proportion sum becomes valid
+    if (proportionSum !== 100) {
+      errors.proportion = `Demographic proportions must add up to 100%. Current sum:
+            ${proportionSum.toFixed(1)}% (${(100 - proportionSum).toFixed(1)}%
+            remaining).`;
+    }
+
+    setFormErrors(errors);
+  }, [params]);
+
+  //Environmental-specific handler
+  const handleEnvChange = (key) => (event) => {
     const value =
       event.target.type === "checkbox"
         ? event.target.checked
         : event.target.value;
-    setParams((prev) => ({ ...prev, [key]: value }));
+
+    setParams((prev) => ({
+      ...prev,
+      envParams: {
+        ...prev.envParams,
+        [key]: event.target.type === "number" ? parseFloat(value) || 0 : value,
+      },
+    }));
   };
 
-  const handleSliderChange = (key) => (_, value) => {
-    setParams((prev) => ({ ...prev, [key]: value }));
+  // Demographic-specific handler
+  const handleDemographicChange = (demographicValue, prop) => (event) => {
+    const { value } = event.target;
+    setParams((prevParams) => ({
+      ...prevParams,
+      demoParams: {
+        ...prevParams.demoParams,
+        [demographicValue]: {
+          ...prevParams.demoParams[demographicValue],
+          // Convert numbers, handle percentages/rates appropriately
+          [prop]:
+            event.target.type === "number" ? parseFloat(value) || 0 : value,
+        },
+      },
+    }));
   };
 
-  const handleBegin = () => {
+  // Industry-specific handler
+  const handleIndustryChange = (industryValue, prop) => (event) => {
+    const { value } = event.target;
+    setParams((prevParams) => ({
+      ...prevParams,
+      industryParams: {
+        ...prevParams.industryParams,
+        [industryValue]: {
+          ...prevParams.industryParams[industryValue],
+          [prop]:
+            event.target.type === "number" ? parseFloat(value) || 0 : value,
+        },
+      },
+    }));
+  };
+
+  // Policy-specific handler
+  const handlePolicyChange = (key) => (event) => {
+    const { value } = event.target;
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        [key]: event.target.type === "number" ? parseFloat(value) || 0 : value,
+      },
+    }));
+  };
+
+  // Send parameters to backend and navigate to simulation view
+  const handleBegin = async () => {
+    setBackendError(null);
     console.log("Simulation parameters:", params);
-    navigate("/BaseSimView");
+    const payload = buildCreatePayload(params);
+
+    console.log(
+      "Sending payload to backend:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    try {
+      const modelId = await SimulationAPI.createModel(payload);
+      console.log("Model created with ID:", modelId);
+      // Navigate to simulation view with the new model ID
+      navigate(`/BaseSimView`, { state: { modelId: modelId } });
+    } catch (error) {
+      console.error("Error creating model:", error.message);
+      setBackendError(error.message);
+    }
   };
 
   return (
@@ -81,286 +189,44 @@ export default function SetupPage() {
         behave when the simulation begins.
       </Typography>
 
-      {/* Environmental */}
-      <Accordion defaultExpanded>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Environmental Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                label="Max Simulation Length"
-                type="number"
-                fullWidth
-                value={params.maxSimulationLength}
-                onChange={handleChange("maxSimulationLength")}
-              />
-            </Grid>
-            
-            <Grid item xs={6}>
-              <TextField
-                label="National Inflation Rate (%)"
-                type="number"
-                fullWidth
-                value={params.inflationRate}
-                onChange={handleChange("inflationRate")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Rate of Price Increases (%)"
-                type="number"
-                fullWidth
-                value={params.priceIncreaseRate}
-                onChange={handleChange("priceIncreaseRate")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={params.randomEvents}
-                    onChange={handleChange("randomEvents")}
-                  />
-                }
-                label="Random Events"
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+      <EnvironmentalAccordion
+        envParams={params.envParams}
+        handleEnvChange={handleEnvChange}
+        formErrors={formErrors}
+      />
 
-      {/* Demographic */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Demographic Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                label="Mean Income ($)"
-                type="number"
-                fullWidth
-                value={params.meanIncome}
-                onChange={handleChange("meanIncome")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Income Std. Deviation ($)"
-                type="number"
-                fullWidth
-                value={params.sdIncome}
-                onChange={handleChange("sdIncome")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Population Distribution (%)"
-                type="number"
-                fullWidth
-                value={params.populationDistribution}
-                onChange={handleChange("populationDistribution")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Spending Behavior (% Income)"
-                type="number"
-                fullWidth
-                value={params.spendingBehavior}
-                onChange={handleChange("spendingBehavior")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Mean Savings ($)"
-                type="number"
-                fullWidth
-                value={params.meanSavings}
-                onChange={handleChange("meanSavings")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Savings Std. Deviation ($)"
-                type="number"
-                fullWidth
-                value={params.sdSavings}
-                onChange={handleChange("sdSavings")}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Starting Unemployment Rate (%)"
-                type="number"
-                fullWidth
-                value={params.unemploymentRate}
-                onChange={handleChange("unemploymentRate")}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+      <DemographicAccordion
+        demoParams={params.demoParams}
+        handleDemographicChange={handleDemographicChange}
+        formErrors={formErrors}
+      />
 
-      {/* Industry */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Industry Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                select
-                label="Industry Type"
-                fullWidth
-                value={params.industryType}
-                onChange={handleChange("industryType")}
-              >
-                <MenuItem value="Manufacturing">Manufacturing</MenuItem>
-                <MenuItem value="Technology">Technology</MenuItem>
-                <MenuItem value="Retail">Retail</MenuItem>
-                <MenuItem value="Agriculture">Agriculture</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Starting Inventory"
-                type="number"
-                fullWidth
-                value={params.startingInventory}
-                onChange={handleChange("startingInventory")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Starting Price ($)"
-                type="number"
-                fullWidth
-                value={params.startingPrice}
-                onChange={handleChange("startingPrice")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Industry Savings ($)"
-                type="number"
-                fullWidth
-                value={params.industrySavings}
-                onChange={handleChange("industrySavings")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Number of Employees"
-                type="number"
-                fullWidth
-                value={params.employees}
-                onChange={handleChange("employees")}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Offered Wage ($/hr)"
-                type="number"
-                fullWidth
-                value={params.offeredWage}
-                onChange={handleChange("offeredWage")}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+      <IndustryAccordion
+        industryParams={params.industryParams}
+        handleIndustryChange={handleIndustryChange}
+        formErrors={formErrors}
+      />
 
-      {/* Policy */}
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Government Policy Parameters</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <TextField
-                label="Sales Tax (%)"
-                type="number"
-                fullWidth
-                value={params.salesTax}
-                onChange={handleChange("salesTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Corporate Income Tax (%)"
-                type="number"
-                fullWidth
-                value={params.corporateTax}
-                onChange={handleChange("corporateTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Personal Income Tax (%)"
-                type="number"
-                fullWidth
-                value={params.personalIncomeTax}
-                onChange={handleChange("personalIncomeTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Property Tax ($)"
-                type="number"
-                fullWidth
-                value={params.propertyTax}
-                onChange={handleChange("propertyTax")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Tariffs (%)"
-                type="number"
-                fullWidth
-                value={params.tariffs}
-                onChange={handleChange("tariffs")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Subsidies ($)"
-                type="number"
-                fullWidth
-                value={params.subsidies}
-                onChange={handleChange("subsidies")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Rent Cap ($)"
-                type="number"
-                fullWidth
-                value={params.rentCap}
-                onChange={handleChange("rentCap")}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Minimum Wage ($/hr)"
-                type="number"
-                fullWidth
-                value={params.minimumWage}
-                onChange={handleChange("minimumWage")}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+      <PolicyAccordion
+        policyParams={params.policyParams}
+        handlePolicyChange={handlePolicyChange}
+        formErrors={formErrors}
+      />
 
-      {/* Begin Simulation Button */}
+      {backendError && (
+        <Alert
+          severity="error"
+          sx={{ mt: 3 }}
+          onClose={() => setBackendError(null)} // Allow user to dismiss
+        >
+          {backendError}
+        </Alert>
+      )}
+
       <div style={{ marginTop: "2rem" }}>
-        <Button
+        {Object.keys(formErrors).length == 0 ? (
+          // Render the button if no form errors
+          <Button
             variant="contained"
             color="primary"
             size="large"
@@ -369,6 +235,17 @@ export default function SetupPage() {
           >
             Begin Simulation
           </Button>
+        ) : (
+          // Render form errors if present
+          <Alert severity="error" sx={{ mt: 3 }}>
+            Please fix the following issues:
+            <ul style={{ margin: "0.5rem 0 0 1rem", padding: 0 }}>
+              {Object.values(formErrors).map((errorText) => (
+                <li key={errorText}>{errorText}</li>
+              ))}
+            </ul>
+          </Alert>
+        )}
       </div>
     </div>
   );
