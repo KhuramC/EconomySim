@@ -101,3 +101,20 @@ class IndustryAgent(Agent):
         # TODO: Implement industry wage logic
 
         pass
+
+    def sell_goods(self, quantity: float):
+        """
+        Reduces the industry's inventory by the specified quantity.
+
+        Args:
+            quantity: The amount of goods sold.
+        """
+
+        if quantity > self.inventory:
+            logging.error(
+                f"Attempted to sell {quantity} but only have {self.inventory} in stock."
+            )
+            return
+
+        self.inventory -= quantity
+        self.total_money += quantity * self.price

@@ -1,6 +1,7 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
 from ..types.demographic import Demographic
+from ..types.industry_type import IndustryType
 import logging
 
 
@@ -71,21 +72,23 @@ class PersonAgent(Agent):
         # see this for CES utility function: https://www.econgraphs.org/textbooks/intermediate_micro/scarcity_and_choice/preferences_and_utility/ces
 
         valid_goods = [name for name in prefs if name in prices]
-        
+
         denominator = sum(
             (prefs[name] ** self.sigma) * (prices[name] ** (1 - self.sigma))
             for name in valid_goods
         )
-        
+
         if denominator == 0:
             return {name: 0 for name in valid_goods}
-        
+
         demands = {}
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity = (numerator / denominator) * budget / prices[name] # The good's share of the budget, divided by its price
+            quantity = (
+                (numerator / denominator) * budget / prices[name]
+            )  # The good's share of the budget, divided by its price
             demands[name] = quantity
-        
+
         return demands
 
     def purchase_goods(self):
@@ -93,50 +96,58 @@ class PersonAgent(Agent):
         The person receives their weekly income and then attempts to purchase goods
         from various industries based on their CES utility function.
         """
-        
+
         # Receive periodic income
         self.payday()
-                
+
         # Get industry and pricing info
-        all_industries = [] # API call to get available industries.
-        prices = {} # Retrieve price data for each industry
-        
+        all_industries = [
+            industryAgent.industry_type
+            for industryAgent in self.model.agents_by_type[IndustryAgent]
+        ]  # API call to get available industries.
+        prices = {
+            industryAgent.industry_type: industryAgent.price
+            for industryAgent in self.model.agents_by_type[IndustryAgent]
+        }  # Retrieve price data for each industry
+
         # TODO: Implement decision for how much of weekly income/total balance to spend.
         # For simplicity, I will assume every agent allocates ALL of their weekly income.
-        
+
         # Calculate desired purchases
         desired_quantities = self.demand_func(
-            budget=self.income,
-            prefs=self.preferences,
-            prices=prices
+            budget=self.income, prefs=self.preferences, prices=prices
         )
-        
+
         # Attempt to purchase goods
         for industry in all_industries:
             if industry not in desired_quantities:
                 continue
-            
+
             desired_quantity = desired_quantities[industry]
             if desired_quantity <= 0:
                 continue
-            
+
             # TODO: Shortage Handling
             # how do we determine what happens if they want more than is available to buy?
             # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
             # This unspent money is effectively saved for the next cycle.
-            
-            available_quantity = industry.inventory # REPLACE this with actual API call
+
+            available_quantity = industry.inventory
             quantity_to_buy = min(desired_quantity, available_quantity)
-            
-            cost = quantity_to_buy * industry.price # REPLACE
-            
+
+            cost = quantity_to_buy * industry.price
+
             if self.current_money >= cost:
                 # Execute transaction
                 self.current_money -= cost
-                industry.inventory -= quantity_to_buy # REPLACE
-                logging.info(f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry}")
+                industry.sell_goods(quantity_to_buy)
+                logging.info(
+                    f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry}"
+                )
             else:
-                logging.warning(f"Agent {self.unique_id} has insufficient funds for {industry}")
+                logging.warning(
+                    f"Agent {self.unique_id} has insufficient funds for {industry}"
+                )
 
     def change_employment(self):
         """
