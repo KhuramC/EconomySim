@@ -1,6 +1,6 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
-from ..types.demographic import Demographic
+from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
 
@@ -35,7 +35,6 @@ class PersonAgent(Agent):
         demographic: Demographic,
         preferences: dict[str, float],
         savings_rate: float = 0.10,
-        sigma: float = 1,
         income: int = 0,
         employer: IndustryAgent | None = None,
         current_money: int = 0,
@@ -49,8 +48,8 @@ class PersonAgent(Agent):
         self.employer = employer
         self.current_money = current_money
         self.preferences = preferences
-        self.sigma = sigma
         self.savings_rate = savings_rate
+        self.sigma = DEMOGRAPHIC_SIGMAS[self.demographic]
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
@@ -69,9 +68,6 @@ class PersonAgent(Agent):
         Returns:
             A dictionary mapping each good's name to the desired quantity.
         """
-
-        ## TODO: Should sigma be a bigger model variable?
-        # see this for CES utility function: https://www.econgraphs.org/textbooks/intermediate_micro/scarcity_and_choice/preferences_and_utility/ces
 
         valid_goods = [name for name in prefs if name in prices]
 
