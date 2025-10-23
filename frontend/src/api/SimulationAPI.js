@@ -110,11 +110,12 @@ export class SimulationAPI {
 
   /**
    * Sets the model policies for a given model ID.
-   * @param {Object} policies - The policies to set for the model.
+   * @param {Object} policyParams - The policies to set for the model.
    * @param {string} [modelId=this.modelId] - The ID of the model.
    * @throws {Error} If the policies could not be set because the response is not NO_CONTENT.
    */
-  async setModelPolicies(policies, modelId = this.modelId) {
+  async setModelPolicies(policyParams, modelId = this.modelId) {
+    policies = receivePoliciesPayload(policyParams);
     const response = await fetch(
       `${BASE_HTTP_URL}/models/${modelId}/policies`,
       {
