@@ -176,7 +176,7 @@ def test_step_model(api_client: TestClient, created_model: int):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_step_model_websocket(api_client: TestClient, created_model: int):
+def test_model_websocket(api_client: TestClient, created_model: int):
     """
     Test for `step_model_websocket`, an API endpoint.
     Tests that it can connect, simulating a possible use case and works as expected.
@@ -185,17 +185,25 @@ def test_step_model_websocket(api_client: TestClient, created_model: int):
         created_model (int): the id of the model created.
     """
 
-    # TODO: fleshout testing this function as the actual function gets fleshed out.
-    with api_client.websocket_connect(f"models/{created_model}/websocket") as websocket:
-        # Send a message to the server to trigger a step
-        websocket.send_text("step")
-        websocket.send_text("indicators")
-        json_string = websocket.receive_text()
+    with api_client.websocket_connect(f"/models/{created_model}/websocket") as websocket:
+        # 1. Send a "step" action and verify the response
+        websocket.send_json({"action": "step"})
+        response_step = websocket.receive_json()
+        assert response_step == {"status": "success", "action": "step"}
 
-        # Manually parse the JSON string into a Python list/dict
-        indicators = json.loads(json_string)
+        # 2. Send a "get_indicators" action and verify the response
+        websocket.send_json({"action": "get_indicators"})
+        response_indicators = websocket.receive_json()
 
-        # Assert that the data looks correct
-        assert isinstance(indicators, list)
-        assert len(indicators) == 1  # one step
-        assert indicators[0]["Week"] == 1
+        # Assert the structure of the indicators response
+        assert response_indicators["status"] == "success"
+        assert response_indicators["action"] == "get_indicators"
+        assert "data" in response_indicators
+
+        # Assert the content of the indicators data
+        indicators_data = response_indicators["data"]
+        assert isinstance(indicators_data, list)
+        assert len(indicators_data) == 1 # Week 1 (after step)
+        assert indicators_data[0]["Week"] == 1
+        for indicator in available_indicators:
+            assert indicator in indicators_data[0]
