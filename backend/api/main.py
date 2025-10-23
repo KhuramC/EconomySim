@@ -14,6 +14,8 @@ from .city_template import CityTemplate
 controller = ModelController()
 app = FastAPI()
 
+
+# TODO: tighten these CORS settings 
 origins = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",  # React dev server pt.2
@@ -110,7 +112,7 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.get("/models/{model_id}/get_policies", status_code=status.HTTP_200_OK)
+@app.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
 async def get_model_policies(
     model_id: int,
 ) -> dict[str, float | dict[IndustryType, float]]:
@@ -137,7 +139,7 @@ async def get_model_policies(
         )
 
 
-@app.post("/models/{model_id}/set_policies", status_code=status.HTTP_204_NO_CONTENT)
+@app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
     model_id: int, policies: dict[str, float | dict[IndustryType, float]]
 ):

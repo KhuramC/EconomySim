@@ -107,7 +107,7 @@ def test_get_and_set_policies(
     """
 
     # Get initial policies
-    response = api_client.get(f"/models/{created_model}/get_policies")
+    response = api_client.get(f"/models/{created_model}/policies")
     assert response.status_code == status.HTTP_200_OK
     initial_policies = response.json()
     assert (
@@ -121,12 +121,12 @@ def test_get_and_set_policies(
     new_policies["property_tax"] = 0.1
 
     response_set = api_client.post(
-        f"/models/{created_model}/set_policies", json=new_policies
+        f"/models/{created_model}/policies", json=new_policies
     )
     assert response_set.status_code == status.HTTP_204_NO_CONTENT
 
     # Get new policies, confirm same as what was set.
-    response_get2 = api_client.get(f"/models/{created_model}/get_policies")
+    response_get2 = api_client.get(f"/models/{created_model}/policies")
     assert response_get2.status_code == status.HTTP_200_OK
     updated_policies = response_get2.json()
     assert updated_policies["personal_income_tax"] == 0.5
