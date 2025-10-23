@@ -15,13 +15,13 @@ from .city_template import CityTemplate
 controller = ModelController()
 app = FastAPI()
 
-
-# TODO: tighten these CORS settings 
+# Define allowed origins for both HTTP and WebSocket
 origins = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",  # React dev server pt.2
 ]
 
+# Middleware for standard HTTP requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -29,6 +29,20 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allows all headers (like Content-Type)
 )
+
+# Custom middleware to handle WebSocket origins
+@app.middleware("http")
+async def add_websocket_origin_header(request, call_next):
+    # This is a workaround to ensure WebSocket connections from allowed
+    # origins are accepted by Starlette's WebSocket implementation.
+    if request.scope["type"] == "websocket":
+        origin = request.headers.get("origin")
+        if origin in origins:
+            # This header is what Starlette's WebSocket class checks.
+            request.scope["subprotocols"] = ["asgi_htmx"] # Dummy protocol to satisfy Starlette
+            request.headers.__dict__["_list"].append((b"sec-websocket-protocol", b"asgi_htmx"))
+    response = await call_next(request)
+    return response
 
 
 class ModelCreateRequest(BaseModel):
