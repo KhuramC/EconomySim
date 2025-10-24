@@ -294,7 +294,7 @@ async def model_websocket(websocket: WebSocket, model_id: int):
                     {"status": "success", "action": "get_policies", "data": policies}
                 )
             elif action == "set_policies":
-                payload = data.get("payload")
+                payload = data.get("data")
                 if payload:
                     controller.set_policies(model_id, payload)
                     await websocket.send_json(
