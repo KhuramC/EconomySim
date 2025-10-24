@@ -1,5 +1,6 @@
 import statistics
 import random
+import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
 from mesa.datacollection import DataCollector
@@ -9,15 +10,34 @@ from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
+demographics_schema = {
+    demo.value: {
+        "income": {"mean": None, "sd": None},
+        "proportion": None,
+        "unemployment_rate": None,
+        "spending_behavior": {itype.value: None for itype in IndustryType},
+        "current_money": {"mean": None, "sd": None},
+    }
+    for demo in Demographic
+}
+"""Schema for validating the demographics dictionary."""
 
-taxes_schema = {
+industries_schema = {
+    itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
+    for itype in IndustryType
+}
+
+policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
     "personal_income_tax": None,
     "sales_tax": {itype.value: None for itype in IndustryType},
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
+    "subsidies": {itype.value: None for itype in IndustryType},
+    "rent_cap": None,
+    "minimum_wage": None,
 }
-"""Schema for validating the tax_rates dictionary."""
+"""Schema for validating the policies dictionary."""
 
 
 class EconomyModel(Model):
@@ -25,25 +45,17 @@ class EconomyModel(Model):
     The main model for the economic simulation.
 
     Attributes:
-        week (int): The current week in the simulation.
-        tax_rates (dict): A dictionary of various tax rates in the simulation.
-        minimum_wage (float): The minimum wage an industry can offer their employees.
+        max_simulation_length (int): The maximum length of the simulation in weeks.
         inflation_rate (float): The weekly inflation rate in the simulation.
         random_events (bool): Whether random events are enabled in the simulation.
+        policies (dict): A dictionary of various tax rates in the simulation.
+        week (int): The current week in the simulation.
     """
 
-    week: int
-    """The current week in the simulation."""
-
-    # Changeable by the user at any time
-
-    tax_rates: dict[str, float | dict[IndustryType, float]]
-    """A dictionary of various tax rates in the simulation. Needs to match taxes_schema."""
-
-    minimum_wage: float
-    """The minimum wage an industry can give to employees."""
-
     # Set at the start of the simulation
+
+    max_simulation_length: int
+    """The maximum length of the simulation in weeks."""
 
     inflation_rate: float
     """The weekly inflation rate in the simulation."""
@@ -51,26 +63,43 @@ class EconomyModel(Model):
     random_events: bool
     """Whether random events are enabled in the simulation."""
 
+    # Changeable by the user at any time
+
+    policies: dict[str, float | dict[IndustryType, float]]
+    """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
+
+    week: int
+    """The current week in the simulation."""
+
     def __init__(
         self,
+        max_simulation_length: int,
         num_people: int,
-        tax_rates: dict[str, float | dict[IndustryType, float]],
-        minimum_wage: float = 0,
-        starting_unemployment_rate: float = 0.0,  # TODO: use variable to accurately start unemployment
-        inflation_rate: float = 0.000001,
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
+        industries: dict[IndustryType, dict[str, float | int]],
+        starting_policies: dict[str, float | dict[IndustryType, float]],
+        inflation_rate: float = 0.001,
         random_events: bool = False,
     ):
         super().__init__()
-        self.week = 0
 
-        # check tax_rates has all necessary keys
-        self.validate_taxes(tax_rates)
-        self.tax_rates = tax_rates
-        self.minimum_wage = minimum_wage
+        if max_simulation_length <= 0:
+            raise ValueError("Maximum simulation length must be positive.")
+        if num_people <= 0:
+            raise ValueError("A nonnegative amount of agents is required.")
+        # check demographics/industries/policies has all necessary keys
+        self.validate_schema(demographics, demographics_schema, path="demographics")
+        self.validate_schema(industries, industries_schema, path="industries")
+        self.validate_schema(starting_policies)
 
+        self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
         self.random_events = random_events
+        self.policies = starting_policies
 
+        self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
                 "Week": self.get_week,
@@ -84,33 +113,18 @@ class EconomyModel(Model):
             agenttype_reporters={IndustryAgent: {"Price": "price"}},
         )
 
-        # TODO: need to create with income based on demographics
-        incomes = [random.uniform(0, 100) for _ in range(num_people)]
-        PersonAgent.create_agents(
-            model=self,
-            n=num_people,
-            demographic=Demographic.MIDDLE_CLASS,
-            income=incomes,
-        )
+        self.setup_person_agents(num_people, demographics)
+        self.setup_industry_agents(industries)
 
-        # Create one instance of each industry type
-        IndustryAgent.create_agents(
-            model=self,
-            n=len(IndustryType),
-            industry_type=list(IndustryType),
-            starting_price=10.0,
-        )
-
-        # collect info for first week
-        self.datacollector.collect(self)
-
-    def validate_taxes(self, data: dict, schema: dict = taxes_schema, path="tax_rates"):
+    def validate_schema(
+        self, data: dict, schema: dict = policies_schema, path="policies"
+    ):
         """
-        Recursively validate the tax_rates dictionary against the taxes_schema.
+        Recursively validate the dictionary against the schema.
 
         Args:
-            data (dict): The tax_rates dictionary to validate.
-            path (str, optional): Name of dict variable. Defaults to "tax_rates".
+            data (dict): The dictionary to validate.
+            path (str, optional): Name of dict variable. Defaults to "policies".
 
         Raises:
             ValueError: If the data dictionary does not match the schema.
@@ -122,7 +136,138 @@ class EconomyModel(Model):
 
         for key, subschema in schema.items():
             if isinstance(subschema, dict):
-                self.validate_taxes(data[key], subschema, path=f"{path}[{key}]")
+                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
+
+    def num_prop(self, ratio, N):
+        """Calculate numbers of total N in proportion to ratio"""
+        ratio = np.asarray(ratio)
+        p = np.cumsum(np.insert(ratio.ravel(), 0, 0))  # cumulative proportion
+        return np.diff(np.round(N / p[-1] * p).astype(int)).reshape(ratio.shape)
+
+    def generate_lognormal(self, log_mean: float, log_std: float, size: int):
+        """
+        Generates n observations from a lognormal distribution.
+
+        Args:
+            log_mean (float): The desired mean of the lognormal distribution.
+            log_std (float): The desired standard deviation of the lognormal distribution.
+            size (int): The number of observations to generate (n).
+
+        Returns:
+            np.ndarray: An array of random samples.
+        """
+        # Convert to the parameters of the underlying normal distribution
+        mu_underlying = np.log(log_mean**2 / np.sqrt(log_std**2 + log_mean**2))
+        sigma_underlying = np.sqrt(np.log(1 + (log_std**2 / log_mean**2)))
+
+        # Generate the samples
+        return np.random.lognormal(
+            mean=mu_underlying, sigma=sigma_underlying, size=size
+        )
+
+    def setup_person_agents(
+        self,
+        total_people: int,
+        demographics: dict[
+            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        ],
+    ) -> None:
+        """
+        Creates the PersonAgents based on the demographics dictionary.
+
+        Args:
+            total_people (int): the total number of PersonAgents to create.
+            demographics (dict): the information about each demographics to create.
+
+        Raises:
+            ValueError: if the demographics dictionary is invalid.
+        """
+        # do same thing for each demographic
+
+        # get number of people per demographic
+        demo_people = self.num_prop(
+            [
+                demographics[demographic]["proportion"] * 100
+                for demographic in demographics.keys()
+            ],
+            total_people,
+        )
+        demo_people = {
+            demographic: demo_people[i]
+            for i, demographic in enumerate(demographics.keys())
+        }
+
+        for demographic, demo_info in demographics.items():
+
+            unemployment_rate = demo_info.get("unemployment_rate", 0)
+            # TODO: set unemployment based on starting_unemployment_rate per demographic
+            # actually do something with unemployment rate
+            spending_behavior_info = demo_info.get("spending_behavior", {})
+            # TODO: acutally use spending behavior when creating agents
+            income_info = demo_info.get("income", {})
+            current_money_info = demo_info.get("current_money", {})
+
+            # param checking
+            if isinstance(income_info, dict) and isinstance(current_money_info, dict):
+                num_demo_people = demo_people[demographic]
+
+                # uses lognormal distribution; sd represents right skew
+                incomes = self.generate_lognormal(
+                    log_mean=income_info.get("mean", 0),
+                    log_std=income_info.get("sd", 0),
+                    size=num_demo_people,
+                )
+                starting_moneys = self.generate_lognormal(
+                    log_mean=current_money_info.get("mean", 0),
+                    log_std=current_money_info.get("sd", 0),
+                    size=num_demo_people,
+                )
+
+                PersonAgent.create_agents(
+                    model=self,
+                    n=num_demo_people,
+                    demographic=demographic,
+                    income=incomes,
+                    current_money=starting_moneys,
+                )
+
+            else:
+                raise ValueError(
+                    f"Income and current_money must be dictionaries at demographics[{demographic}]."
+                )
+
+    def setup_industry_agents(
+        self,
+        industries: dict[IndustryType, dict[str, float | int]],
+    ) -> None:
+        """
+        Creates the IndustryAgents based on the industries dictionary.
+
+        Args:
+            industries (dict): the information about each industry to create.
+
+        Raises:
+            ValueError: if the industries dictionary is invalid.
+        """
+        for industry_type, industry_info in industries.items():
+            if not isinstance(industry_info, dict):
+                raise ValueError(
+                    f"Industry info must be a dictionary at industries[{industry_type}]."
+                )
+            starting_price = industry_info.get("price", 0.0)
+            starting_inventory = industry_info.get("inventory", 0)
+            starting_money = industry_info.get("money", 0.0)
+            starting_offered_wage = industry_info.get("offered_wage", 0.0)
+
+            IndustryAgent.create_agents(
+                model=self,
+                n=1,
+                industry_type=industry_type,
+                starting_price=starting_price,
+                starting_inventory=starting_inventory,
+                starting_money=starting_money,
+                starting_offered_wage=starting_offered_wage,
+            )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
         """
@@ -146,11 +291,13 @@ class EconomyModel(Model):
         # could have prices go up by inflation percentage and current_money go down by the same percentage
         pass
 
-    def step(self):
+    def step(self) -> None:
         """
-        Advance the simulation by one week.
+        Advance the simulation by one week, causing inflation, IndustryAgents and then PersonAgents to act.
         """
-        self.week += 1  # new week
+        if self.week >= self.max_simulation_length:
+            return  # do not step past maximum simulation length
+        self.week = self.week + 1  # new week
 
         # TODO: implement inflation logic
         self.inflation()
@@ -168,6 +315,14 @@ class EconomyModel(Model):
 
         # collect info for this week
         self.datacollector.collect(self)
+
+    def reverse_step(self) -> None:
+        """
+        Reverse the simulation by one week.
+        """
+        # TODO: Implement reversing simulation
+        # might want to add choice of how much to reverse.
+        pass
 
     # Economic indicators
 
@@ -205,7 +360,6 @@ class EconomyModel(Model):
         # TODO: Implement calculation of the GDP
         # see https://www.investopedia.com/terms/b/bea.asp for notes
         # It's from the project documentation back in the spring
-
         return 0
 
     def calculate_income_per_capita(self):

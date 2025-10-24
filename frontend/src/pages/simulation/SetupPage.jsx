@@ -1,195 +1,252 @@
-import React, { useState } from 'react';
-import { Box, Grid, Typography, Button, Card, CardContent, Modal } from '@mui/material';
-import TopicCard from '../../components/TopicCard';
-import PageTitle from "../../components/PageTitle";
-import { useNavigate } from "react-router-dom";  
+import { useState, useEffect } from "react";
+import { Typography, Alert, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-function SetupPage({ onSetupComplete }) {
+import EnvironmentalAccordion from "../../components/SimSetup/EnvironmentalAccordion.jsx";
+import DemographicAccordion from "../../components/SimSetup/DemographicAccordion.jsx";
+import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
+import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 
-    const navigate = useNavigate();  
-    // Parameter popups
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTopic, setEditingTopic] = useState(null);
+import { Demographic } from "../../types/Demographic.js";
+import { IndustryType } from "../../types/IndustryType.js";
+import { buildCreatePayload } from "../../api/payloadBuilder.js";
+import { SimulationAPI } from "../../api/SimulationAPI.js";
 
-    const handleOpenModal = (topic) => {
-        setEditingTopic(topic);
-        setIsModalOpen(true);
-    };
+//Function to generate default parameters for one demographic
+const getDefaultDemographicParams = () => ({
+  meanIncome: 50000,
+  sdIncome: 15000,
+  proportion: 33,
+  // TODO: update once spending behavior is finalized in backend
+  spendingBehavior: 70,
+  meanSavings: 10000,
+  sdSavings: 5000,
+  unemploymentRate: 0.05,
+});
 
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setEditingTopic(null);
-    };
+//Function to generate default parameters for one industry
+const getDefaultIndustryParams = () => ({
+  startingInventory: 1000,
+  startingPrice: 10,
+  industrySavings: 50000,
+  offeredWage: 15,
+});
 
-    console.log("Current topic to edit:", editingTopic);
+export default function SetupPage() {
+  const navigate = useNavigate();
 
-    // Simulation settings state
-    const [config, setConfig] = useState({
-        demographics: { },
-        industries: { },
-        policies: { }
-    });
+  const [backendError, setBackendError] = useState(null);
 
-    const handleBeginClick = () => {
-        // When user clicks the button, call the function from the parent
-        // and pass collected config data
-        // onSetupComplete(config);
-        
-        // For now I will comment out the onSetupComplete()
-        navigate("/BaseSimView");
-    };
+  const [formErrors, setFormErrors] = useState({});
 
-    return (
-        // Container with padding
-        <Box sx={{ p: 3}}>
-            <PageTitle text="Simulation Set-Up" />
+  const [params, setParams] = useState({
+    envParams: {
+      numPeople: 1000,
+      maxSimulationLength: 100,
+      inflationRate: 1.0,
+      randomEvents: false,
+    },
 
-            {/* Handles overall layout */}
-            <Grid container spacing={3} sx={{ display: 'flex' }}>
+    demoParams: Object.fromEntries(
+      Object.values(Demographic).map((value) => [
+        value,
+        getDefaultDemographicParams(),
+      ])
+    ),
 
-                {/* Defines a single column */}
-                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant='h5'>Demographics</Typography>
+    industryParams: Object.fromEntries(
+      Object.values(IndustryType).map((value) => [
+        value,
+        getDefaultIndustryParams(),
+      ])
+    ),
 
-                    <TopicCard
-                        title="Upper Class"
-                        description="Percentage of Pop: 5%, Avg Household Income: $500,000"
-                        onEdit={handleOpenModal}
-                    />
+    policyParams: {
+      // TODO: update to be industry and demographic specific
+      salesTax: 7,
+      corporateTax: 21,
+      personalIncomeTax: 15,
+      propertyTax: 10,
+      tariffs: 5,
+      subsidies: 20,
+      rentCap: 20,
+      minimumWage: 7.25,
+    },
+  });
 
-                    <TopicCard
-                        title="Middle Class"
-                        description="Percentage of Pop: 55%, Avg Household Income: $80,000"
-                        onEdit={handleOpenModal}
-                    />
+  // Validate form inputs whenever params change
+  useEffect(() => {
+    const errors = {};
 
-                    <TopicCard
-                        title="Lower Class"
-                        description="Percentage of Pop: 40%, Avg Household Income: $30,000"
-                        onEdit={handleOpenModal}
-                    />                  
-                </Grid>
-
-                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant="h5">Industries</Typography>
-
-                    <TopicCard
-                        title="Utilities"
-                        description="Avg. Price of Electricity: $200 / kwH"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Housing"
-                        description="Avg. Rent: $500 / month"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Groceries"
-                        description="Avg. Price of Goods: $200"
-                        onEdit={handleOpenModal}
-                    />  
-
-                    <TopicCard
-                        title="Entertainment"
-                        description="Avg. Price of Goods: $200"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Luxury Goods"
-                        description="Avg. Price of Goods: $800"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Gas"
-                        description="Avg. Price Per Gallon: $4.00"
-                        onEdit={handleOpenModal}
-                    /> 
-                </Grid>
-
-                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant="h5">Policies</Typography>
-
-                    <TopicCard
-                        title="Taxes"
-                        description="Tax Structure: Progressive Tax"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Tariffs"
-                        description="Current rate on imports: 5%"
-                        onEdit={handleOpenModal}
-                    />
-
-                    <TopicCard
-                        title="Subsidies"
-                        description="Current Goods Subsidized: Electric cars, food stamps"
-                        onEdit={handleOpenModal}
-                    /> 
-                </Grid>
-            </Grid>
-
-
-            {/* Modal (popup) for ediiting simulation configuration by topic. */}
-            <Modal open={isModalOpen} onClose={handleCloseModal} aria-labelledby="modal-title">
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 400,
-                    bgcolor: 'background.paper',
-                    border: '2px solid #000',
-                    boxShadow: 24,
-                    p: 4,
-                }}>
-                    <Typography id="modal-title" variant="h6" component="h2" >Editing {editingTopic}</Typography>
-
-                    {renderModalContent(editingTopic)}
-
-                    <Button onClick={handleCloseModal} sx={{ mt: 2 }}>Save and Close</Button>
-                </Box>
-            </Modal>
-
-
-            <Button 
-                variant="contained" 
-                color="primary" sx={{ mt: 4 }} 
-                onClick={handleBeginClick}
-            >
-                Begin Simulation
-            </Button>
-        </Box>
+    // Demographic Validations //
+    const proportionSum = Object.values(params.demoParams).reduce(
+      (sum, demoData) => {
+        return sum + demoData.proportion;
+      },
+      0
     );
-}
-
-const renderModalContent = (topic) => {
-    switch (topic) {
-        case 'Upper Class':
-        case 'Middle Class':
-        case 'Lower Class':
-            return (
-                <Box>
-                    <Typography >Adjust Demographics:</Typography>
-                    {/* Add sliders and input fields for demographics here */}
-                </Box>
-            );
-        case 'Utilities':
-        case 'Housing':
-        case 'Entertainment':
-        case 'Groceries':
-        case 'Luxury Goods':
-        case 'Gas':
-        case 'Taxes':
-        case 'Tariffs':
-        case 'Subsidies':
-        default:
-            return <Typography>No settings available for this topic.</Typography>;
+    // Clear error message when proportion sum becomes valid
+    if (proportionSum !== 100) {
+      errors.proportion = `Demographic proportions must add up to 100%. Current sum:
+            ${proportionSum.toFixed(1)}% (${(100 - proportionSum).toFixed(1)}%
+            remaining).`;
     }
-};
 
-export default SetupPage;
+    setFormErrors(errors);
+  }, [params]);
+
+  //Environmental-specific handler
+  const handleEnvChange = (key) => (event) => {
+    const value =
+      event.target.type === "checkbox"
+        ? event.target.checked
+        : event.target.value;
+
+    setParams((prev) => ({
+      ...prev,
+      envParams: {
+        ...prev.envParams,
+        [key]: event.target.type === "number" ? parseFloat(value) || 0 : value,
+      },
+    }));
+  };
+
+  // Demographic-specific handler
+  const handleDemographicChange = (demographicValue, prop) => (event) => {
+    const { value } = event.target;
+    setParams((prevParams) => ({
+      ...prevParams,
+      demoParams: {
+        ...prevParams.demoParams,
+        [demographicValue]: {
+          ...prevParams.demoParams[demographicValue],
+          // Convert numbers, handle percentages/rates appropriately
+          [prop]:
+            event.target.type === "number" ? parseFloat(value) || 0 : value,
+        },
+      },
+    }));
+  };
+
+  // Industry-specific handler
+  const handleIndustryChange = (industryValue, prop) => (event) => {
+    const { value } = event.target;
+    setParams((prevParams) => ({
+      ...prevParams,
+      industryParams: {
+        ...prevParams.industryParams,
+        [industryValue]: {
+          ...prevParams.industryParams[industryValue],
+          [prop]:
+            event.target.type === "number" ? parseFloat(value) || 0 : value,
+        },
+      },
+    }));
+  };
+
+  // Policy-specific handler
+  const handlePolicyChange = (key) => (event) => {
+    const { value } = event.target;
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        [key]: event.target.type === "number" ? parseFloat(value) || 0 : value,
+      },
+    }));
+  };
+
+  // Send parameters to backend and navigate to simulation view
+  const handleBegin = async () => {
+    setBackendError(null);
+    console.log("Simulation parameters:", params);
+    const payload = buildCreatePayload(params);
+
+    console.log(
+      "Sending payload to backend:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    try {
+      const modelId = await SimulationAPI.createModel(payload);
+      console.log("Model created with ID:", modelId);
+      // Navigate to simulation view with the new model ID
+      navigate(`/BaseSimView`, { state: { modelId: modelId } });
+    } catch (error) {
+      console.error("Error creating model:", error.message);
+      setBackendError(error.message);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 800, margin: "2rem auto", padding: "1rem" }}>
+      <Typography variant="h4" gutterBottom>
+        Simulation Setup
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Configure the starting parameters for your simulation. These values
+        affect how the environment, demographics, industries, and policies
+        behave when the simulation begins.
+      </Typography>
+
+      <EnvironmentalAccordion
+        envParams={params.envParams}
+        handleEnvChange={handleEnvChange}
+        formErrors={formErrors}
+      />
+
+      <DemographicAccordion
+        demoParams={params.demoParams}
+        handleDemographicChange={handleDemographicChange}
+        formErrors={formErrors}
+      />
+
+      <IndustryAccordion
+        industryParams={params.industryParams}
+        handleIndustryChange={handleIndustryChange}
+        formErrors={formErrors}
+      />
+
+      <PolicyAccordion
+        policyParams={params.policyParams}
+        handlePolicyChange={handlePolicyChange}
+        formErrors={formErrors}
+      />
+
+      {backendError && (
+        <Alert
+          severity="error"
+          sx={{ mt: 3 }}
+          onClose={() => setBackendError(null)} // Allow user to dismiss
+        >
+          {backendError}
+        </Alert>
+      )}
+
+      <div style={{ marginTop: "2rem" }}>
+        {Object.keys(formErrors).length == 0 ? (
+          // Render the button if no form errors
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handleBegin}
+            sx={{ mt: 3, borderRadius: 2 }}
+          >
+            Begin Simulation
+          </Button>
+        ) : (
+          // Render form errors if present
+          <Alert severity="error" sx={{ mt: 3 }}>
+            Please fix the following issues:
+            <ul style={{ margin: "0.5rem 0 0 1rem", padding: 0 }}>
+              {Object.values(formErrors).map((errorText) => (
+                <li key={errorText}>{errorText}</li>
+              ))}
+            </ul>
+          </Alert>
+        )}
+      </div>
+    </div>
+  );
+}

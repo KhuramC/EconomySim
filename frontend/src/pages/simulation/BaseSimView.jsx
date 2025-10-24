@@ -1,17 +1,22 @@
 // src/pages/simulation/BaseSimView.jsx
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper } from "@mui/material";
 import SidebarNav from "../../components/SidebarNav";
 
 // Content-only pages (no sidebar or outer Paper inside them)
-import Overview from "./overview.jsx";
-import Industries from "./industries.jsx";
-import Policies from "./policies.jsx";
-import Demographics from "./demographics.jsx";
+import Overview from "./Overview.jsx";
+import Industries from "./Industries.jsx";
+import Policies from "./Policies.jsx";
+import Demographics from "./Demographics.jsx";
 import Statistics from "./Statistics.jsx";
 
 export default function BaseSimView() {
+  const location = useLocation();
+  // Access the modelId from location.state
+  const modelId = location.state?.modelId;
+  console.log("BaseSimView received modelId:", modelId);
+
   const basePath = "/BaseSimView";
 
   return (

@@ -32,3 +32,6 @@ httpx = "^0.28.1"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts] # defines the ability to do `poetry run dev`
+dev = "api.run:start"

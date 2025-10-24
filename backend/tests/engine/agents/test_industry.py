@@ -7,17 +7,25 @@ from engine.types.industry_type import IndustryType
 from engine.types.Pricing_Type import PricingType
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
-def test_get_tariffs(industry_type: IndustryType, mock_economy_model):
+def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
+    """
+    Test for `get_tariffs`.
+    Tests that the tariffs obtained for this industry is accurate.
+
+    Args:
+        industry_type (IndustryType): the industry be looked at.
+        mock_economy_model: a mock model. 
+    """
 
     i_agent = IndustryAgent(mock_economy_model, industry_type=industry_type)
     assert (
-        i_agent.get_tariffs() == mock_economy_model.tax_rates["tariffs"][industry_type]
+        i_agent.get_tariffs() == mock_economy_model.policies["tariffs"][industry_type]
     )
 
 
-@mark.skip(reason="TODO.")
+@mark.xfail(reason="TODO.")
 def test_get_employees():
-    pass
+    assert False
 
 
 @mark.xfail(reason="Function not implemented yet.")
