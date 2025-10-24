@@ -83,10 +83,6 @@ export default function Overview() {
             </Grid>
           </Grid>
 
-          {/* Graph area */}
-          <Box sx={{ mb: 2 }}>
-            <GraphSlot title="Lorenz Curve" onOpen={() => console.log('Open Graph')} />
-          </Box>
 
           {/* Summary card */}
           <Card sx={{ mb: 2 }}>

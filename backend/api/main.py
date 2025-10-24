@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 import pandas as pd
+import json
 from typing import Any
 
 from engine.interface.controller import ModelController
@@ -14,11 +15,13 @@ from .city_template import CityTemplate
 controller = ModelController()
 app = FastAPI()
 
+# Define allowed origins for both HTTP and WebSocket
 origins = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",  # React dev server pt.2
 ]
 
+# Middleware for standard HTTP requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -110,7 +113,7 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.get("/models/{model_id}/get_policies", status_code=status.HTTP_200_OK)
+@app.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
 async def get_model_policies(
     model_id: int,
 ) -> dict[str, float | dict[IndustryType, float]]:
@@ -137,7 +140,7 @@ async def get_model_policies(
         )
 
 
-@app.post("/models/{model_id}/set_policies", status_code=status.HTTP_204_NO_CONTENT)
+@app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
     model_id: int, policies: dict[str, float | dict[IndustryType, float]]
 ):
@@ -172,7 +175,7 @@ def dataframe_to_json_response(df: pd.DataFrame) -> Response:
         response (Response): A Response containing a JSON string of the dataframe.
     """
 
-    json_string = df.to_json(orient="records")  # list of dataframe rows
+    json_string = df.to_json(orient="columns")  # dict of columns
     return Response(content=json_string, media_type="application/json")
 
 
@@ -231,33 +234,85 @@ async def step_model(model_id: int):
         )
 
 
-@app.websocket("/models/{model_id}/websocket")
-async def step_model_websocket(websocket: WebSocket, model_id: int):
+@app.websocket("/models/{model_id}")
+async def model_websocket(websocket: WebSocket, model_id: int):
     """
     Sets up a websocket for consistent communication.
-    Allows for stepping with "step", and getting indicators with "indicators".
+    Accepts JSON messages with an "action" and optional "payload".
+
+    Actions:
+    - {"action": "step"}: Steps the model by one week.
+    - {"action": "reverse_step"}: Steps the model backwards by one week.
+    - {"action": "get_current_week"}: Returns the current week.}
+    - {"action": "get_indicators"}: Returns all model indicators.
+    - {"action": "get_policies"}: Returns the current model policies.
+    - {"action": "set_policies", "payload": {...}}: Sets the model policies.
 
     Args:
         websocket (WebSocket): the websocket.
-        model_id (int): the model to step.
+        model_id (int): the model to interact with.
     """
 
     await websocket.accept()
     try:
-        while True:
-            text = await websocket.receive_text()  # Wait for a message from the client
-            if "step" in text:
-                controller.step_model(model_id)
-            elif "indicators" in text:
-                indicators = controller.get_indicators(model_id).to_json(
-                    orient="records"
-                )  # manually turn into json
-                await websocket.send_text(
-                    indicators
-                )  # Send indicators back to the client
-            # TODO: fleshout websocket, like with being able to set/get policies.
+        # Ensure the model exists before entering the loop
+        controller.get_model(model_id)
 
-    except ValueError:
+        while True:
+            data = await websocket.receive_json()
+            action = data.get("action")
+
+            if action == "step":
+                controller.step_model(model_id)
+                await websocket.send_json({"status": "success", "action": "step"})
+            elif action == "reverse_step":
+                controller.step_model(model_id, time=-1)
+                await websocket.send_json(
+                    {"status": "success", "action": "reverse_step"}
+                )
+            elif action == "get_current_week":
+                await websocket.send_json(
+                    {
+                        "status": "success",
+                        "action": "get_current_week",
+                        "data": {"week": controller.get_current_week(model_id)},
+                    }
+                )
+            elif action == "get_indicators":
+                indicators_df = controller.get_indicators(model_id)
+                indicators_json = json.loads(indicators_df.to_json(orient="columns"))
+                await websocket.send_json(
+                    {
+                        "status": "success",
+                        "action": "get_indicators",
+                        "data": indicators_json,
+                    }
+                )
+            elif action == "get_policies":
+                policies = controller.get_policies(model_id)
+                await websocket.send_json(
+                    {"status": "success", "action": "get_policies", "data": policies}
+                )
+            elif action == "set_policies":
+                payload = data.get("data")
+                if payload:
+                    controller.set_policies(model_id, payload)
+                    await websocket.send_json(
+                        {"status": "success", "action": "set_policies"}
+                    )
+                else:
+                    await websocket.send_json(
+                        {
+                            "status": "error",
+                            "message": "Payload missing for set_policies action.",
+                        }
+                    )
+            else:
+                await websocket.send_json(
+                    {"status": "error", "message": f"Unknown action: {action}"}
+                )
+
+    except ValueError:  # Catches if model_id is not found
         await websocket.send_json({"error": f"Model with id {model_id} not found."})
     except Exception as e:
         print(f"WebSocket error: {e}")
@@ -266,7 +321,7 @@ async def step_model_websocket(websocket: WebSocket, model_id: int):
         print(f"WebSocket connection closed.")
 
 
-@app.delete("/models/{model_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model(model_id: int):
     """
     Deletes a model.

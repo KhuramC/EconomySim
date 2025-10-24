@@ -114,13 +114,13 @@ def created_model(api_client: TestClient, valid_config: dict) -> Iterator[int]:
     yield model_id  # Provide the model_id to be used
 
     # Teardown: delete the model after the test finishes
-    response = api_client.delete(f"/models/{model_id}/delete")
+    response = api_client.delete(f"/models/{model_id}")
     assert (
         response.status_code == status.HTTP_204_NO_CONTENT
     ), f"Failed to delete model: {response.json()}"
 
     # Check to ensure that model is truly deleted
-    response = api_client.delete(f"/models/{model_id}/delete")
+    response = api_client.delete(f"/models/{model_id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     args = {"start_time": 0, "end_time": 0, "indicators": None}
