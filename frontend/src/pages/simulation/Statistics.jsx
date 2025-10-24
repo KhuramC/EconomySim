@@ -14,6 +14,8 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from "@mui/material";
+import { Chart as ChartJS } from "chart.js/auto";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 import AddIcon from "@mui/icons-material/Add";
 
 import TimelinePanel from "../../components/TimelinePanel";
@@ -28,11 +30,11 @@ export default function Statistics() {
   // Demo controls for "Add New Graph"
   const [metric, setMetric] = useState("GDP");
   const [startUnit, setStartUnit] = useState("week");
+  const [graphs, setGraphs] = useState([["GDP", "week"]]);
 
   const handleGenerate = () => {
-    console.log("Generate graph:", { metric, startUnit });
+    setGraphs((prevGraphs) => [...prevGraphs, [metric, startUnit]]);
   };
-
   return (
     <Box>
       {/* Top-right date info (same placement as Overview) */}
@@ -45,64 +47,59 @@ export default function Statistics() {
           mb: 2,
         }}
       >
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: "right" }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ textAlign: "right" }}
+        >
           Year {year} &nbsp;&nbsp; Week {week} of {totalWeeks}
         </Typography>
       </Box>
 
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
-        <Grid item xs={12} md={8} sx={{ display: "flex", flexDirection: "column" }}>
+        <Grid
+          item
+          xs={12}
+          md={8}
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Statistics
           </Typography>
 
-          {/* GDP Graph */}
-          <Box sx={{ mb: 2 }}>
-            <GraphSlot title="GDP Graph" onOpen={() => console.log("Open GDP Graph")} />
-          </Box>
+          {graphs.map(([title, period], index) => (
+  <React.Fragment key={index}>
+    <Box sx={{ mb: 2 }}>
+      <GraphSlot
+        title={`${title} Graph`}
+        onOpen={() => console.log(`Open ${title} Graph`)}
+      />
+    </Box>
 
-          <Typography
-            variant="body2"
-            sx={{ mt: -1, mb: 2, fontWeight: 600, color: "text.secondary" }}
-          >
-            Wealth Distribution Over Time
-          </Typography>
-
-          {/* Summary card */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-              Summary
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              • GDP increased by 0.3%
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              • Unemployment rate decreased to 6.1%
-            </Typography>
-          </Paper>
+    <Typography
+      variant="body2"
+      sx={{
+        mt: -1,
+        mb: 2,
+        fontWeight: 600,
+        color: "text.secondary",
+      }}
+    >
+      {title} Distribution Over Time
+    </Typography>
+  </React.Fragment>
+))}
         </Grid>
 
         {/* RIGHT COLUMN */}
-        <Grid item xs={12} md={4} sx={{ display: "flex", flexDirection: "column" }}>
+        <Grid
+          item
+          xs={12}
+          md={4}
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           {/* Current Policies */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-              Current Policies
-            </Typography>
-            <Typography variant="body2">Sales Tax: 5%</Typography>
-            <Typography variant="body2">Corporate Tax: 20%</Typography>
-            <Typography variant="body2">Property Tax: 12%</Typography>
-            <Typography variant="body2">Tariffs: 4%</Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ mt: 1, fontWeight: 700 }}
-              onClick={() => console.log("View/Edit Policies")}
-            >
-              View/Edit Policies
-            </Button>
-          </Paper>
 
           {/* Add New Graph panel */}
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2 }}>
@@ -126,7 +123,11 @@ export default function Statistics() {
               </Select>
             </FormControl>
 
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 0.5, display: "block" }}
+            >
               Select Start Date
             </Typography>
 
@@ -176,7 +177,6 @@ export default function Statistics() {
               Generate
             </Button>
           </Paper>
-
           {/* Timeline controls */}
           <TimelinePanel />
         </Grid>
