@@ -1,6 +1,6 @@
 from mesa import Agent
 from mesa import Model
-from ..types.industry_type import IndustryType
+from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.Pricing_Type import PricingType
 from .pricing import avg_cost, linear_profit_max, variable_cost_per_unit
 import logging
@@ -37,6 +37,8 @@ class IndustryAgent(Agent):
     """The number of employees in this industry."""
     worker_efficiency: float
     """The efficiency of workers in this industry (units produced per worker per hour)."""
+    hours_worked: float
+    """Number of hours worked by each employee this tick, used for updating employee pay"""
     pricing_strategy: PricingType
     """The pricing strategy used by this industry."""
     debt_allowed: bool
@@ -52,19 +54,19 @@ class IndustryAgent(Agent):
         self,
         model: Model,
         industry_type: IndustryType,
-        starting_price: float = 0.0,
+        starting_price: float = 0.0,    #This should only be passed in when testing.  Determine_price & determine_price_production_cap will entirely handle updates to this value
         starting_inventory: int = 200,
         starting_money: float = 5000.00,
         starting_offered_wage: float = 15.00,
         starting_fixed_cost: float = 200.0,
         starting_raw_mat_cost: float = 2.0,
-        starting_number_of_employees: int = 5,
+        starting_number_of_employees: int = 5, #placeholder value for now that should be dependant on person agents employed at industry when employment logic has been implemented
         starting_worker_efficiency: float = 1.0,
-        starting_pricing_strategy: PricingType = PricingType.LINEAR_PROFIT_MAX,
-        starting_debt_allowed: bool = True,
+        starting_pricing_strategy: PricingType = PricingType.LINEAR_PROFIT_MAX, #should be static and directly associated with industry type
+        starting_debt_allowed: bool = True, #should be static
+        #TODO: Demand logic will be pulled from another file, either demand.py or person.py.  These values are currently black box standins to enable determine_price logic
         starting_demand_intercept: float = 400.0,
         starting_demand_slope: float = 1.0,
-        starting_inventory_available_this_step: int = 0
     ):
         """
         Initialize an IndustryAgent with its starting values.
@@ -84,7 +86,8 @@ class IndustryAgent(Agent):
         self.pricing_strategy = starting_pricing_strategy
         self.demand_intercept = starting_demand_intercept
         self.demand_slope = starting_demand_slope
-        self.inventory_available_this_step = starting_inventory_available_this_step
+        self.inventory_available_this_step = 0      #calculated by determine_price
+        self.hours_worked = 0                       #calculated by produce_goods
         
 
     def get_tariffs(self) -> float:
@@ -101,8 +104,7 @@ class IndustryAgent(Agent):
         """
         Gets all employees that are employed to this industry.
         """
-        employees = 5
-        return employees #placeholder for number of employees
+        return self.model.get_employees(self.industry_type)
     def determine_price(self):
         """
         Determine the price of goods/services in this industry based on market conditions.
@@ -122,28 +124,36 @@ class IndustryAgent(Agent):
 
         # feasible maximum to consider when computing suggested Q:
         # allow selling current inventory plus what production capacity will add this step
+        #production capacity is capped by two variables: the number of employees and the total available funds
         Q_max = int(max(0, self.inventory + self.get_production_capacity()))
 
         Price = self.price
         Suggested_Quantity = float(self.inventory)
-
-        if self.pricing_strategy == PricingType.AVG_COST:
+        
+        strategy = INDUSTRY_PRICING[self.industry_type]
+        
+        if strategy == PricingType.AVG_COST:
             Price, Suggested_Quantity = avg_cost(A, B, V, float(self.fixed_cost), Q_max)
-        elif self.pricing_strategy == PricingType.LINEAR_PROFIT_MAX:
+        elif strategy == PricingType.LINEAR_PROFIT_MAX:
             Price, Suggested_Quantity = linear_profit_max(A, B, m, n, Q_max)
 
         # ensure suggested quantity is feasible and non-negative, clamp to [0, Q_max]
         if Suggested_Quantity is None:
             Suggested_Quantity = 0.0
         Suggested_Quantity = float(max(0.0, min(Suggested_Quantity, Q_max)))
-
+        #TODO: Implement Logic to hire more employees if the max_production_capacity is too small to accomodate suggested quantity
+        #Note: don't just look at Q_max here, as this number also takes into account if there's insufficient funds to produce at the suggested quantity
+        #Instead, just factor in max capacity based on a 40 hour work week with all current employees
+        
         # set results on the instance
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
         self.inventory_available_this_step = Suggested_Quantity
-        pass
 
     def produce_goods(self):
+        #TODO: Implement logic to sell stored inventory first before producing more goods on top.
+        #The current logic hinders this, as we don't want to immediately cut hours based on a temporary supply surplus
+        #We also don't neccisarily want to change the price of the goods being sold, just because the production cost went down
         quantity_to_produce = self.inventory_available_this_step
         variable_cost_per_unit = self.get_variable_cost()
         total_variable_cost = variable_cost_per_unit * quantity_to_produce
@@ -156,10 +166,15 @@ class IndustryAgent(Agent):
                 quantity_to_produce = max(0, quantity_to_produce)  # Avoid negative production
             self.determine_price_production_cap(int(quantity_to_produce))
             hours_worked = quantity_to_produce / (self.num_employees * self.worker_efficiency) if self.num_employees * self.worker_efficiency > 0 else 0
+            total_hours_worked = hours_worked * self.num_employees
             total_full_hours = self.num_employees * 40
-            hours_cut = total_full_hours - hours_worked
+            hours_cut = total_full_hours - total_hours_worked
+            
+            self.hours_worked = hours_worked #update hours worked for each employee this tick.  Assume equal number of hours for each employee for now
+            
             if hours_cut >= 40:
                 logging.info(f"Total employee work hours reduced by {hours_cut:.1f} to stay within budget.")
+                #TODO If the number of hours needed can consistently be accomplished by fewer employees, trigger firing.  (call change_employment here!)
             
         # Update inventory and deduct costs
         self.inventory += quantity_to_produce
@@ -171,14 +186,18 @@ class IndustryAgent(Agent):
             f"spent_fixed={spent_fixed:.2f}; remaining funds {self.total_money:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
-        pass
+        
     def determine_price_production_cap(self, production_capacity: int):
+        """
+        Simpler determine_price helper function for handling exceptions in produce_goods
+        Skips the step that determines the suggested quantity and just updates the price
+        
+        NOTE: shouldn't be accessible outside of internal calls from model. how to fix?
+        """
         A = self.demand_intercept
         B = self.demand_slope
         self.inventory_available_this_step = production_capacity
         self.price = A - B * production_capacity
-        pass
-
     def change_employment(self):
         """
         How the industry will change their employees, whether it be by hiring more, firing more,
@@ -276,3 +295,10 @@ class IndustryAgent(Agent):
         """
         self.demand_A = A
         self.demand_B = B
+    
+    def get_weekly_pay(self):
+        """
+        Helper function for calculating weekly pay for each employee this tick
+        """
+        return self.hours_worked * self.offered_wage
+    
