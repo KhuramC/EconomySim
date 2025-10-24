@@ -31,7 +31,7 @@ class PersonAgent(Agent):
         self,
         model: Model,
         demographic: Demographic,
-        preferences: dict[str, float],
+        preferences: dict[IndustryType, float],
         savings_rate: float = 0.10,
         income: int = 0,
         employer: IndustryAgent | None = None,
@@ -54,7 +54,7 @@ class PersonAgent(Agent):
         self.current_money = self.current_money + self.income
 
     def demand_func(
-        self, budget: float, prefs: dict[str, float], prices: dict[str, float]
+        self, budget: float, prefs: dict[IndustryType, float], prices: dict[str, float]
     ) -> dict[str, float]:
         """
         Calculates the quantity of each good to purchase based on the CES demand function.
