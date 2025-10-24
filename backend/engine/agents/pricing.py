@@ -1,17 +1,18 @@
 import math
 from typing import Optional, Tuple, Dict
 
-def solve_quadratic_choose_higher(B: float, V: float, A: float, F: float) -> Optional[float]:
+def solve_quadratic_choose_higher(B: float, V: float, A: float, F: float, Q_max: int) -> Optional[float]:
     """
-    Solve B*Q^2 + (V - A)*Q + F = 0.
-    If two real roots, return the higher root.
+    Solve B*Q^2 + (V - A)*Q + F = 0
+    Q = [ -(V-A) += sqrt( (V-A)^2) - 4(B*F) ) ] / ( 2 * B )
+    If two real roots, return the higher root, unless we don't have the inventory, then choose lower.
     If one real root (discriminant == 0), return that root.
     If no real roots, return None.
+    
     """
     a = B
     b = V - A
     c = F
-
     if abs(a) < 1e-12:
         # Degenerate: linear equation b*Q + c = 0 -> Q = -c/b
         if abs(b) < 1e-12:
@@ -19,41 +20,21 @@ def solve_quadratic_choose_higher(B: float, V: float, A: float, F: float) -> Opt
         return -c / b
 
     disc = b*b - 4*a*c
-    if disc < 0:
+    if disc < 0:    #imaginary roots, disregard
         return None
-    elif abs(disc) < 1e-12:
+    elif abs(disc) < 1e-12: #value under sqrt is zero -> one real root
         q = -b / (2*a)
         return q
-    else:
+    else:    #two real roots
         sqrt_disc = math.sqrt(disc)
         q1 = (-b + sqrt_disc) / (2*a)
         q2 = (-b - sqrt_disc) / (2*a)
         return max(q1, q2)
 
-def adjusted_marginal_cost_pricing(A: float, B: float, V: float, F: float) -> Tuple[float, float, str]:
-    """
-    Fallback subroutine for 'adjusted marginal cost pricing' when the quadratic has no real roots.
-    We'll use the MR=MC solution with MC = V (i.e., constant MC) as a pragmatic adjusted-MC fallback:
-        Q_adj = (A - V) / (2B)
-    Then clip to feasible range [0, A/B] because demand price becomes <= 0 after Q > A/B.
-    Returns: (Q_adj, price_at_Q_adj, note)
-    """
-    if B <= 0:
-        # If B <= 0 (nonstandard demand), fallback to zero quantity
-        return 0.0, A, "B <= 0 (nonstandard); returned Q=0, price=A"
-
-    q_candidate = (A - V) / (2 * B)
-    # enforce nonnegativity and demand-feasible upper bound (price >= 0)
-    q_candidate = max(q_candidate, 0.0)
-    q_max = A / B if B > 0 else q_candidate
-    q_candidate = min(q_candidate, q_max)
-
-    price = A - B * q_candidate
-    return q_candidate, price, "Adjusted-MC fallback using MR=MC with MC=V"
 
 #Nondiagnostic version: only returns price and quantity
-def avg_cost(A: float, B: float, V: float, F: float) -> Tuple[float, float]:
-    q_root = solve_quadratic_choose_higher(B, V, A, F)
+def avg_cost(A: float, B: float, V: float, F: float, Q_max: int) -> Tuple[float, float]:
+    q_root = solve_quadratic_choose_higher(B, V, A, F, Q_max)
     #if result is infeasible, run adjusted MC fallback
     if q_root is not None: #real solution
         if q_root <= 0: # nonpositive = infeasible
@@ -69,7 +50,9 @@ def avg_cost(A: float, B: float, V: float, F: float) -> Tuple[float, float]:
                 Q = q_root
                 P = A - B * Q
                 return P,Q
-    q_adj, p_adj, note = adjusted_marginal_cost_pricing(A, B, V, F)
+    #if there are no real roots, there are no profitable production levels
+    #instead, minimize loss via linear profit max equation with Marginal Cost = V    
+    q_adj, p_adj = linear_profit_max(A, B, V, 0, Q_max)
 
     if q_adj <= 0:
         # If fallback yields zero quantity, average cost is not defined (division by 0).
@@ -78,7 +61,7 @@ def avg_cost(A: float, B: float, V: float, F: float) -> Tuple[float, float]:
     return p_adj,q_adj
 
 #Diagnostic version: returns dict with details
-def avg_cost_DIAGNOSTIC(A: float, B: float, V: float, F: float) -> Dict[str, Optional[float]]:
+def avg_cost_DIAGNOSTIC(A: float, B: float, V: float, F: float, Q_max: int) -> Dict[str, Optional[float]]:
     """
     Main function:
     Inputs:
@@ -86,6 +69,7 @@ def avg_cost_DIAGNOSTIC(A: float, B: float, V: float, F: float) -> Dict[str, Opt
       - B: demand slope (P = A - B Q), assumed B > 0
       - V: variable cost per unit (linear TC = F + V Q)
       - F: fixed cost
+      - Q_max: total inventory available (upper bound on feasible Q); None if no upper bound
 
     Returns a dict containing:
       - 'Q_suggested': suggested quantity (float or None)
@@ -135,7 +119,7 @@ def avg_cost_DIAGNOSTIC(A: float, B: float, V: float, F: float) -> Dict[str, Opt
         method_note = "Quadratic has no real roots; running adjusted MC fallback."
 
     # 2) If we reached here, run adjusted marginal cost pricing fallback
-    q_adj, p_adj, note = adjusted_marginal_cost_pricing(A, B, V, F)
+    q_adj, p_adj, note = linear_profit_max(A, B, V, 0, Q_max)
 
     if q_adj <= 0:
         # If fallback yields zero quantity, average cost is not defined (division by 0).
@@ -172,7 +156,7 @@ if __name__ == "__main__":
         print(f"{k}: {v}")
 """
 #Nondiagnostic version: only returns price and quantity
-def linear_profit_max(A, B, m, n, Q_max=None) -> Tuple[float, float]:
+def linear_profit_max(A, B, m, n, Q_max) -> Tuple[float, int]:
     denom = 2*B + n
     if denom == 0:
         raise ValueError("Denominator 2B + n is zero — examine boundaries.")
@@ -180,11 +164,12 @@ def linear_profit_max(A, B, m, n, Q_max=None) -> Tuple[float, float]:
     Q_feas = max(Q_star, 0.0)
     if Q_max is not None:
         Q_feas = min(Q_feas, Q_max)
-
-    P_at_Q = A - B * Q_feas
-    return P_at_Q,Q_feas
+    Q_Rounded = round(Q_feas)
+    P_at_Q = A - B * Q_Rounded
+    Price_Rounded = round(P_at_Q,2)
+    return Price_Rounded,Q_Rounded
 #Diagnostic version: returns dict with details
-def linear_profit_max_DIAGNOSTIC(A, B, m, n, Q_max=None) -> Dict[str, Optional[float]]:
+def linear_profit_max_DIAGNOSTIC(A, B, m, n, Q_max) -> Dict[str, Optional[float]]:
     """
     A: demand intercept (P at Q=0)
     B: demand slope (P = A - B Q), B > 0
