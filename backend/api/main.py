@@ -30,20 +30,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers (like Content-Type)
 )
 
-# Custom middleware to handle WebSocket origins
-@app.middleware("http")
-async def add_websocket_origin_header(request, call_next):
-    # This is a workaround to ensure WebSocket connections from allowed
-    # origins are accepted by Starlette's WebSocket implementation.
-    if request.scope["type"] == "websocket":
-        origin = request.headers.get("origin")
-        if origin in origins:
-            # This header is what Starlette's WebSocket class checks.
-            request.scope["subprotocols"] = ["asgi_htmx"] # Dummy protocol to satisfy Starlette
-            request.headers.__dict__["_list"].append((b"sec-websocket-protocol", b"asgi_htmx"))
-    response = await call_next(request)
-    return response
-
 
 class ModelCreateRequest(BaseModel):
     """Defines the expected structure for creating a new simulation model."""
@@ -248,7 +234,7 @@ async def step_model(model_id: int):
         )
 
 
-@app.websocket("/models/{model_id}/websocket")
+@app.websocket("/models/{model_id}")
 async def model_websocket(websocket: WebSocket, model_id: int):
     """
     Sets up a websocket for consistent communication.
@@ -280,21 +266,38 @@ async def model_websocket(websocket: WebSocket, model_id: int):
             elif action == "get_indicators":
                 indicators_df = controller.get_indicators(model_id)
                 indicators_json = json.loads(indicators_df.to_json(orient="records"))
-                await websocket.send_json({"status": "success", "action": "get_indicators", "data": indicators_json})
+                await websocket.send_json(
+                    {
+                        "status": "success",
+                        "action": "get_indicators",
+                        "data": indicators_json,
+                    }
+                )
             elif action == "get_policies":
                 policies = controller.get_policies(model_id)
-                await websocket.send_json({"status": "success", "action": "get_policies", "data": policies})
+                await websocket.send_json(
+                    {"status": "success", "action": "get_policies", "data": policies}
+                )
             elif action == "set_policies":
                 payload = data.get("payload")
                 if payload:
                     controller.set_policies(model_id, payload)
-                    await websocket.send_json({"status": "success", "action": "set_policies"})
+                    await websocket.send_json(
+                        {"status": "success", "action": "set_policies"}
+                    )
                 else:
-                    await websocket.send_json({"status": "error", "message": "Payload missing for set_policies action."})
+                    await websocket.send_json(
+                        {
+                            "status": "error",
+                            "message": "Payload missing for set_policies action.",
+                        }
+                    )
             else:
-                await websocket.send_json({"status": "error", "message": f"Unknown action: {action}"})
+                await websocket.send_json(
+                    {"status": "error", "message": f"Unknown action: {action}"}
+                )
 
-    except ValueError: # Catches if model_id is not found
+    except ValueError:  # Catches if model_id is not found
         await websocket.send_json({"error": f"Model with id {model_id} not found."})
     except Exception as e:
         print(f"WebSocket error: {e}")
