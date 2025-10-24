@@ -177,18 +177,6 @@ export default function Statistics() {
               Generate
             </Button>
           </Paper>
-          {/* Summary card */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-              Summary
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              • GDP increased by 0.3%
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              • Unemployment rate decreased to 6.1%
-            </Typography>
-          </Paper>
           {/* Timeline controls */}
           <TimelinePanel />
         </Grid>
