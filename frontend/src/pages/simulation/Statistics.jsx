@@ -16,7 +16,27 @@ import {
 } from "@mui/material";
 import { SimulationContext } from "./BaseSimView.jsx";
 import AddIcon from "@mui/icons-material/Add";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import GraphSlot from "../../components/GraphSlot";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
@@ -76,8 +96,14 @@ export default function Statistics() {
                 <GraphSlot
                   title={`${title} Graph`}
                   onOpen={() => console.log(`Open ${title} Graph`)}
-                  labels={indicatorData?.Week ? Object.values(indicatorData.Week) : []}
-                  data={indicatorData?.[title] ? Object.values(indicatorData[title]) : []}
+                  labels={
+                    indicatorData?.Week ? Object.values(indicatorData.Week) : []
+                  }
+                  data={
+                    indicatorData?.[title]
+                      ? Object.values(indicatorData[title])
+                      : []
+                  }
                 />
               </Box>
 
