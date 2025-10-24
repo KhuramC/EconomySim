@@ -2,6 +2,8 @@
 import React from 'react';
 import { Paper, Box, Typography, Link, Stack, Button } from '@mui/material';
 import InsertChartOutlinedIcon from '@mui/icons-material/InsertChartOutlined';
+import {Chart as ChartJS} from "chart.js/auto"
+import {Bar,Doughnut,Line} from "react-chartjs-2"
 
 // Simple placeholder area to drop/choose a graph later
 export default function GraphSlot({ title = 'Lorenz Curve', onOpen }) {
@@ -32,15 +34,16 @@ export default function GraphSlot({ title = 'Lorenz Curve', onOpen }) {
         }}
       >
         <Stack spacing={1} alignItems="center">
-          <InsertChartOutlinedIcon />
-          <Typography variant="body2" color="text.secondary">
-            Graph will be loaded here
-          </Typography>
-          {/* Optional buttons (no real logic yet) */}
-          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-            <Button size="small" variant="outlined">Choose</Button>
-            <Button size="small" variant="text">Clear</Button>
-          </Stack>
+          <Line
+               
+               data={{labels: ["Week 1","Week 2","Week 3"],
+                 datasets: [
+                   {
+                     label: title,
+                     data: [100,200,300]
+                   }
+                 ]
+               }}/>
         </Stack>
       </Box>
     </Paper>
