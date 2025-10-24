@@ -269,11 +269,25 @@ export class SimulationAPI {
    * @param {object} message - The message object to send (e.g., { action: "step" }).
    */
   sendMessage(message) {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-      this.websocket.send(JSON.stringify(message));
-    } else {
+    if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
       console.error("WebSocket is not connected. Cannot send message.");
+      return;
     }
+
+    if (this.websocket.readyState === WebSocket.OPEN) {
+      this.websocket.send(JSON.stringify(message));
+    } else if (this.websocket.readyState === WebSocket.CONNECTING) {
+      // Queue the message to be sent once the connection is open
+      console.log("WebSocket is connecting. Queuing message:", message);
+      this.websocket.addEventListener('open', () => this.sendMessage(message), { once: true });
+    }
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the current week.
+   */
+  getCurrentWeek() {
+    this.sendMessage({ action: "get_current_week" });
   }
 
   /**

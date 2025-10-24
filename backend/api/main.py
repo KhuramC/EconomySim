@@ -242,6 +242,8 @@ async def model_websocket(websocket: WebSocket, model_id: int):
 
     Actions:
     - {"action": "step"}: Steps the model by one week.
+    - {"action": "reverse_step"}: Steps the model backwards by one week.
+    - {"action": "get_current_week"}: Returns the current week.}
     - {"action": "get_indicators"}: Returns all model indicators.
     - {"action": "get_policies"}: Returns the current model policies.
     - {"action": "set_policies", "payload": {...}}: Sets the model policies.
@@ -263,6 +265,19 @@ async def model_websocket(websocket: WebSocket, model_id: int):
             if action == "step":
                 controller.step_model(model_id)
                 await websocket.send_json({"status": "success", "action": "step"})
+            elif action == "reverse_step":
+                controller.step_model(model_id, time=-1)
+                await websocket.send_json(
+                    {"status": "success", "action": "reverse_step"}
+                )
+            elif action == "get_current_week":
+                await websocket.send_json(
+                    {
+                        "status": "success",
+                        "action": "get_current_week",
+                        "data": {"week": controller.get_current_week(model_id)},
+                    }
+                )
             elif action == "get_indicators":
                 indicators_df = controller.get_indicators(model_id)
                 indicators_json = json.loads(indicators_df.to_json(orient="records"))
