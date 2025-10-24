@@ -1,8 +1,9 @@
 // src/pages/simulation/BaseSimView.jsx
-import React from "react";
+import React, { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper } from "@mui/material";
 import SidebarNav from "../../components/SidebarNav";
+import { SimulationAPI } from "../../api/SimulationAPI";
 
 // Content-only pages (no sidebar or outer Paper inside them)
 import Overview from "./Overview.jsx";
@@ -11,11 +12,31 @@ import Policies from "./Policies.jsx";
 import Demographics from "./Demographics.jsx";
 import Statistics from "./Statistics.jsx";
 
+export const SimulationContext = createContext(null);
+
 export default function BaseSimView() {
   const location = useLocation();
-  // Access the modelId from location.state
-  const modelId = location.state?.modelId;
-  console.log("BaseSimView received modelId:", modelId);
+
+  // Latch the modelId from location.state into component state.
+  // This ensures it persists across navigations within this view.
+  const [modelId] = useState(location.state?.modelId);
+
+  // useMemo ensures the API instance is created only once for a given modelId.
+  // We also handle the case where modelId might not be present on first render.
+  const simAPI = useMemo(() => {
+    if (!modelId) return null;
+    console.log("Creating SimulationAPI instance for modelId:", modelId);
+    return new SimulationAPI(modelId);
+  }, [modelId]);
+
+  // useEffect to manage the websocket connection lifecycle.
+  // This runs once when the simAPI instance is created.
+  useEffect(() => {
+    if (simAPI && !simAPI.websocket) {
+      console.log("Connecting WebSocket...");
+      simAPI.connect();
+    }
+  }, [simAPI]); // Dependency array ensures this runs only when simAPI changes.
 
   const basePath = "/BaseSimView";
 
@@ -47,6 +68,7 @@ export default function BaseSimView() {
           }}
         >
           <SidebarNav basePath={basePath} />
+          
         </Box>
 
         {/* RIGHT: Content area fills the remaining space */}
@@ -60,15 +82,17 @@ export default function BaseSimView() {
             overflow: "auto",     // Scroll only inside this area if content is long
           }}
         >
-          <Routes>
-            <Route index element={<Navigate to="overview" replace />} />
-            <Route path="overview" element={<Overview />} />
-            <Route path="industries" element={<Industries />} />
-            <Route path="policies" element={<Policies />} />
-            <Route path="demographics" element={<Demographics />} />
-            <Route path="statistics" element={<Statistics />} />
-            <Route path="*" element={<Navigate to="overview" replace />} />
-          </Routes>
+          <SimulationContext.Provider value={simAPI}>
+            <Routes>
+              <Route index element={<Navigate to="overview" replace state={{ modelId }} />} />
+              <Route path="overview" element={<Overview />} />
+              <Route path="industries" element={<Industries />} />
+              <Route path="policies" element={<Policies />} />
+              <Route path="demographics" element={<Demographics />} />
+              <Route path="statistics" element={<Statistics />} />
+              <Route path="*" element={<Navigate to="overview" replace state={{ modelId }} />} />
+            </Routes>
+          </SimulationContext.Provider>
         </Box>
       </Paper>
     </Box>
