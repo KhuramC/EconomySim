@@ -175,7 +175,7 @@ def dataframe_to_json_response(df: pd.DataFrame) -> Response:
         response (Response): A Response containing a JSON string of the dataframe.
     """
 
-    json_string = df.to_json(orient="records")  # list of dataframe rows
+    json_string = df.to_json(orient="columns")  # dict of columns
     return Response(content=json_string, media_type="application/json")
 
 
@@ -280,7 +280,7 @@ async def model_websocket(websocket: WebSocket, model_id: int):
                 )
             elif action == "get_indicators":
                 indicators_df = controller.get_indicators(model_id)
-                indicators_json = json.loads(indicators_df.to_json(orient="records"))
+                indicators_json = json.loads(indicators_df.to_json(orient="columns"))
                 await websocket.send_json(
                     {
                         "status": "success",

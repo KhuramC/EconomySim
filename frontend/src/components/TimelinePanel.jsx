@@ -24,6 +24,7 @@ export default function TimelinePanel({ simAPI }) {
       <IconButton
         aria-label="previous"
         onClick={() => simAPI.sendMessage({ action: "reverse_step" })}
+        disabled={!simAPI}
       >
         <SkipPreviousIcon />
       </IconButton>
@@ -31,6 +32,7 @@ export default function TimelinePanel({ simAPI }) {
       <IconButton
         aria-label={isPlaying ? "pause" : "play"}
         onClick={handlePlayPauseClick}
+        disabled={!simAPI}
       >
         {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
       </IconButton>
@@ -39,12 +41,13 @@ export default function TimelinePanel({ simAPI }) {
       <IconButton
         aria-label="next"
         onClick={() => simAPI.sendMessage({ action: "step" })}
+        disabled={!simAPI}
       >
         <SkipNextIcon />
       </IconButton>
 
       {/* Fast Forward */}
-      <IconButton aria-label="fast forward">
+      <IconButton aria-label="fast forward" disabled={!simAPI}>
         {/* TODO: make onClick to speed up simulation speed if it is currently playing*/}
         <FastForwardIcon />
       </IconButton>

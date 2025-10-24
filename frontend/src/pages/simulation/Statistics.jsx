@@ -1,5 +1,5 @@
 // src/pages/simulation/Statistics.jsx
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -14,48 +14,50 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from "@mui/material";
-import { Chart as ChartJS } from "chart.js/auto";
-import { Bar, Doughnut, Line } from "react-chartjs-2";
+import { SimulationContext } from "./BaseSimView.jsx";
 import AddIcon from "@mui/icons-material/Add";
-
-import TimelinePanel from "../../components/TimelinePanel";
 import GraphSlot from "../../components/GraphSlot";
 
 export default function Statistics() {
-  // Demo values (wire these to real state later)
-  const year = 5;
-  const week = 5;
-  const totalWeeks = 52;
+  const simAPI = useContext(SimulationContext); // Get API from context
 
   // Demo controls for "Add New Graph"
   const [metric, setMetric] = useState("GDP");
+  const [indicatorData, setIndicatorData] = useState(null);
   const [startUnit, setStartUnit] = useState("week");
   const [graphs, setGraphs] = useState([["GDP", "week"]]);
+
+  useEffect(() => {
+    if (!simAPI) return;
+
+    const handleWebSocketMessage = (message) => {
+      // When a step happens, request the latest indicators
+      if (message.action === "step" || message.action === "reverse_step") {
+        simAPI.sendMessage({ action: "get_indicators" });
+      }
+      // When indicator data arrives, update our state
+      if (message.action === "get_indicators" && message.data) {
+        console.log("Received indicator data:", message.data);
+        setIndicatorData(message.data);
+      }
+    };
+
+    // Add the listener
+    simAPI.addMessageListener(handleWebSocketMessage);
+    // Fetch initial data on component mount
+    simAPI.sendMessage({ action: "get_indicators" });
+
+    // Cleanup: remove the listener when the component unmounts
+    return () => {
+      simAPI.removeMessageListener(handleWebSocketMessage);
+    };
+  }, [simAPI]); // Rerun if simAPI instance changes
 
   const handleGenerate = () => {
     setGraphs((prevGraphs) => [...prevGraphs, [metric, startUnit]]);
   };
   return (
     <Box>
-      {/* Top-right date info (same placement as Overview) */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ textAlign: "right" }}
-        >
-          Year {year} &nbsp;&nbsp; Week {week} of {totalWeeks}
-        </Typography>
-      </Box>
-
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
         <Grid
@@ -69,27 +71,29 @@ export default function Statistics() {
           </Typography>
 
           {graphs.map(([title, period], index) => (
-  <React.Fragment key={index}>
-    <Box sx={{ mb: 2 }}>
-      <GraphSlot
-        title={`${title} Graph`}
-        onOpen={() => console.log(`Open ${title} Graph`)}
-      />
-    </Box>
+            <React.Fragment key={index}>
+              <Box sx={{ mb: 2 }}>
+                <GraphSlot
+                  title={`${title} Graph`}
+                  onOpen={() => console.log(`Open ${title} Graph`)}
+                  labels={indicatorData?.Week ? Object.values(indicatorData.Week) : []}
+                  data={indicatorData?.[title] ? Object.values(indicatorData[title]) : []}
+                />
+              </Box>
 
-    <Typography
-      variant="body2"
-      sx={{
-        mt: -1,
-        mb: 2,
-        fontWeight: 600,
-        color: "text.secondary",
-      }}
-    >
-      {title} Distribution Over Time
-    </Typography>
-  </React.Fragment>
-))}
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: -1,
+                  mb: 2,
+                  fontWeight: 600,
+                  color: "text.secondary",
+                }}
+              >
+                {title} Distribution Over Time
+              </Typography>
+            </React.Fragment>
+          ))}
         </Grid>
 
         {/* RIGHT COLUMN */}
@@ -177,8 +181,6 @@ export default function Statistics() {
               Generate
             </Button>
           </Paper>
-          {/* Timeline controls */}
-          <TimelinePanel />
         </Grid>
       </Grid>
     </Box>

@@ -360,7 +360,7 @@ class EconomyModel(Model):
         # TODO: Implement calculation of the GDP
         # see https://www.investopedia.com/terms/b/bea.asp for notes
         # It's from the project documentation back in the spring
-        return 0
+        return 5 + self.get_week() + random.random()
 
     def calculate_income_per_capita(self):
         """

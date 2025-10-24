@@ -215,10 +215,10 @@ class ModelController:
         indicators_df: pd.DataFrame = model.datacollector.get_model_vars_dataframe()
 
         # filter by time
-        if end_time == 0:
-            end_time = model.get_week()
+        current_week = model.get_week()
+        effective_end_time = current_week if end_time == 0 else end_time
         indicators_df = indicators_df[
-            indicators_df["Week"].between(start_time, end_time, inclusive="both")
+            indicators_df["Week"].between(start_time, effective_end_time, inclusive="both")
         ]
 
         # filter by indicators
