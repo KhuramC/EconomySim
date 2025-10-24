@@ -44,7 +44,7 @@ def test_payday(mock_economy_model, income: int):
     assert person.current_money == (starting_money + income)
 
 
-@mark.parametize(
+@mark.parametrize(
     "income, savings_rate, expected_budget",
     [(1000, 0.1, 900), (500, 0.25, 375), (2000, 0.0, 2000), (100, 1.0, 0)],
 )
