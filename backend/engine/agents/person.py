@@ -26,9 +26,7 @@ class PersonAgent(Agent):
     """The total money held by this person. Negative indicates debt."""
     preferences: dict[str, float]
     """Spending preferences, mapping industry name to a weight. Must sum to 1."""
-    sigma: float
-    """The elasticity of substitution for the agent's CES utility function."""
-
+    
     def __init__(
         self,
         model: Model,
@@ -63,7 +61,7 @@ class PersonAgent(Agent):
 
         Args:
             budget: The total money available to spend.
-            prefs: The preference werights for the available goods.
+            prefs: The preference weights for the available goods.
             prices: The prices of the available goods.
         Returns:
             A dictionary mapping each good's name to the desired quantity.
@@ -82,9 +80,7 @@ class PersonAgent(Agent):
         demands = {}
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity = (
-                (numerator / denominator) * budget / prices[name]
-            )  # The good's share of the budget, divided by its price
+            quantity = (numerator / denominator) * budget # The good's share of the budget
             demands[name] = quantity
 
         return demands
