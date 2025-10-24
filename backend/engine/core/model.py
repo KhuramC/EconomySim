@@ -229,6 +229,7 @@ class EconomyModel(Model):
                     demographic=demographic,
                     income=incomes,
                     current_money=starting_moneys,
+                    preferences={}
                 )
 
             else:
