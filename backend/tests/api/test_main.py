@@ -185,7 +185,7 @@ def test_model_websocket(api_client: TestClient, created_model: int):
         created_model (int): the id of the model created.
     """
 
-    with api_client.websocket_connect(f"/models/{created_model}/websocket") as websocket:
+    with api_client.websocket_connect(f"/models/{created_model}") as websocket:
         # 1. Send a "step" action and verify the response
         websocket.send_json({"action": "step"})
         response_step = websocket.receive_json()
