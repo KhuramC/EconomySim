@@ -1,6 +1,9 @@
 import { HTTP_STATUS } from "./httpCodes";
-import { buildCreatePayload } from "./payloadBuilder";
-import { receivePoliciesPayload, receiveTemplatePayload } from "./payloadReceiver";
+import { buildPoliciesPayload, buildCreatePayload } from "./payloadBuilder";
+import {
+  receivePoliciesPayload,
+  receiveTemplatePayload,
+} from "./payloadReceiver";
 const BASE_HTTP_URL = "http://localhost:8000";
 const BASE_WS_URL = "ws://localhost:8000";
 
@@ -98,7 +101,7 @@ export class SimulationAPI {
 
     if (response.status === HTTP_STATUS.OK) {
       const policies = await response.json();
-      console.log("Policies received:", policies)
+      console.log("Policies received:", policies);
       return receivePoliciesPayload(policies);
     } else {
       this.throwReadableError(
@@ -160,7 +163,7 @@ export class SimulationAPI {
         }),
       }
     );
-    
+
     if (response.status === HTTP_STATUS.OK) {
       const data = await response.json();
       return data;
@@ -279,7 +282,9 @@ export class SimulationAPI {
     } else if (this.websocket.readyState === WebSocket.CONNECTING) {
       // Queue the message to be sent once the connection is open
       console.log("WebSocket is connecting. Queuing message:", message);
-      this.websocket.addEventListener('open', () => this.sendMessage(message), { once: true });
+      this.websocket.addEventListener("open", () => this.sendMessage(message), {
+        once: true,
+      });
     }
   }
 
@@ -288,6 +293,13 @@ export class SimulationAPI {
    */
   getCurrentWeek() {
     this.sendMessage({ action: "get_current_week" });
+  }
+
+  setPolicies(policyParams) {
+    this.sendMessage({
+      action: "set_policies",
+      data: buildPoliciesPayload(policyParams),
+    });
   }
 
   /**
