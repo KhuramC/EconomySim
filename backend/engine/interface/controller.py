@@ -84,7 +84,9 @@ class ModelController:
             self.next_id = self.next_id + 1
             return model_id
         except ValueError as e:
-            raise ValueError(f"Demographics/industries/policies not validated: {str(e)}")
+            raise ValueError(
+                f"Demographics/industries/policies not validated: {str(e)}"
+            )
 
     def delete_model(self, model_id: int) -> None:
         """
@@ -157,6 +159,22 @@ class ModelController:
         model = self.get_model(model_id)
         model.validate_schema(policies)
         model.policies = policies
+
+    def get_current_week(self, model_id: int) -> int:
+        """
+        Retrieve the current week from the specified model.
+
+        Args:
+            model_id (int): The unique identifier for the model to retrieve indicators from.
+        Returns:
+            current_week (int): The current week for the model.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist.
+        """
+
+        model = self.get_model(model_id)
+        return model.get_week()
 
     def get_indicators(
         self,
