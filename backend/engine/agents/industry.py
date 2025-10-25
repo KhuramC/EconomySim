@@ -27,6 +27,7 @@ class IndustryAgent(Agent):
     """The inventory level of goods/services in this industry."""
     total_money: float
     """The total money held by this industry. Negative indicates debt."""
+    #TODO: Possible feature for employment logic: have each person agent have a custom wage, with minimum wage cap, meaning some workers are cheaper than others
     offered_wage: float
     """The weekly wage offered by this industry."""
     fixed_cost: float
@@ -35,12 +36,11 @@ class IndustryAgent(Agent):
     """The cost of raw materials per unit produced."""
     num_employees: int
     """The number of employees in this industry."""
+    #TODO: Possible feature for employment logic: have each person agent have a custom efficiency, meaning some workers produce more goods than others
     worker_efficiency: float
     """The efficiency of workers in this industry (units produced per worker per hour)."""
     hours_worked: float
     """Number of hours worked by each employee this tick, used for updating employee pay"""
-    pricing_strategy: PricingType
-    """The pricing strategy used by this industry."""
     debt_allowed: bool
     """Whether this industry is allowed to go into debt."""
     demand_intercept: float
@@ -62,7 +62,6 @@ class IndustryAgent(Agent):
         starting_raw_mat_cost: float = 2.0,
         starting_number_of_employees: int = 5, #placeholder value for now that should be dependant on person agents employed at industry when employment logic has been implemented
         starting_worker_efficiency: float = 1.0,
-        starting_pricing_strategy: PricingType = PricingType.LINEAR_PROFIT_MAX, #should be static and directly associated with industry type
         starting_debt_allowed: bool = True, #should be static
         #TODO: Demand logic will be pulled from another file, either demand.py or person.py.  These values are currently black box standins to enable determine_price logic
         starting_demand_intercept: float = 400.0,
@@ -81,9 +80,7 @@ class IndustryAgent(Agent):
         self.raw_mat_cost = starting_raw_mat_cost
         self.num_employees = starting_number_of_employees
         self.worker_efficiency = starting_worker_efficiency
-        self.pricing_strategy = starting_pricing_strategy
         self.debt_allowed = starting_debt_allowed
-        self.pricing_strategy = starting_pricing_strategy
         self.demand_intercept = starting_demand_intercept
         self.demand_slope = starting_demand_slope
         self.inventory_available_this_step = 0      #calculated by determine_price

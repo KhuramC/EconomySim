@@ -88,6 +88,15 @@ def test_variable_cost_per_unit(mock_economy_model):
     # variable cost per unit = (Wage / Efficiency) + Raw Material Cost
     expected_variable_cost = (15.0 / 1.0) + 2 # = 17.0
     assert calculated_variable_cost == expected_variable_cost
+    
+    
+    """
+    See Linear Profit Max Test for full explanation of testing parameters
+    This test is designed to find the price at the breakpoint quantity, where revenue = cost
+    In this instance, the parameters have been set up to ensure the suggested quantity is 200, and the suggested price is $18 per unit
+    
+    
+    """
 def test_determine_price_avg_cost(mock_economy_model):
     """
     Test determine_price when pricing strategy is AVG_COST.
@@ -103,7 +112,6 @@ def test_determine_price_avg_cost(mock_economy_model):
                        starting_raw_mat_cost=2.0,
                        starting_number_of_employees=5,
                        starting_worker_efficiency=1.0,
-                       starting_pricing_strategy=PricingType.AVG_COST,
                        starting_demand_intercept=36.0,
                        starting_demand_slope=0.09)
     ind.determine_price()
@@ -184,7 +192,6 @@ def test_determine_price_linear_profit_max(mock_economy_model):
                        starting_raw_mat_cost=2.0,
                        starting_number_of_employees=5,
                        starting_worker_efficiency=1.0,
-                       starting_pricing_strategy=PricingType.LINEAR_PROFIT_MAX,
                        starting_demand_intercept=36.0,
                        starting_demand_slope=0.09)
     ind.determine_price()
