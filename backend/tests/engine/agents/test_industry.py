@@ -65,8 +65,7 @@ def test_max_production_capacity(mock_economy_model):
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
                        starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_pricing_strategy=PricingType.AVG_COST)
+                       starting_worker_efficiency=1.0)
     capacity = ind.get_production_capacity()
     # With 5 employees, efficiency 1.0, hours 40, max production = 5 * 1.0 * 40 = 200
     assert capacity == 200
@@ -82,8 +81,7 @@ def test_variable_cost_per_unit(mock_economy_model):
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
                        starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_pricing_strategy=PricingType.AVG_COST)
+                       starting_worker_efficiency=1.0)
     calculated_variable_cost = ind.get_variable_cost()
     # variable cost per unit = (Wage / Efficiency) + Raw Material Cost
     expected_variable_cost = (15.0 / 1.0) + 2 # = 17.0
