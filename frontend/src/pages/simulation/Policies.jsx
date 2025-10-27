@@ -3,6 +3,7 @@ import { Box, Grid, Typography, Paper, Alert } from "@mui/material";
 import _ from "lodash";
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 import { SimulationContext } from "./BaseSimView.jsx";
+import ChangeableParameters from "../../components/SimSetup/ChangeableParameters.jsx";
 
 export default function Policies() {
   const simAPI = useContext(SimulationContext);
@@ -81,32 +82,12 @@ export default function Policies() {
             <PolicyAccordion
               policyParams={policies}
               handlePolicyChange={handlePolicyChange}
+              starting={false}
             />
           ) : null}
         </Grid>
 
-        {/* RIGHT column: notes */}
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{ display: "flex", flexDirection: "column" }}
-        >
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-              Notes
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ textAlign: "left" }}
-            >
-              • These values can be adjusted while the simulation is running.
-              <br />• Use Setup for initial values; refine here during a run as
-              needed.
-            </Typography>
-          </Paper>
-        </Grid>
+        <ChangeableParameters />
       </Grid>
     </Box>
   );

@@ -9,6 +9,7 @@ export default function DemographicAccordion({
   demoParams,
   handleDemographicChange,
   formErrors,
+  starting = true,
 }) {
   const [selectedDemographic, setSelectedDemographic] = useState(
     Object.values(Demographic)[0]
@@ -42,7 +43,11 @@ export default function DemographicAccordion({
         error={!!formErrors.proportion}
       />
       <ParameterNumInput
-        label="Starting Unemployment Rate (%)"
+        label={
+          starting == true
+            ? "Starting Unemployment Rate (%)"
+            : "Unemployment Rate (%)"
+        }
         value={demoParams[selectedDemographic].unemploymentRate}
         onChange={handleDemographicChange(
           selectedDemographic,

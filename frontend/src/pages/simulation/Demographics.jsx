@@ -1,10 +1,8 @@
-// src/pages/simulation/Demographics.jsx
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Grid,
   Typography,
-  Paper,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -13,7 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-
+import UnchangeableParameters from "../../components/SimSetup/UnchangeableParameters";
 /**
  * READ-ONLY Demographics view
  * - Values are DISPLAY-ONLY during the simulation
@@ -31,11 +29,6 @@ const INDUSTRIES = [
 ];
 
 export default function Demographics() {
-  // Demo date (wire to real simulation clock later)
-  const year = 5;
-  const week = 5;
-  const totalWeeks = 52;
-
   // Display-only demo data (replace with real state/props later)
   const [groups] = useState({
     lower: {
@@ -101,21 +94,6 @@ export default function Demographics() {
 
   return (
     <Box>
-      {/* Top-right date (same placement as Overview/Statistics) */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: "right" }}>
-          Year {year} &nbsp;&nbsp; Week {week} of {totalWeeks}
-        </Typography>
-      </Box>
-
       <Grid container spacing={3}>
         {/* LEFT column: accordions for three classes + global parameters */}
         <Grid item xs={12} md={8}>
@@ -207,19 +185,7 @@ export default function Demographics() {
           </Accordion>
         </Grid>
 
-        {/* RIGHT column: brief note */}
-        <Grid item xs={12} md={4} sx={{ display: "flex", flexDirection: "column" }}>
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-              Notes
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "left" }}>
-              • Class values reflect the current simulation state.<br />
-              • Editing is disabled while the simulation is running.<br />
-              • Use Setup to change initial parameters.
-            </Typography>
-          </Paper>
-        </Grid>
+        <UnchangeableParameters />
       </Grid>
     </Box>
   );
@@ -231,7 +197,12 @@ export default function Demographics() {
  * - Shows read-only class metrics plus Spending Behavior breakdown by industry.
  * - If no per-class spending map is provided, falls back to a uniform global percentage.
  */
-function ClassAccordion({ title, data, globalSpendingFallbackPct, defaultExpanded = false }) {
+function ClassAccordion({
+  title,
+  data,
+  globalSpendingFallbackPct,
+  defaultExpanded = false,
+}) {
   // Build display map: prefer class-specific spending; otherwise fill with a uniform fallback
   const spendingMap = useMemo(() => {
     if (data?.spending && Object.keys(data.spending).length > 0) {
@@ -296,7 +267,11 @@ function ClassAccordion({ title, data, globalSpendingFallbackPct, defaultExpande
         <Grid container spacing={1}>
           {spendingMap.map((row) => (
             <Grid key={row.label} item xs={12} sm={6} md={4}>
-              <ReadOnlyField label={row.label} value={String(row.value)} adornEnd="%" />
+              <ReadOnlyField
+                label={row.label}
+                value={String(row.value)}
+                adornEnd="%"
+              />
             </Grid>
           ))}
         </Grid>
@@ -305,9 +280,10 @@ function ClassAccordion({ title, data, globalSpendingFallbackPct, defaultExpande
 
         {/* Quick summary line */}
         <Typography variant="body2" color="text.secondary">
-          Share: <b>{data.share}%</b>&nbsp;•&nbsp; Income: <b>${formatCurrency(data.income)}</b>
-          &nbsp;•&nbsp; Savings: <b>{data.savingsRate}%</b>&nbsp;•&nbsp; Unemployment:
-          &nbsp;<b>{data.unemployment}%</b>
+          Share: <b>{data.share}%</b>&nbsp;•&nbsp; Income:{" "}
+          <b>${formatCurrency(data.income)}</b>
+          &nbsp;•&nbsp; Savings: <b>{data.savingsRate}%</b>&nbsp;•&nbsp;
+          Unemployment: &nbsp;<b>{data.unemployment}%</b>
         </Typography>
       </AccordionDetails>
     </Accordion>

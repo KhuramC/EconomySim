@@ -5,9 +5,16 @@ export default function PolicyAccordion({
   policyParams,
   handlePolicyChange,
   formErrors,
+  starting = true,
 }) {
   return (
-    <ParameterAccordion title="Starting Government Policies">
+    <ParameterAccordion
+      title={
+        starting == true
+          ? "Starting Government Policies"
+          : "Government Policies"
+      }
+    >
       <ParameterNumInput
         label="Sales Tax (%)"
         value={policyParams.salesTax}
