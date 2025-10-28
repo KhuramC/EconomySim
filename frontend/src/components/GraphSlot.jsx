@@ -1,8 +1,27 @@
 import { useState, useMemo } from "react";
 import { Paper, Box, Typography, Link, Stack } from "@mui/material";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import { Line } from "react-chartjs-2";
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 // Simple placeholder area to drop/choose a graph later
 export default function GraphSlot({
   title = "Untitled Graph",
