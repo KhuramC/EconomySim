@@ -1,4 +1,3 @@
-// src/pages/simulation/Statistics.jsx
 import React, { useState, useContext, useEffect } from "react";
 import {
   Box,
@@ -27,6 +26,7 @@ import {
   Legend,
 } from "chart.js";
 import GraphSlot from "../../components/GraphSlot";
+import { Indicators } from "../../types/Indicators";
 
 ChartJS.register(
   CategoryScale,
@@ -42,7 +42,7 @@ export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
 
   // Demo controls for "Add New Graph"
-  const [metric, setMetric] = useState("GDP");
+  const [metric, setMetric] = useState(Object.values(Indicators)[0]);
   const [indicatorData, setIndicatorData] = useState(null);
   const [startUnit, setStartUnit] = useState("week");
   const [graphs, setGraphs] = useState([["GDP", "week"]]);
@@ -97,7 +97,7 @@ export default function Statistics() {
                   title={`${title} Graph`}
                   onOpen={() => console.log(`Open ${title} Graph`)}
                   labels={
-                    indicatorData?.Week ? Object.values(indicatorData.Week) : []
+                    indicatorData?.week ? Object.values(indicatorData.week) : []
                   }
                   data={
                     indicatorData?.[title]
@@ -146,10 +146,12 @@ export default function Statistics() {
                 value={metric}
                 onChange={(e) => setMetric(e.target.value)}
               >
-                <MenuItem value="GDP">GDP</MenuItem>
-                <MenuItem value="UNEMPLOYMENT">Unemployment</MenuItem>
-                <MenuItem value="CPI">CPI</MenuItem>
-                <MenuItem value="WEALTH">Wealth Distribution</MenuItem>
+                {Object.entries(Indicators).map(([key, value]) => (
+                  // Create a MenuItem for each Indicator
+                  <MenuItem key={value} value={value}>
+                    <span style={{ textTransform: "capitalize" }}>{value}</span>
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 
