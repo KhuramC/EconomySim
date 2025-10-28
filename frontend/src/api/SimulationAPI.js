@@ -15,6 +15,7 @@ export class SimulationAPI {
     this.modelId = modelId;
     this.websocket = null;
     this.messageListeners = new Set();
+    this.messageQueue = []; // Queue for messages sent before connection is open
   }
 
   // --- Static Methods (don't require a model instance) ---
@@ -229,6 +230,7 @@ export class SimulationAPI {
 
       this.websocket.onopen = () => {
         console.log(`WebSocket connected to model ${this.modelId}`);
+        this.processMessageQueue();
         resolve();
       };
 
@@ -250,6 +252,15 @@ export class SimulationAPI {
         this.websocket = null;
       };
     });
+  }
+
+  /**
+   * Processes and sends any messages that were queued while the WebSocket was connecting.
+   */
+  processMessageQueue() {
+    while (this.messageQueue.length > 0) {
+      this.sendMessage(this.messageQueue.shift());
+    }
   }
 
   /**
@@ -281,11 +292,8 @@ export class SimulationAPI {
     if (this.websocket.readyState === WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(message));
     } else if (this.websocket.readyState === WebSocket.CONNECTING) {
-      // Queue the message to be sent once the connection is open
       console.log("WebSocket is connecting. Queuing message:", message);
-      this.websocket.addEventListener("open", () => this.sendMessage(message), {
-        once: true,
-      });
+      this.messageQueue.push(message);
     }
   }
 
