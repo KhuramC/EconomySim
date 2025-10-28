@@ -1,20 +1,10 @@
 from typing import Iterable
 import pandas as pd
 from ..core.model import EconomyModel
-from ..core.model import policies_schema
 
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
-
-available_indicators: tuple = (
-    "Unemployment",
-    "GDP",
-    "IncomePerCapita",
-    "MedianIncome",
-    "HooverIndex",
-    "LorenzCurve",
-)
-"""The indicators that can be retrieved from the model."""
+from ..types.indicators import Indicators
 
 
 class ModelController:
@@ -181,7 +171,7 @@ class ModelController:
         model_id: int,
         start_time: int = 0,
         end_time: int = 0,
-        indicators: Iterable[str] | None = None,
+        indicators: Iterable[Indicators] | None = None,
     ) -> pd.DataFrame:
         """
         Retrieve economic indicators from the specified model.
@@ -205,10 +195,10 @@ class ModelController:
         if start_time < 0 or end_time < 0 or (end_time != 0 and end_time < start_time):
             raise ValueError("Invalid start_time or end_time values.")
         if indicators is not None and not all(
-            ind in available_indicators for ind in indicators
+            ind in Indicators.values() for ind in indicators
         ):
             raise ValueError(
-                f"One or more requested indicators are not available. Available indicators: {available_indicators}"
+                f"One or more requested indicators are not available. Available indicators: {list(Indicators)}"
             )
         model = self.get_model(model_id)
 
@@ -218,7 +208,9 @@ class ModelController:
         current_week = model.get_week()
         effective_end_time = current_week if end_time == 0 else end_time
         indicators_df = indicators_df[
-            indicators_df["Week"].between(start_time, effective_end_time, inclusive="both")
+            indicators_df["week"].between(
+                start_time, effective_end_time, inclusive="both"
+            )
         ]
 
         # filter by indicators
