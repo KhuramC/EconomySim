@@ -154,20 +154,11 @@ export class SimulationAPI {
    */
   async getModelIndicators(startTime = 0, endTime = 0, modelId = this.modelId) {
     // TODO: Should we give ability to fetch specific indicators? API can be changed to do that, see controller method to get indicators.
-    const response = await fetch(
-      `${BASE_HTTP_URL}/models/${modelId}/indicators`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          start_time: startTime,
-          end_time: endTime,
-        }),
-      }
-    );
+    const url = new URL(`${BASE_HTTP_URL}/models/${modelId}/indicators`);
+    url.searchParams.append("start_time", startTime);
+    url.searchParams.append("end_time", endTime);
 
+    const response = await fetch(url.toString(), { method: "GET" });
     if (response.status === HTTP_STATUS.OK) {
       const data = await response.json();
       return data;
