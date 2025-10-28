@@ -24,7 +24,7 @@ class PersonAgent(Agent):
     """The employer of this person, or None if unemployed."""
     current_money: int
     """The total money held by this person. Negative indicates debt."""
-    preferences: dict[str, float]
+    preferences: dict[IndustryType, float]
     """Spending preferences, mapping industry name to a weight. Must sum to 1."""
     
     def __init__(
