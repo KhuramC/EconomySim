@@ -2,7 +2,7 @@ from mesa import Agent
 from mesa import Model
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.Pricing_Type import PricingType
-from .pricing import avg_cost, linear_profit_max, variable_cost_per_unit
+from .pricing import avg_cost, linear_profit_max, linear_price
 import logging
 import math
 
@@ -27,7 +27,7 @@ class IndustryAgent(Agent):
     """The inventory level of goods/services in this industry."""
     total_money: float
     """The total money held by this industry. Negative indicates debt."""
-    #TODO: Possible feature for employment logic: have each person agent have a custom wage, with minimum wage cap, meaning some workers are cheaper than others
+    #TODO: Possible feature for employment logic: have each person agent have a custom wage, with minimum wage floor, meaning some workers are cheaper than others
     offered_wage: float
     """The weekly wage offered by this industry."""
     fixed_cost: float
@@ -51,6 +51,7 @@ class IndustryAgent(Agent):
     """The inventory available for sale this time step."""
     
     def __init__(
+        #TODO: associate most or all starting variables with industry_type so they don't need to be passed in via the constructor
         self,
         model: Model,
         industry_type: IndustryType,
@@ -103,13 +104,36 @@ class IndustryAgent(Agent):
         """
         return self.model.get_employees(self.industry_type)
     def determine_price(self):
-        """
-        Determine the price of goods/services in this industry based on market conditions.
+        """  
+        Description:
+            Determines the suggested quantity and price of goods for this tick using pricing strategy
+            associated with the industry type
+            The suggested quantity is used by produce_goods to determine the number of units produced this tick
 
-        Uses the industry's demand parameters (self.demand_intercept, self.demand_slope),   
-        variable cost from self.get_variable_cost(), and fixed cost self.fixed_cost.
-        Supports AVG_COST and LINEAR_PROFIT_MAX pricing strategies.
-        """
+            Incorperated in the calculation is the production cap, determined by the maximum amount that employees
+            can produce, and the total available funds
+        
+        Required Inputs: (These Values must be known before running this function)
+            self.demand_intercept (float): intercept of demand graph
+            self.demand_slope (float): slope of demand graph
+            self.get_variable_cost() requirements:
+                self.offered_wage (float): hourly wage of employees
+                self.worker_efficiency (float): goods produced per employee, per hour
+                self.raw_mat_cost (float): per-unit cost of raw materials
+            self.inventory (int): inventory left over from previous tick
+            self.get_production_capacity() requirements:
+                self.num_employees (int): number of employees employeed by industry
+                if debt is not allowed,
+                    self.total_money must be known
+            self.industry_type (IndustryType): defines the pricing strategy
+                
+            
+        Updated Variables:  
+            self.inventory_available_this_step (int): Returns the quantity available for sale this step
+                Note: this is different from the total inventory available, which is the leftovers from the 
+                last tick.  In order to maximize profit, the industry may artificially restrict how much they sell
+            self.price (float): Returns the price to sell the suggested quantity
+        """  
 
         A = float(self.demand_intercept)
         B = float(self.demand_slope)
@@ -125,22 +149,26 @@ class IndustryAgent(Agent):
         Q_max = int(max(0, self.inventory + self.get_production_capacity()))
 
         Price = self.price
-        Suggested_Quantity = float(self.inventory)
+        Suggested_Quantity = self.inventory
         
+        #Determine pricing strategy
         strategy = INDUSTRY_PRICING[self.industry_type]
-        
         if strategy == PricingType.AVG_COST:
-            Price, Suggested_Quantity = avg_cost(A, B, V, float(self.fixed_cost), Q_max)
+            Suggested_Quantity = avg_cost(A, B, V, float(self.fixed_cost))
         elif strategy == PricingType.LINEAR_PROFIT_MAX:
-            Price, Suggested_Quantity = linear_profit_max(A, B, m, n, Q_max)
+            Suggested_Quantity = linear_profit_max(A, B, m, n)
 
         # ensure suggested quantity is feasible and non-negative, clamp to [0, Q_max]
         if Suggested_Quantity is None:
-            Suggested_Quantity = 0.0
-        Suggested_Quantity = float(max(0.0, min(Suggested_Quantity, Q_max)))
-        #TODO: Implement Logic to hire more employees if the max_production_capacity is too small to accomodate suggested quantity
+            Suggested_Quantity = 0
+        
+        Suggested_Quantity = float(max(0, min(Suggested_Quantity, Q_max)))
+        #TODO: Implement Logic here to hire more employees if the max_production_capacity is too small to accomodate suggested quantity
         #Note: don't just look at Q_max here, as this number also takes into account if there's insufficient funds to produce at the suggested quantity
         #Instead, just factor in max capacity based on a 40 hour work week with all current employees
+
+        #Set price based on suggested quantity
+        Price = linear_price(A,B,Suggested_Quantity)
         
         # set results on the instance
         self.price = float(Price)
@@ -148,29 +176,44 @@ class IndustryAgent(Agent):
         self.inventory_available_this_step = Suggested_Quantity
 
     def produce_goods(self):
-        #TODO: Implement logic to sell stored inventory first before producing more goods on top.
-        #The current logic hinders this, as we don't want to immediately cut hours based on a temporary supply surplus
-        #We also don't neccisarily want to change the price of the goods being sold, just because the production cost went down
-        quantity_to_produce = self.inventory_available_this_step
+        """  
+        Description:
+            Determines the suggested quantity and price of goods for this tick using pricing strategy
+            associated with the industry type
+            The suggested quantity is used by produce_goods to determine the number of units produced this tick
+
+            Incorperated in the calculation is the production cap, determined by the maximum amount that employees
+            can produce, and the total available funds
+        
+        Required Inputs: (These Values must be known before running this function)
+            self.inventory_available_this_step (int): Quantity that will be sold this step
+            self.inventory (int): current inventory on hand
+            self.num_employees (int): number of employees employed
+            self.worker_efficiency (float): goods produced per employee, per hour
+            self.get_variable_cost() requirements:
+                self.offered_wage (float): hourly wage of employees
+                self.worker_efficiency (float): goods produced per employee, per hour
+                self.raw_mat_cost (float): per-unit cost of raw materials
+            
+        Updated Variables:  
+            self.inventory (int): total inventory available after production
+            self.total_money (float): Funds available after production
+        """  
+        #produce needed inventory without re-producing inventory aready in storage
+        quantity_to_produce = self.inventory_available_this_step - self.inventory
+        
         variable_cost_per_unit = self.get_variable_cost()
         total_variable_cost = variable_cost_per_unit * quantity_to_produce
-        if not self.debt_allowed:
-            total_cost = self.fixed_cost + total_variable_cost
-            # If debt is not allowed, ensure we have enough funds to cover costs
-            if total_cost > self.total_money:
-                # Calculate max affordable quantity
-                quantity_to_produce = int((self.total_money - self.fixed_cost) / variable_cost_per_unit)
-                quantity_to_produce = max(0, quantity_to_produce)  # Avoid negative production
-            self.determine_price_production_cap(int(quantity_to_produce))
-            hours_worked = quantity_to_produce / (self.num_employees * self.worker_efficiency) if self.num_employees * self.worker_efficiency > 0 else 0
-            total_hours_worked = hours_worked * self.num_employees
-            total_full_hours = self.num_employees * 40
-            hours_cut = total_full_hours - total_hours_worked
+        
+        hours_worked = quantity_to_produce / (self.num_employees * self.worker_efficiency) if self.num_employees * self.worker_efficiency > 0 else 0
+        total_hours_worked = hours_worked * self.num_employees
+        total_full_hours = self.num_employees * 40
+        hours_cut = total_full_hours - total_hours_worked
             
-            self.hours_worked = hours_worked #update hours worked for each employee this tick.  Assume equal number of hours for each employee for now
-            
-            if hours_cut >= 40:
-                logging.info(f"Total employee work hours reduced by {hours_cut:.1f} to stay within budget.")
+        self.hours_worked = hours_worked #update hours worked for each employee this tick.  Assume equal number of hours for each employee for now
+
+        if hours_cut >= 40:
+                logging.info(f"Total employee work hours reduced by {hours_cut:.1f} to meet production quota.")
                 #TODO If the number of hours needed can consistently be accomplished by fewer employees, trigger firing.  (call change_employment here!)
             
         # Update inventory and deduct costs
@@ -178,23 +221,12 @@ class IndustryAgent(Agent):
         spent_variable = variable_cost_per_unit * quantity_to_produce
         spent_fixed = self.fixed_cost
         self.total_money = self.total_money - spent_fixed - spent_variable     
+        
         logging.info(
             f"Produced {quantity_to_produce:.2f} units; spent_variable={spent_variable:.2f}; "
             f"spent_fixed={spent_fixed:.2f}; remaining funds {self.total_money:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
-        
-    def determine_price_production_cap(self, production_capacity: int):
-        """
-        Simpler determine_price helper function for handling exceptions in produce_goods
-        Skips the step that determines the suggested quantity and just updates the price
-        
-        NOTE: shouldn't be accessible outside of internal calls from model. how to fix?
-        """
-        A = self.demand_intercept
-        B = self.demand_slope
-        self.inventory_available_this_step = production_capacity
-        self.price = A - B * production_capacity
     def change_employment(self):
         """
         How the industry will change their employees, whether it be by hiring more, firing more,
@@ -216,10 +248,18 @@ class IndustryAgent(Agent):
 
     def get_variable_cost(self):
         """
-        Return variable cost per unit: (wage / efficiency) + raw_material_cost.
+        Description:
+            Return variable cost per unit: (wage / efficiency) + raw_material_cost.
+        
+            If efficiency <= 0, return float('inf') to signal that per-unit cost is undefined
+            (production is impossible / infeasible).
+        Required Inputs: 
+            self.offered_wage (float): hourly wage of employees
+            self.worker_efficiency (float): goods produced per employee, per hour
+            self.raw_mat_cost (float): per-unit cost of raw materials
+        Returns:
+            variable_cost (float): variable cost per unit
 
-        If efficiency <= 0, return float('inf') to signal that per-unit cost is undefined
-        (production is impossible / infeasible).
         """
         try:
             ow = float(self.offered_wage)
@@ -238,12 +278,34 @@ class IndustryAgent(Agent):
             # semantics: if eff==0 we cannot produce — treat per-unit cost as infinite
             return float("inf")
 
-        return (ow / eff) + rm
+        variable_cost = (ow / eff) + rm
+        return variable_cost
     def get_production_capacity(self):
         """
         Get production capacity based on workers and funds available.
 
         Returns an int (capacity in units). If production is infeasible returns 0.
+        """
+        """
+        Description:
+            Get production capacity based on workers and funds available.
+
+            Returns an int (capacity in units). If production is infeasible returns 0.
+        Required Inputs: 
+            self.num_employees (int): number of employees employed by industry
+            self.worker_efficiency (float): goods produced per employee, per hour
+            self.debt_allowed (bool): whether or not the industry is allowed to go into debt to meet
+                                      production capacity
+            self.get_variable_cost() requirements:
+                self.offered_wage (float): hourly wage of employees
+                self.worker_efficiency (float): goods produced per employee, per hour
+                self.raw_mat_cost (float): per-unit cost of raw materials
+            self.total_money (float): total money available
+            
+        Returns:
+            production_capacity (int): depending on debt allowed, either worker capacity limit
+                                       or the min of fund cap and worker cap
+
         """
         # worker_limit: how many units can workers produce this period
         # (num_employees * efficiency * hours_per_worker); hours assumed 40 here
@@ -255,42 +317,50 @@ class IndustryAgent(Agent):
         if worker_limit <= 0:
             return 0
 
-        variable_cost_per_unit = self.get_variable_cost()
-
-        # Validate variable_cost_per_unit BEFORE dividing
-        # Accept only positive, finite costs
-        if (
-            not math.isfinite(variable_cost_per_unit)
-            or variable_cost_per_unit <= 0.0
-        ):
-            # If cost is infinite / undefined -> no funds-based production possible
-            # If cost <= 0 (shouldn't happen) treat as no funds bound (or choose worker_limit)
-            # Here we'll treat as funds_limit = 0 for safety (you can change policy)
-            funds_limit = 0
+        #If industry is allowed to go into debt, skip funds limit check
+        if(self.debt_allowed):
+            return worker_limit
         else:
-            # compute funds_limit safely — protect against unreasonable huge values
-            funds_limit_raw = self.total_money / variable_cost_per_unit
-            # if funds_limit_raw is not finite for some reason, fall back to 0
-            if not math.isfinite(funds_limit_raw):
+            variable_cost_per_unit = self.get_variable_cost()
+
+            # Validate variable_cost_per_unit BEFORE dividing
+            # Accept only positive, finite costs
+            if (
+                not math.isfinite(variable_cost_per_unit)
+                or variable_cost_per_unit <= 0.0
+            ):
+                # If cost is infinite / undefined -> no funds-based production possible
+                # If cost <= 0 (shouldn't happen) treat as no funds bound (or choose worker_limit)
+                # Here we'll treat as funds_limit = 0 for safety (you can change policy)
                 funds_limit = 0
             else:
-                # clamp to a sensible integer range before floor to avoid overflow
-                # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
-                funds_limit = int(max(0, math.floor(funds_limit_raw)))
+                # compute funds_limit safely — protect against unreasonable huge values
+                funds_limit_raw = self.total_money / variable_cost_per_unit
+                # if funds_limit_raw is not finite for some reason, fall back to 0
+                if not math.isfinite(funds_limit_raw):
+                    funds_limit = 0
+                else:
+                    # clamp to a sensible integer range before floor to avoid overflow
+                    # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
+                    funds_limit = int(max(0, math.floor(funds_limit_raw)))
 
-        # final capacity is the min of worker limit and funds limit
-        return min(worker_limit, funds_limit)
+            # final capacity is the min of worker limit and funds limit
+            return min(worker_limit, funds_limit)
 
         
     def set_demand_graph_params(self, A: float, B: float):
         """
-        Set the demand graph parameters for the industry.
-        
-        A: demand intercept (P at Q=0)
-        B: demand slope (P = A - B Q), B > 0
+            Set the demand graph parameters for the industry.
+            Called after demand graph is externally calculated
+        args:
+            A (float): demand intercept (P at Q=0)
+            B (float): demand slope (P = A - B Q), B > 0
+        updates:
+            self.demand_intercept
+            self.demand_slope
         """
-        self.demand_A = A
-        self.demand_B = B
+        self.demand_intercept = A
+        self.demand_slope = B
     
     def get_weekly_pay(self):
         """
@@ -298,23 +368,29 @@ class IndustryAgent(Agent):
         """
         return self.hours_worked * self.offered_wage
     
-        pass
-
     def sell_goods(self, quantity: float):
         """
         Reduces the industry's inventory by the specified quantity.
+        
+        checked against self.inventory_available_this_step, which designates how much
+        industry is allowing for sale this tick
 
         Args:
             quantity: The amount of goods sold.
+        Updated Variables:
+            self.inventory (int): reduced by quantity sold
+            self.inventory_available_this_step (int): reduced by quantity sold
+            self.total_money (float): increased by revenue generated by sale
         """
         if quantity <= 0:
             return
 
-        if quantity > self.inventory:
+        if quantity > self.inventory_available_this_step:
             logging.error(
-                f"Attempted to sell {quantity} but only have {self.inventory} in stock."
+                f"Attempted to sell {quantity} but only have {self.inventory_available_this_step} available for sale."
             )
             return
 
         self.inventory -= quantity
+        self.inventory_available_this_step -= quantity
         self.total_money += quantity * self.price
