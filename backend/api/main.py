@@ -1,18 +1,18 @@
-from fastapi import FastAPI, HTTPException, WebSocket, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 import pandas as pd
-import json
 from typing import Any
 
 from engine.interface.controller import ModelController
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from .city_template import CityTemplate
+from . import websocket
+from .dependencies import get_controller
 
-# these work like singletons here
-controller = ModelController()
+controller = get_controller()
 app = FastAPI()
 
 # Define allowed origins for both HTTP and WebSocket
@@ -29,6 +29,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allows all headers (like Content-Type)
 )
+
+app.include_router(websocket.router)
 
 
 class ModelCreateRequest(BaseModel):
@@ -83,7 +85,9 @@ async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
 
 
 @app.post("/models/create", status_code=status.HTTP_201_CREATED)
-async def create_model(model_parameters: ModelCreateRequest) -> int:
+async def create_model(
+    model_parameters: ModelCreateRequest,
+) -> int:
     """
     Creates a model based on the given parameters.
     The default status code is 201 upon success.
@@ -142,7 +146,8 @@ async def get_model_policies(
 
 @app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
-    model_id: int, policies: dict[str, float | dict[IndustryType, float]]
+    model_id: int,
+    policies: dict[str, float | dict[IndustryType, float]],
 ):
     """
     Sets all of the current policies in a model.
@@ -232,93 +237,6 @@ async def step_model(model_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with id {model_id} not found.",
         )
-
-
-@app.websocket("/models/{model_id}")
-async def model_websocket(websocket: WebSocket, model_id: int):
-    """
-    Sets up a websocket for consistent communication.
-    Accepts JSON messages with an "action" and optional "payload".
-
-    Actions:
-    - {"action": "step"}: Steps the model by one week.
-    - {"action": "reverse_step"}: Steps the model backwards by one week.
-    - {"action": "get_current_week"}: Returns the current week.}
-    - {"action": "get_indicators"}: Returns all model indicators.
-    - {"action": "get_policies"}: Returns the current model policies.
-    - {"action": "set_policies", "payload": {...}}: Sets the model policies.
-
-    Args:
-        websocket (WebSocket): the websocket.
-        model_id (int): the model to interact with.
-    """
-
-    await websocket.accept()
-    try:
-        # Ensure the model exists before entering the loop
-        controller.get_model(model_id)
-
-        while True:
-            data = await websocket.receive_json()
-            action = data.get("action")
-
-            if action == "step":
-                controller.step_model(model_id)
-                await websocket.send_json({"status": "success", "action": "step"})
-            elif action == "reverse_step":
-                controller.step_model(model_id, time=-1)
-                await websocket.send_json(
-                    {"status": "success", "action": "reverse_step"}
-                )
-            elif action == "get_current_week":
-                await websocket.send_json(
-                    {
-                        "status": "success",
-                        "action": "get_current_week",
-                        "data": {"week": controller.get_current_week(model_id)},
-                    }
-                )
-            elif action == "get_indicators":
-                indicators_df = controller.get_indicators(model_id)
-                indicators_json = json.loads(indicators_df.to_json(orient="columns"))
-                await websocket.send_json(
-                    {
-                        "status": "success",
-                        "action": "get_indicators",
-                        "data": indicators_json,
-                    }
-                )
-            elif action == "get_policies":
-                policies = controller.get_policies(model_id)
-                await websocket.send_json(
-                    {"status": "success", "action": "get_policies", "data": policies}
-                )
-            elif action == "set_policies":
-                payload = data.get("data")
-                if payload:
-                    controller.set_policies(model_id, payload)
-                    await websocket.send_json(
-                        {"status": "success", "action": "set_policies"}
-                    )
-                else:
-                    await websocket.send_json(
-                        {
-                            "status": "error",
-                            "message": "Payload missing for set_policies action.",
-                        }
-                    )
-            else:
-                await websocket.send_json(
-                    {"status": "error", "message": f"Unknown action: {action}"}
-                )
-
-    except ValueError:  # Catches if model_id is not found
-        await websocket.send_json({"error": f"Model with id {model_id} not found."})
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-    finally:
-        await websocket.close()
-        print(f"WebSocket connection closed.")
 
 
 @app.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
