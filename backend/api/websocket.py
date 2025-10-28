@@ -92,23 +92,28 @@ async def model_websocket(websocket: WebSocket, model_id: int):
         controller.get_model(model_id)
 
         while True:
-            data = await websocket.receive_json()
-            action = data.get("action")
+            try:
+                data = await websocket.receive_json()
+                action = data.get("action")
 
-            handler = ACTION_HANDLERS.get(action)
-            if handler:
-                if action == "set_policies":
-                    response = handler(model_id, data.get("data"))
+                handler = ACTION_HANDLERS.get(action)
+                if handler:
+                    if action == "set_policies":
+                        response = handler(model_id, data.get("data"))
+                    else:
+                        response = handler(model_id)
                 else:
-                    response = handler(model_id)
+                    response = {"status": "error", "message": f"Unknown action: {action}"}
                 await websocket.send_json(response)
-            else:
-                await websocket.send_json(
-                    {"status": "error", "message": f"Unknown action: {action}"}
-                )
-    except WebSocketDisconnect:
-        print(f"Client for model {model_id} disconnected.")
+
+            except ValueError as e:
+                # Catch errors from handlers (e.g., bad policy data) and report them
+                # without disconnecting the client.
+                await websocket.send_json({"status": "error", "message": str(e)})
+            except WebSocketDisconnect:
+                print(f"Client for model {model_id} disconnected.")
+                break
+
     except ValueError:  # Catches if model_id is not found
         await websocket.send_json({"error": f"Model with id {model_id} not found."})
-    finally:
         await websocket.close()
