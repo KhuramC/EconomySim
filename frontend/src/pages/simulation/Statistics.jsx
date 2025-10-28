@@ -25,7 +25,7 @@ export default function Statistics() {
   const [metric, setMetric] = useState(Object.values(Indicators)[0]);
   const [indicatorData, setIndicatorData] = useState(null);
   const [startUnit, setStartUnit] = useState("week");
-  const [graphs, setGraphs] = useState([["GDP", "week"]]);
+  const [graphs, setGraphs] = useState([["gdp", "week"]]);
 
   useEffect(() => {
     if (!simAPI) return;
