@@ -214,7 +214,6 @@ class IndustryAgent(Agent):
         return self.offered_wage
         # TODO: Implement industry wage logic
 
-
     def get_variable_cost(self):
         """
         Return variable cost per unit: (wage / efficiency) + raw_material_cost.
@@ -299,3 +298,23 @@ class IndustryAgent(Agent):
         """
         return self.hours_worked * self.offered_wage
     
+        pass
+
+    def sell_goods(self, quantity: float):
+        """
+        Reduces the industry's inventory by the specified quantity.
+
+        Args:
+            quantity: The amount of goods sold.
+        """
+        if quantity <= 0:
+            return
+
+        if quantity > self.inventory:
+            logging.error(
+                f"Attempted to sell {quantity} but only have {self.inventory} in stock."
+            )
+            return
+
+        self.inventory -= quantity
+        self.total_money += quantity * self.price
