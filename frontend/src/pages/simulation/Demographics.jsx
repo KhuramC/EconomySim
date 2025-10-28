@@ -12,21 +12,14 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import UnchangeableParameters from "../../components/SimView/UnchangeableParameters";
+import { Demographic } from "../../types/Demographic";
+import { IndustryType } from "../../types/IndustryType";
 /**
  * READ-ONLY Demographics view
  * - Values are DISPLAY-ONLY during the simulation
  * - Includes per-class Spending Behavior (fallbacks to a uniform global value)
  */
 
-// Demo industry keys used for spending behavior breakdown
-const INDUSTRIES = [
-  "Utilities",
-  "Housing",
-  "Groceries",
-  "Entertainment",
-  "Luxury Goods",
-  "Gas",
-];
 
 export default function Demographics() {
   // Display-only demo data (replace with real state/props later)
@@ -206,13 +199,13 @@ function ClassAccordion({
   // Build display map: prefer class-specific spending; otherwise fill with a uniform fallback
   const spendingMap = useMemo(() => {
     if (data?.spending && Object.keys(data.spending).length > 0) {
-      return INDUSTRIES.map((k) => ({
+      return Object.values(IndustryType).map((k) => ({
         label: k,
         value: data.spending[k] ?? 0,
       }));
     }
     // Fallback: same % for all industries (demo only)
-    return INDUSTRIES.map((k) => ({
+    return Object.values(IndustryType).map((k) => ({
       label: k,
       value: Number(globalSpendingFallbackPct ?? 0),
     }));
