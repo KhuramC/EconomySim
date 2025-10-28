@@ -25,10 +25,11 @@ export class SimulationAPI {
    * @param {*} defaultMessage - the default message if nothing could be obtained.
    * @returns an error with a message.
    */
-  throwReadableError(response, defaultMessage) {
+  static async throwReadableError(response, defaultMessage) {
     let readableError = defaultMessage;
 
-    return response.json().then((errorData) => {
+    try {
+      const errorData = await response.json();
       if (errorData.detail) {
         if (Array.isArray(errorData.detail)) {
           // This handles Pydantic 422 validation errors
@@ -41,8 +42,8 @@ export class SimulationAPI {
           readableError = errorData.detail;
         }
       }
-      throw new Error(readableError);
-    });
+    } catch (e) {}
+    throw new Error(readableError);
   }
 
   /**
@@ -58,7 +59,7 @@ export class SimulationAPI {
       // Transform the backend config into the frontend's `params` format
       return receiveTemplatePayload(backendConfig);
     } else {
-      this.throwReadableError(
+      throw await SimulationAPI.throwReadableError(
         response,
         `Failed to fetch configuration for template: ${template}`
       );
@@ -84,7 +85,7 @@ export class SimulationAPI {
       const modelId = await response.json();
       return modelId;
     } else {
-      this.throwReadableError(response, "Failed to create model.");
+      throw await SimulationAPI.throwReadableError(response, "Failed to create model.");
     }
   }
 
@@ -104,7 +105,7 @@ export class SimulationAPI {
       console.log("Policies received:", policies);
       return receivePoliciesPayload(policies);
     } else {
-      this.throwReadableError(
+      throw await SimulationAPI.throwReadableError(
         response,
         `Failed to fetch policies for model ID ${modelId}`
       );
@@ -133,7 +134,7 @@ export class SimulationAPI {
     if (response.status === HTTP_STATUS.NO_CONTENT) {
       return;
     } else {
-      this.throwReadableError(
+      throw await SimulationAPI.throwReadableError(
         response,
         `Failed to set policies for model ID ${modelId}`
       );
@@ -168,7 +169,7 @@ export class SimulationAPI {
       const data = await response.json();
       return data;
     } else {
-      this.throwReadableError(
+      throw await SimulationAPI.throwReadableError(
         response,
         `Failed to fetch indicators for model ID ${modelId}`
       );
@@ -188,7 +189,7 @@ export class SimulationAPI {
     if (response.status === HTTP_STATUS.NO_CONTENT) {
       return;
     } else {
-      this.throwReadableError(response, `Failed to step model ID ${modelId}`);
+      throw await SimulationAPI.throwReadableError(response, `Failed to step model ID ${modelId}`);
     }
   }
 
@@ -205,7 +206,7 @@ export class SimulationAPI {
     if (response.status === HTTP_STATUS.NO_CONTENT) {
       return;
     } else {
-      this.throwReadableError(response, `Failed to delete model ID ${modelId}`);
+      throw await SimulationAPI.throwReadableError(response, `Failed to delete model ID ${modelId}`);
     }
   }
 
