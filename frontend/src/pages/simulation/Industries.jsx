@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
 import { IndustryType } from "../../types/IndustryType.js";
-import UnchangeableParameters from "../../components/SimSetup/UnchangeableParameters.jsx";
+import UnchangeableParameters from "../../components/SimView/UnchangeableParameters.jsx";
 
 /**
  * Read-only Industries view

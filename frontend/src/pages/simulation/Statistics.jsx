@@ -13,7 +13,7 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from "@mui/material";
-import { SimulationContext } from "./BaseSimView.jsx";
+
 import AddIcon from "@mui/icons-material/Add";
 import {
   Chart as ChartJS,
@@ -25,6 +25,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { SimulationContext } from "./BaseSimView.jsx";
 import GraphSlot from "../../components/GraphSlot";
 import { Indicators } from "../../types/Indicators";
 

@@ -3,7 +3,7 @@ import { Box, Grid, Typography, Paper, Alert } from "@mui/material";
 import _ from "lodash";
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 import { SimulationContext } from "./BaseSimView.jsx";
-import ChangeableParameters from "../../components/SimSetup/ChangeableParameters.jsx";
+import ChangeableParameters from "../../components/SimView/ChangeableParameters.jsx";
 
 export default function Policies() {
   const simAPI = useContext(SimulationContext);

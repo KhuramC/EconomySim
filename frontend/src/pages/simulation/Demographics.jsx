@@ -11,7 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import UnchangeableParameters from "../../components/SimSetup/UnchangeableParameters";
+import UnchangeableParameters from "../../components/SimView/UnchangeableParameters";
 /**
  * READ-ONLY Demographics view
  * - Values are DISPLAY-ONLY during the simulation
