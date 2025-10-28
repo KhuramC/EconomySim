@@ -49,7 +49,7 @@ def handle_get_policies(model_id: int) -> dict:
 
 def handle_set_policies(model_id: int, policies: dict) -> dict:
     if policies == None:
-        raise ValueError("Policies cannot be None")
+        raise ValueError("Policies cannot be None.")
     controller.set_policies(model_id, policies)
     return {
         "status": "success",
@@ -91,36 +91,23 @@ async def model_websocket(websocket: WebSocket, model_id: int):
         # Ensure the model exists before entering the loop
         controller.get_model(model_id)
 
-        try:
-            while True:
-                data = await websocket.receive_json()
-                action = data.get("action")
+        while True:
+            data = await websocket.receive_json()
+            action = data.get("action")
 
-                if action == "step":
-                    response = handle_step(model_id)
-                    await websocket.send_json(response)
-                elif action == "reverse_step":
-                    reponse = handle_reverse_step(model_id)
-                    await websocket.send_json(reponse)
-                elif action == "get_current_week":
-                    response = handle_get_current_week(model_id)
-                    await websocket.send_json(response)
-                elif action == "get_indicators":
-                    response = handle_get_indicators(model_id)
-                    await websocket.send_json(response)
-                elif action == "get_policies":
-                    response = handle_get_policies(model_id)
-                    await websocket.send_json(response)
-                elif action == "set_policies":
-                    response = handle_set_policies(model_id, data.get("data"))
-                    await websocket.send_json(response)
+            handler = ACTION_HANDLERS.get(action)
+            if handler:
+                if action == "set_policies":
+                    response = handler(model_id, data.get("data"))
                 else:
-                    await websocket.send_json(
-                        {"status": "error", "message": f"Unknown action: {action}"}
-                    )
-        except WebSocketDisconnect:
-            print(f"Client for model {model_id} disconnected.")
-
+                    response = handler(model_id)
+                await websocket.send_json(response)
+            else:
+                await websocket.send_json(
+                    {"status": "error", "message": f"Unknown action: {action}"}
+                )
+    except WebSocketDisconnect:
+        print(f"Client for model {model_id} disconnected.")
     except ValueError:  # Catches if model_id is not found
         await websocket.send_json({"error": f"Model with id {model_id} not found."})
     finally:
