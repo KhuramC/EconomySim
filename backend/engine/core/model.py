@@ -104,7 +104,7 @@ class EconomyModel(Model):
             model_reporters={
                 "week": self.get_week,
                 "unemployment": self.calculate_unemployment,
-                "gdp": self.calculate_gdp,
+                "GDP": self.calculate_gdp,
                 "income per capita": self.calculate_income_per_capita,
                 "median income": self.calculate_median_income,
                 "hoover index": self.calculate_hoover_index,
