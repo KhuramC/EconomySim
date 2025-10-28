@@ -26,6 +26,7 @@ industries_schema = {
     itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
     for itype in IndustryType
 }
+"""Schema for validating the industries dictionary."""
 
 policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
