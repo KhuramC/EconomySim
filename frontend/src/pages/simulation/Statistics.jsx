@@ -14,29 +14,9 @@ import {
   ToggleButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
 import { SimulationContext } from "./BaseSimView.jsx";
 import GraphSlot from "../../components/GraphSlot";
 import { Indicators } from "../../types/Indicators";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
