@@ -6,7 +6,7 @@ from typing import Any
 
 from api.city_template import CityTemplate
 from engine.types.demographic import Demographic
-from engine.interface.controller import available_indicators
+from engine.types.indicators import Indicators
 import json
 import copy
 
@@ -133,16 +133,19 @@ def test_get_and_set_policies(
     assert updated_policies["property_tax"] == 0.1
 
 
-def test_get_indicators(api_client: TestClient, created_model: int):
+def test_get_model_indicators(api_client: TestClient, created_model: int):
     """
-    Reasoning: Tests data retrieval. It ensures that after creating a model,
-    we can fetch its indicators. The test checks for a successful status and
-    that the returned data is in the expected DataFrame-to-JSON format (a list of objects).
+    Test for `get_model_indicators`, an API endpoint.
+    Tests that it correctly gets the indicators.
     """
     args = {
         "start_time": 0,
         "end_time": 0,
     }
+
+    # step twice
+    response = api_client.post(f"/models/{created_model}/step")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     response = api_client.post(f"/models/{created_model}/step")
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -150,11 +153,13 @@ def test_get_indicators(api_client: TestClient, created_model: int):
     response = api_client.get(f"/models/{created_model}/indicators", params=args)
     assert response.status_code == status.HTTP_200_OK
 
-    indicators = response.json()
-    assert isinstance(indicators, list)
-    assert "Week" in indicators[0]
-    for indicator in available_indicators:
-        assert indicator in indicators[0]
+    received_indicators = response.json()
+    assert isinstance(received_indicators, dict)
+    for indicator_name, indicator_data in received_indicators.items():
+        # although week is in the data, it's not an indicator
+        if indicator_name != "week":
+            assert indicator_name in Indicators.values()
+        assert len(indicator_data) == 2
 
 
 def test_step_model(api_client: TestClient, created_model: int):
@@ -202,8 +207,9 @@ def test_model_websocket(api_client: TestClient, created_model: int):
 
         # Assert the content of the indicators data
         indicators_data = response_indicators["data"]
-        assert isinstance(indicators_data, list)
-        assert len(indicators_data) == 1 # Week 1 (after step)
-        assert indicators_data[0]["Week"] == 1
-        for indicator in available_indicators:
-            assert indicator in indicators_data[0]
+        assert isinstance(indicators_data, dict)
+        for indicator_name, indicator_data in indicators_data.items():
+            # although week is in the data, it's not an indicator
+            if indicator_name != "week":
+                assert indicator_name in Indicators.values()
+            assert len(indicator_data) == 1
