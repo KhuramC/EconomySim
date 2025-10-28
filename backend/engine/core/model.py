@@ -102,13 +102,13 @@ class EconomyModel(Model):
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
-                "Week": self.get_week,
-                "Unemployment": self.calculate_unemployment,
-                "GDP": self.calculate_gdp,
-                "IncomePerCapita": self.calculate_income_per_capita,
-                "MedianIncome": self.calculate_median_income,
-                "HooverIndex": self.calculate_hoover_index,
-                "LorenzCurve": self.calculate_lorenz_curve,
+                "week": self.get_week,
+                "unemployment": self.calculate_unemployment,
+                "gdp": self.calculate_gdp,
+                "income per capita": self.calculate_income_per_capita,
+                "median income": self.calculate_median_income,
+                "hoover index": self.calculate_hoover_index,
+                "lorenz curve": self.calculate_lorenz_curve,
             },
             agenttype_reporters={IndustryAgent: {"Price": "price"}},
         )
@@ -229,7 +229,7 @@ class EconomyModel(Model):
                     demographic=demographic,
                     income=incomes,
                     current_money=starting_moneys,
-                    preferences={}
+                    preferences={},
                 )
 
             else:
