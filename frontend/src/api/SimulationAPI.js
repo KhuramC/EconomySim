@@ -85,7 +85,10 @@ export class SimulationAPI {
       const modelId = await response.json();
       return modelId;
     } else {
-      throw await SimulationAPI.throwReadableError(response, "Failed to create model.");
+      throw await SimulationAPI.throwReadableError(
+        response,
+        "Failed to create model."
+      );
     }
   }
 
@@ -119,7 +122,7 @@ export class SimulationAPI {
    * @throws {Error} If the policies could not be set because the response is not NO_CONTENT.
    */
   async setModelPolicies(policyParams, modelId = this.modelId) {
-    policies = receivePoliciesPayload(policyParams);
+    const policies = buildPoliciesPayload(policyParams);
     const response = await fetch(
       `${BASE_HTTP_URL}/models/${modelId}/policies`,
       {
@@ -189,7 +192,10 @@ export class SimulationAPI {
     if (response.status === HTTP_STATUS.NO_CONTENT) {
       return;
     } else {
-      throw await SimulationAPI.throwReadableError(response, `Failed to step model ID ${modelId}`);
+      throw await SimulationAPI.throwReadableError(
+        response,
+        `Failed to step model ID ${modelId}`
+      );
     }
   }
 
@@ -206,7 +212,10 @@ export class SimulationAPI {
     if (response.status === HTTP_STATUS.NO_CONTENT) {
       return;
     } else {
-      throw await SimulationAPI.throwReadableError(response, `Failed to delete model ID ${modelId}`);
+      throw await SimulationAPI.throwReadableError(
+        response,
+        `Failed to delete model ID ${modelId}`
+      );
     }
   }
 
