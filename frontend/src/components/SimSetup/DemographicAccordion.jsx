@@ -10,6 +10,7 @@ export default function DemographicAccordion({
   handleDemographicChange,
   formErrors,
   starting = true,
+  readOnly = false,
 }) {
   const [selectedDemographic, setSelectedDemographic] = useState(
     Object.values(Demographic)[0]
@@ -41,6 +42,7 @@ export default function DemographicAccordion({
         onChange={handleDemographicChange(selectedDemographic, "proportion")}
         // Display error if 'formErrors.proportion' exists
         error={!!formErrors.proportion}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label={
@@ -53,26 +55,31 @@ export default function DemographicAccordion({
           selectedDemographic,
           "unemploymentRate"
         )}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label="Mean Income ($/week)"
         value={demoParams[selectedDemographic].meanIncome}
         onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label="Income Std. Deviation ($)"
         value={demoParams[selectedDemographic].sdIncome}
         onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label="Mean Savings ($)"
         value={demoParams[selectedDemographic].meanSavings}
         onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label="Savings Std. Deviation ($)"
         value={demoParams[selectedDemographic].sdSavings}
         onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label="Spending Behavior (% Income)"
@@ -81,6 +88,7 @@ export default function DemographicAccordion({
           selectedDemographic,
           "spendingBehavior"
         )}
+        readOnly={readOnly}
       />
     </ParameterAccordion>
   );

@@ -47,6 +47,7 @@ export default function Industries({ industryParams }) {
             // IndustryAccordion expects a higher-order handler: (k, f) => (e) => {}
             handleIndustryChange={() => () => {}}
             starting={false}
+            readOnly={true}
           />
         </Grid>
 

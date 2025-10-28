@@ -10,6 +10,7 @@ export default function IndustryAccordion({
   handleIndustryChange,
   formErrors,
   starting = true,
+  readOnly = false,
 }) {
   const [selectedIndustry, setSelectedIndustry] = useState(
     Object.values(IndustryType)[0]
@@ -39,21 +40,25 @@ export default function IndustryAccordion({
         label={starting == true ? "Starting Inventory" : "Inventory"}
         value={industryParams[selectedIndustry].startingInventory}
         onChange={handleIndustryChange(selectedIndustry, "startingInventory")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label={starting == true ? "Starting Price ($)" : "Price ($)"}
         value={industryParams[selectedIndustry].startingPrice}
         onChange={handleIndustryChange(selectedIndustry, "startingPrice")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label={starting == true ? "Industry Savings ($)" : "Savings ($)"}
         value={industryParams[selectedIndustry].industrySavings}
         onChange={handleIndustryChange(selectedIndustry, "industrySavings")}
+        readOnly={readOnly}
       />
       <ParameterNumInput
         label={starting == true ? "Offered Wage ($/hr)" : "Wage ($/hr)"}
         value={industryParams[selectedIndustry].offeredWage}
         onChange={handleIndustryChange(selectedIndustry, "offeredWage")}
+        readOnly={readOnly}
       />
     </ParameterAccordion>
   );
