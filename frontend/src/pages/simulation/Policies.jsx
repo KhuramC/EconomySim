@@ -1,5 +1,5 @@
-import { useContext, useState, useEffect } from "react";
-import { Box, Grid, Typography, Paper, Alert } from "@mui/material";
+import { useContext, useState, useEffect, useMemo } from "react";
+import { Box, Grid, Typography, Alert } from "@mui/material";
 import _ from "lodash";
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 import { SimulationContext } from "./BaseSimView.jsx";
@@ -42,6 +42,28 @@ export default function Policies() {
     }
   }, [simAPI]); // Re-run effect if simAPI changes
 
+  // Debounce the function that sends policy updates via WebSocket.
+  // This prevents sending a message on every keystroke.
+  const debouncedSetPolicies = useMemo(
+    () =>
+      _.debounce((newPolicies) => {
+        if (simAPI) {
+          console.log("Debounced: Sending policies update", newPolicies);
+          simAPI.setPolicies(newPolicies);
+        }
+      }, 500), // 500ms delay
+    [simAPI]
+  );
+
+  // Cleanup the debounced function on component unmount
+  useEffect(() => {
+    return () => {
+      // Flush any pending updates when the component unmounts.
+      // This ensures the last change is saved.
+      debouncedSetPolicies.flush();
+    };
+  }, [debouncedSetPolicies]);
+
   const handlePolicyChange = (field) => (event) => {
     const { value } = event.target;
     setPolicies((prevPolicies) => {
@@ -49,11 +71,7 @@ export default function Policies() {
       const newPolicies = _.cloneDeep(prevPolicies);
       _.set(newPolicies, field, parseFloat(value) || 0);
 
-      // Send update to backend via WebSocket
-      if (simAPI) {
-        simAPI.setPolicies(newPolicies);
-      }
-
+      debouncedSetPolicies(newPolicies); // Call the debounced function
       return newPolicies;
     });
   };
