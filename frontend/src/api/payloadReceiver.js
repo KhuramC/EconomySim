@@ -14,8 +14,8 @@ export function receivePoliciesPayload(backendPolicies) {
   // Helper to safely get the first value from an industry-specific policy dictionary.
   // This assumes that for policies like corporate tax, sales tax, etc., the frontend
   // currently uses a single input that is applied uniformly across all industries.
-  // TODO: make this just give every value. Currently, the frontend is not setup to 
-  // get tehes taxes on a industry-specific basis.
+  // TODO: make this just give every value. Currently, the frontend is not setup to
+  // get the taxes on a industry-specific basis.
   const getUniformIndustryPolicyValue = (policyDict) => {
     if (typeof policyDict === "object" && policyDict !== null) {
       const industryKeys = Object.values(IndustryType);

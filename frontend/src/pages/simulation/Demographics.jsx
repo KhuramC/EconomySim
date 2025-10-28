@@ -20,7 +20,6 @@ import { IndustryType } from "../../types/IndustryType";
  * - Includes per-class Spending Behavior (fallbacks to a uniform global value)
  */
 
-
 export default function Demographics() {
   // Display-only demo data (replace with real state/props later)
   const [groups] = useState({

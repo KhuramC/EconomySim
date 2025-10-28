@@ -3,7 +3,7 @@ import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
 import SidebarNav from "../../components/SidebarNav";
 import { SimulationAPI } from "../../api/SimulationAPI";
-import TimelinePanel from '../../components/TimelinePanel';
+import TimelinePanel from "../../components/TimelinePanel";
 
 // Content-only pages (no sidebar or outer Paper inside them)
 import Overview from "./Overview.jsx";
@@ -60,7 +60,7 @@ export default function BaseSimView() {
 
     return () => {
       simAPI.removeMessageListener(handleWebSocketMessage);
-    }
+    };
   }, [simAPI]); // Dependency array ensures this runs only when simAPI changes.
 
   const basePath = "/BaseSimView";
