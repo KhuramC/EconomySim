@@ -11,7 +11,7 @@ export default function GraphSlot({
   data = [],
 }) {
   // Check if there's data to display
-  const hasData = useState(data && data.length > 0);
+  const hasData = useMemo(() => data && data.length > 0, [data]);
 
   // useMemo will re-calculate chartData only when `labels` or `data` props change.
   // This ensures the chart gets a new object reference and triggers a re-render.
