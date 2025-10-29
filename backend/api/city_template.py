@@ -31,7 +31,7 @@ _SMALL_CONFIG = {
     },
     "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
-        "personal_income_tax": 1,
+        "personal_income_tax": {demo.value: 1 for demo in Demographic},
         "sales_tax": {itype.value: 1 for itype in IndustryType},
         "property_tax": 1,
         "tariffs": {itype.value: 1 for itype in IndustryType},
@@ -39,7 +39,6 @@ _SMALL_CONFIG = {
         "rent_cap": 0.0,
         "minimum_wage": 1,
     },
-    
 }
 _MEDIUM_CONFIG = {
     "num_people": 10000,
@@ -67,7 +66,7 @@ _MEDIUM_CONFIG = {
     },
     "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
-        "personal_income_tax": 1,
+        "personal_income_tax": {demo.value: 1 for demo in Demographic},
         "sales_tax": {itype.value: 1 for itype in IndustryType},
         "property_tax": 1,
         "tariffs": {itype.value: 1 for itype in IndustryType},
@@ -75,7 +74,6 @@ _MEDIUM_CONFIG = {
         "rent_cap": 0.0,
         "minimum_wage": 1,
     },
-    
 }
 _LARGE_CONFIG = {
     "num_people": 100000,
@@ -103,7 +101,7 @@ _LARGE_CONFIG = {
     },
     "policies": {
         "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
-        "personal_income_tax": 1,
+        "personal_income_tax": {demo.value: 1 for demo in Demographic},
         "sales_tax": {itype.value: 1 for itype in IndustryType},
         "property_tax": 1,
         "tariffs": {itype.value: 1 for itype in IndustryType},
@@ -111,7 +109,6 @@ _LARGE_CONFIG = {
         "rent_cap": 0.0,
         "minimum_wage": 1,
     },
-    
 }
 
 

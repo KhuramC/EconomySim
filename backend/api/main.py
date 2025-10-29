@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 import pandas as pd
 from typing import Any
 
-from engine.interface.controller import ModelController
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from .city_template import CityTemplate
@@ -50,7 +49,7 @@ class ModelCreateRequest(BaseModel):
     industries: dict[IndustryType, dict[str, float | int]] = Field(
         ..., description="Information about every industry."
     )
-    policies: dict[str, float | dict[IndustryType, float]] = Field(
+    policies: dict[str, float | dict[IndustryType | Demographic, float]] = Field(
         ..., description="Policies for the simulation."
     )
 
@@ -120,7 +119,7 @@ async def create_model(
 @app.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
 async def get_model_policies(
     model_id: int,
-) -> dict[str, float | dict[IndustryType, float]]:
+) -> dict[str, float | dict[IndustryType | Demographic, float]]:
     """
     Returns all of the current policies associated with a model.
     The default status code is 200 upon success.
@@ -147,7 +146,7 @@ async def get_model_policies(
 @app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
     model_id: int,
-    policies: dict[str, float | dict[IndustryType, float]],
+    policies: dict[str, float | dict[IndustryType | Demographic, float]],
 ):
     """
     Sets all of the current policies in a model.

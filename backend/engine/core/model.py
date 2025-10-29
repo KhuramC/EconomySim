@@ -30,7 +30,7 @@ industries_schema = {
 
 policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": None,
+    "personal_income_tax": {demo.value: None for demo in Demographic},
     "sales_tax": {itype.value: None for itype in IndustryType},
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
@@ -66,7 +66,7 @@ class EconomyModel(Model):
 
     # Changeable by the user at any time
 
-    policies: dict[str, float | dict[IndustryType, float]]
+    policies: dict[str, float | dict[IndustryType | Demographic, float]]
     """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
 
     week: int
@@ -80,7 +80,7 @@ class EconomyModel(Model):
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         industries: dict[IndustryType, dict[str, float | int]],
-        starting_policies: dict[str, float | dict[IndustryType, float]],
+        starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
         inflation_rate: float = 0.001,
         random_events: bool = False,
     ):
