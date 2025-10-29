@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
@@ -9,16 +9,19 @@ from engine.interface.controller import ModelController
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from .city_template import CityTemplate
+from . import websocket
+from .dependencies import get_controller
 
-# these work like singletons here
-controller = ModelController()
+controller = get_controller()
 app = FastAPI()
 
+# Define allowed origins for both HTTP and WebSocket
 origins = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",  # React dev server pt.2
 ]
 
+# Middleware for standard HTTP requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -26,6 +29,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allows all headers (like Content-Type)
 )
+
+app.include_router(websocket.router)
 
 
 class ModelCreateRequest(BaseModel):
@@ -80,7 +85,9 @@ async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
 
 
 @app.post("/models/create", status_code=status.HTTP_201_CREATED)
-async def create_model(model_parameters: ModelCreateRequest) -> int:
+async def create_model(
+    model_parameters: ModelCreateRequest,
+) -> int:
     """
     Creates a model based on the given parameters.
     The default status code is 201 upon success.
@@ -110,7 +117,7 @@ async def create_model(model_parameters: ModelCreateRequest) -> int:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.get("/models/{model_id}/get_policies", status_code=status.HTTP_200_OK)
+@app.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
 async def get_model_policies(
     model_id: int,
 ) -> dict[str, float | dict[IndustryType, float]]:
@@ -137,9 +144,10 @@ async def get_model_policies(
         )
 
 
-@app.post("/models/{model_id}/set_policies", status_code=status.HTTP_204_NO_CONTENT)
+@app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
-    model_id: int, policies: dict[str, float | dict[IndustryType, float]]
+    model_id: int,
+    policies: dict[str, float | dict[IndustryType, float]],
 ):
     """
     Sets all of the current policies in a model.
@@ -172,7 +180,7 @@ def dataframe_to_json_response(df: pd.DataFrame) -> Response:
         response (Response): A Response containing a JSON string of the dataframe.
     """
 
-    json_string = df.to_json(orient="records")  # list of dataframe rows
+    json_string = df.to_json(orient="columns")  # dict of columns
     return Response(content=json_string, media_type="application/json")
 
 
@@ -231,42 +239,7 @@ async def step_model(model_id: int):
         )
 
 
-@app.websocket("/models/{model_id}/websocket")
-async def step_model_websocket(websocket: WebSocket, model_id: int):
-    """
-    Sets up a websocket for consistent communication.
-    Allows for stepping with "step", and getting indicators with "indicators".
-
-    Args:
-        websocket (WebSocket): the websocket.
-        model_id (int): the model to step.
-    """
-
-    await websocket.accept()
-    try:
-        while True:
-            text = await websocket.receive_text()  # Wait for a message from the client
-            if "step" in text:
-                controller.step_model(model_id)
-            elif "indicators" in text:
-                indicators = controller.get_indicators(model_id).to_json(
-                    orient="records"
-                )  # manually turn into json
-                await websocket.send_text(
-                    indicators
-                )  # Send indicators back to the client
-            # TODO: fleshout websocket, like with being able to set/get policies.
-
-    except ValueError:
-        await websocket.send_json({"error": f"Model with id {model_id} not found."})
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-    finally:
-        await websocket.close()
-        print(f"WebSocket connection closed.")
-
-
-@app.delete("/models/{model_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model(model_id: int):
     """
     Deletes a model.

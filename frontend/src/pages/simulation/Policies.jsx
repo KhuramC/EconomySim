@@ -1,90 +1,92 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Box, Grid, Typography, Paper, Alert } from "@mui/material";
+import { useContext, useState, useEffect, useMemo } from "react";
+import { Box, Grid, Typography, Alert } from "@mui/material";
+import _ from "lodash";
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
+import { SimulationContext } from "./BaseSimView.jsx";
+import ChangeableParameters from "../../components/SimView/ChangeableParameters.jsx";
 
-/**
- * Policies page
- *
- * Props:
- *  - policyParams?: object
- *  - handlePolicyChange?: (field: string) => (event) => void
- *  - formErrors?: object
- *  - isSimRunning?: boolean
- */
-export default function Policies({
-  policyParams,
-  handlePolicyChange,
-  formErrors = {},
-  isSimRunning = true,
-}) {
-  // Demo clock (wire to real simulation clock later)
-  const year = 5;
-  const week = 5;
-  const totalWeeks = 52;
+export default function Policies() {
+  const simAPI = useContext(SimulationContext);
+  const [error, setError] = useState(null);
+  const [policies, setPolicies] = useState(null);
 
-  // Safe defaults
-  const defaults = useMemo(
-    () => ({
-      salesTax: 7,
-      corporateTax: 21,
-      personalIncomeTax: 15,
-      propertyTax: 10,
-      tariffs: 5,
-      subsidies: 20,
-      rentCap: 200,
-      minimumWage: 7.25,
-    }),
-    []
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      if (!simAPI) {
+        // ideally, this never happens unless a reload occurs
+        setError("Simulation API not available");
+        return;
+      }
+      try {
+        const fetchedPolicies = await simAPI.getModelPolicies();
+        console.log("fetched policies:", fetchedPolicies);
+        setPolicies(fetchedPolicies); // Assuming fetchedPolicies is already in frontend format
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    fetchPolicies(); // Initial fetch
+
+    const handleWebSocketMessage = (message) => {
+      // Refetch policies if they were changed by another client or if a step occurs
+      if (message.action === "set_policies" || message.action === "step") {
+        console.log("Policies updated via WebSocket, refetching...");
+        fetchPolicies();
+      }
+    };
+
+    if (simAPI) {
+      simAPI.addMessageListener(handleWebSocketMessage);
+      return () => simAPI.removeMessageListener(handleWebSocketMessage);
+    }
+  }, [simAPI]); // Re-run effect if simAPI changes
+
+  // Debounce the function that sends policy updates via WebSocket.
+  // This prevents sending a message on every keystroke.
+  const debouncedSetPolicies = useMemo(
+    () =>
+      _.debounce((newPolicies) => {
+        if (simAPI) {
+          console.log("Debounced: Sending policies update", newPolicies);
+          simAPI.setPolicies(newPolicies);
+        }
+      }, 500), // 500ms delay
+    [simAPI]
   );
 
-  // ---- Local state fallback when parent does NOT provide a handler ----
-  // Initialize local with merged defaults + props
-  const [localPolicies, setLocalPolicies] = useState({
-    ...defaults,
-    ...(policyParams ?? {}),
-  });
-
-  // If parent updates policyParams later, sync into local
+  // Cleanup the debounced function on component unmount
   useEffect(() => {
-    if (policyParams) {
-      setLocalPolicies((prev) => ({ ...prev, ...policyParams }));
-    }
-  }, [policyParams]);
+    return () => {
+      // Flush any pending updates when the component unmounts.
+      // This ensures the last change is saved.
+      debouncedSetPolicies.flush();
+    };
+  }, [debouncedSetPolicies]);
 
-  // Decide which data + handler to use:
-  const usingParentHandler = typeof handlePolicyChange === "function";
-  const data = usingParentHandler
-    ? { ...defaults, ...(policyParams ?? {}) }
-    : localPolicies;
+  const handlePolicyChange = (field) => (event) => {
+    const { value } = event.target;
+    setPolicies((prevPolicies) => {
+      // Use lodash for deep cloning and setting nested properties
+      const newPolicies = _.cloneDeep(prevPolicies);
+      _.set(newPolicies, field, parseFloat(value) || 0);
 
-  // Fallback handler (matches HOF signature expected by PolicyAccordion)
-  const fallbackHandlePolicyChange = (field) => (event) => {
-    const raw = event?.target?.value;
-    // MUI number fields still give strings; allow empty string, else coerce to number
-    const next = raw === "" ? "" : Number(raw);
-    setLocalPolicies((prev) => ({ ...prev, [field]: next }));
+      debouncedSetPolicies(newPolicies); // Call the debounced function
+      return newPolicies;
+    });
   };
-
-  const effectiveHandlePolicyChange =
-    handlePolicyChange ?? fallbackHandlePolicyChange;
 
   return (
     <Box>
-      {/* Top-right date */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: "right" }}>
-          Year {year} &nbsp;&nbsp; Week {week} of {totalWeeks}
-        </Typography>
-      </Box>
-
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          onClose={() => setError(null)} // Allows user to dismiss the error
+        >
+          Error: {error}
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {/* LEFT column: main content (editable) */}
@@ -93,28 +95,18 @@ export default function Policies({
             Policies
           </Typography>
 
-          {/* Always editable: use team’s accordion with effective data/handler */}
-          <PolicyAccordion
-            policyParams={data}
-            handlePolicyChange={effectiveHandlePolicyChange}
-            formErrors={formErrors}
-          />
+          {/* Only render the accordion when policies data is available */}
+          {policies ? (
+            <PolicyAccordion
+              policyParams={policies}
+              handlePolicyChange={handlePolicyChange}
+              starting={false}
+            />
+          ) : null}
         </Grid>
 
-        {/* RIGHT column: notes */}
-        <Grid item xs={12} md={4} sx={{ display: "flex", flexDirection: "column" }}>
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-              Notes
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "left" }}>
-              • These values can be adjusted while the simulation is running.<br />
-              • Use Setup for initial values; refine here during a run as needed.
-            </Typography>
-          </Paper>
-        </Grid>
+        <ChangeableParameters />
       </Grid>
     </Box>
   );
 }
-

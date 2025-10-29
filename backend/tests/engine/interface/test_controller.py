@@ -125,6 +125,27 @@ def test_set_policies(controller: ModelController, demographics, industries, pol
 
     retrieved_policies = controller.get_policies(model_id)
     assert retrieved_policies == new_policies
+    
+def test_get_current_week(controller: ModelController, demographics, industries, policies):
+    """
+    Test for `get_current_week`.
+    Tests that one can correctly retrieve the current week of a model.
+    """
+    
+    model_id = controller.create_model(
+        max_simulation_length=52,
+        num_people=100,
+        demographics=demographics,
+        industries=industries,
+        starting_policies=policies,
+    )
+    current_week = controller.get_current_week(model_id)
+    assert current_week == 0
+
+    controller.step_model(model_id)
+    current_week = controller.get_current_week(model_id)
+    assert current_week == 1
+
 
 
 @mark.xfail(reason="Testing the get_indicators function has not been determined yet.")

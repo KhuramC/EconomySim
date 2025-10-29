@@ -3,6 +3,7 @@ from .industry import IndustryAgent
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
+import math
 
 
 class PersonAgent(Agent):
@@ -22,11 +23,11 @@ class PersonAgent(Agent):
     """Weekly income of the person."""
     employer: IndustryAgent | None
     """The employer of this person, or None if unemployed."""
-    current_money: int
-    """The total money held by this person. Negative indicates debt."""
-    preferences: dict[str, float]
+    current_money: float
+    """The total dollars held by this person. Negative indicates debt."""
+    preferences: dict[IndustryType, float]
     """Spending preferences, mapping industry name to a weight. Must sum to 1."""
-    
+
     def __init__(
         self,
         model: Model,
@@ -35,7 +36,7 @@ class PersonAgent(Agent):
         savings_rate: float = 0.10,
         income: int = 0,
         employer: IndustryAgent | None = None,
-        current_money: int = 0,
+        current_money: float = 0.0,
     ):
         """
         Initialize a PersonAgent with its starting values.
@@ -55,7 +56,7 @@ class PersonAgent(Agent):
 
     def demand_func(
         self, budget: float, prefs: dict[IndustryType, float], prices: dict[str, float]
-    ) -> dict[str, float]:
+    ) -> dict[str, int]:
         """
         Calculates the quantity of each good to purchase based on the CES demand function.
 
@@ -80,22 +81,24 @@ class PersonAgent(Agent):
         demands = {}
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity = (numerator / denominator) * budget # The good's share of the budget
+            quantity: int = math.floor(
+                (numerator / denominator) * budget
+            )  # The good's share of the budget, rounded down
             demands[name] = quantity
 
         return demands
 
-    def determine_budget(self):
+    def determine_budget(self) -> float:
         """
         Determines the agent's spending budget for the week based on their
         income and savings rate.
         """
-        
+
         # TODO: How does this savings_rate get updated?
         # Is it based off of demographic?
-        
+
         budget = self.income * (1 - self.savings_rate)
-        return max(0, budget)  # Must be non-negative
+        return max(0.0, budget)  # Must be non-negative
 
     def purchase_goods(self):
         """

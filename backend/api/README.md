@@ -5,7 +5,9 @@ This directory will contain the logic for the FastAPI server and API endpoints.
 ## Structure
 
 - [city_template](./city_template.py): the templates for a simulation.
-- [main.py](./main.py): the API endpoints for the frontend to connect to.
+- [main.py](./main.py): the REST API endpoints for the frontend to connect to.
+- [websocket.py](./websocket.py): the websocket endpoints for the frontend to connect to.
+- [dependencies.py](./dependencies.py): the dependencies for the FastAPI server (a ModelController).
 - [run.py](./run.py): what actually runs the FastAPI server.
 
 ## Important Commands

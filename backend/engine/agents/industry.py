@@ -102,7 +102,7 @@ class IndustryAgent(Agent):
 
         pass
 
-    def sell_goods(self, quantity: float):
+    def sell_goods(self, quantity: int):
         """
         Reduces the industry's inventory by the specified quantity.
 
