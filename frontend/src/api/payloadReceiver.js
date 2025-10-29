@@ -30,6 +30,25 @@ export function receivePoliciesPayload(backendPolicies) {
     return 0;
   };
 
+  // Helper to safely get the first value from a demographic-specific policy dictionary.
+  // This assumes that for policies like personal income tax, the frontend
+  // currently uses a single input that is applied uniformly across all demographics.
+  // TODO: make this just give every value. Currently, the frontend is not setup to
+  // get the taxes on a demographic-specific basis.
+  const getUniformDemographicPolicyValue = (policyDict) => {
+    if (typeof policyDict === "object" && policyDict !== null) {
+      const demographicKeys = Object.values(Demographic);
+      if (
+        demographicKeys.length > 0 &&
+        policyDict[demographicKeys[0]] !== undefined
+      ) {
+        return policyDict[demographicKeys[0]];
+      }
+    }
+    // Fallback if the structure is unexpected or empty
+    return 0;
+  };
+
   // Policies that are percentages and are uniform across industries in the frontend
   frontendPolicies.corporateTax =
     getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax) * 100;
@@ -42,7 +61,7 @@ export function receivePoliciesPayload(backendPolicies) {
 
   // Policies that are percentages and are single values in the frontend
   frontendPolicies.personalIncomeTax =
-    backendPolicies.personal_income_tax * 100;
+    getUniformDemographicPolicyValue(backendPolicies.personal_income_tax) * 100;
   frontendPolicies.propertyTax = backendPolicies.property_tax * 100;
 
   // Policies that are direct values (not percentages)
