@@ -15,7 +15,12 @@ export function buildPoliciesPayload(policyParams) {
         policyParams.corporateTax / 100.0,
       ])
     ),
-    personal_income_tax: policyParams.personalIncomeTax / 100.0,
+    personal_income_tax: Object.fromEntries(
+      Object.values(Demographic).map((value) => [
+        value,
+        policyParams.personalIncomeTax / 100.0,
+      ])
+    ),
     sales_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
