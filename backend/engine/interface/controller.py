@@ -239,6 +239,7 @@ class ModelController:
     ) -> pd.DataFrame:
         """
         Retrieve economic indicators from the specified model.
+        Columns include "week" and whatever indicator is requested.
 
         Args:
             model_id (int): The unique identifier for the model to retrieve indicators from.
@@ -279,7 +280,9 @@ class ModelController:
 
         # filter by indicators
         if indicators:
-            indicators_df = indicators_df[list(indicators)]
+            # Always include the 'week' column along with the requested indicators
+            columns_to_keep = ["week"] + list(indicators)
+            indicators_df = indicators_df[columns_to_keep]
 
         return indicators_df
 
