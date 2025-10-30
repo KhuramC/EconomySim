@@ -116,7 +116,7 @@ class EconomyModel(Model):
                     "price": "price",
                     "inventory": "inventory",
                     "money": "total_money",
-                    "wage": "offered_wage",
+                    "offered_wage": "offered_wage",
                 }
             },
         )

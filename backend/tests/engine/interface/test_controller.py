@@ -217,7 +217,7 @@ def test_get_industry_data(
     assert not all_data_df.empty
     assert set(all_data_df["week"].unique()) == {1, 2, 3, 4, 5}
     assert len(all_data_df["industry"].unique()) == len(industries)
-    expected_columns = {"week", "price", "inventory", "money", "wage", "industry"}
+    expected_columns = {"week", "price", "inventory", "money", "offered_wage", "industry"}
     assert expected_columns.issubset(all_data_df.columns)
 
     # Test time filtering
