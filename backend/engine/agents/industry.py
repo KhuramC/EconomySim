@@ -335,7 +335,7 @@ class IndustryAgent(Agent):
                 funds_limit = 0
             else:
                 # compute funds_limit safely — protect against unreasonable huge values
-                funds_limit_raw = self.total_money / variable_cost_per_unit
+                funds_limit_raw = (self.total_money - self.fixed_cost) / variable_cost_per_unit
                 # if funds_limit_raw is not finite for some reason, fall back to 0
                 if not math.isfinite(funds_limit_raw):
                     funds_limit = 0
@@ -343,6 +343,9 @@ class IndustryAgent(Agent):
                     # clamp to a sensible integer range before floor to avoid overflow
                     # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
                     funds_limit = int(max(0, math.floor(funds_limit_raw)))
+                if self.fixed_cost > self.total_money:
+                    funds_limit = 0
+                    #TODO add handler for if fixed cost is more than total money -> Bankruptcy imminent!
 
             # final capacity is the min of worker limit and funds limit
             return min(worker_limit, funds_limit)
