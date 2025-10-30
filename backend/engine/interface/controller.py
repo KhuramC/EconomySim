@@ -190,8 +190,8 @@ class ModelController:
             dataframe (DataFrame): A DataFrame containing the requested industries' information.
 
         Raises:
-            ValueError: If the model associated with the model_id does not exist, \\
-                if the start_time or end_time are invalid, \\
+            ValueError: If the model associated with the model_id does not exist or \\
+                if the start_time or end_time are invalid.
         """
         # parameter validation
         if start_time < 0 or end_time < 0 or (end_time != 0 and end_time < start_time):
