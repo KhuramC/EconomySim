@@ -100,3 +100,32 @@ def test_lorenz_curve_typical_case(indicator_test_model_factory):
     expected_y = [0.0, 0.10, 0.30, 0.60, 1.0]
     assert result['x'] == approx(expected_x)
     assert result['y'] == approx(expected_y)
+    
+# -- Gini Coefficient Test Suite --
+def test_gini_coefficient_no_agents(indicator_test_model_factory):
+    """Test Gini coefficient with zero agents should be 0."""
+    model = indicator_test_model_factory(incomes=[])
+    assert model.calculate_gini_coefficient() == approx(0.0)
+    
+def test_gini_coefficient_perfect_equality(indicator_test_model_factory):
+    """Test Gini coefficient with perfect income equality should be 0."""
+    model = indicator_test_model_factory(incomes=[100, 100, 100, 100])
+    assert model.calculate_gini_coefficient() == approx(0.0)
+
+def test_gini_coefficient_all_zero_income(indicator_test_model_factory):
+    """Test Gini coefficient where all agents have zero income (a form of equality)."""
+    model = indicator_test_model_factory(incomes=[0, 0, 0, 0])
+    assert model.calculate_gini_coefficient() == approx(0.0)
+
+def test_gini_coefficient_perfect_inequality(indicator_test_model_factory):
+    """Test Gini coefficient with perfect income inequality."""
+    # For N agents, the max Gini is (N-1)/N
+    model = indicator_test_model_factory(incomes=[0, 0, 0, 100])
+    expected_gini = (4 - 1) / 4  # 0.75
+    assert model.calculate_gini_coefficient() == approx(expected_gini)
+
+def test_gini_coefficient_typical_case(indicator_test_model_factory):
+    """Test Gini coefficient with a standard, unequal distribution of income."""
+    model = indicator_test_model_factory(incomes=[10, 20, 30, 40])
+    # The known Gini coefficient for this distribution is 0.25
+    assert model.calculate_gini_coefficient() == approx(0.25)
