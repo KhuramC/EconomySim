@@ -37,7 +37,7 @@ VALID_CONFIG = {
     },
     "policies": {
         "corporate_income_tax": {itype.value: 0.2 for itype in IndustryType},
-        "personal_income_tax": 0.15,
+        "personal_income_tax": {demo.value: 0.04 for demo in Demographic},
         "sales_tax": {itype.value: 0.05 for itype in IndustryType},
         "property_tax": 0.02,
         "tariffs": {itype.value: 0.03 for itype in IndustryType},
@@ -114,13 +114,13 @@ def created_model(api_client: TestClient, valid_config: dict) -> Iterator[int]:
     yield model_id  # Provide the model_id to be used
 
     # Teardown: delete the model after the test finishes
-    response = api_client.delete(f"/models/{model_id}/delete")
+    response = api_client.delete(f"/models/{model_id}")
     assert (
         response.status_code == status.HTTP_204_NO_CONTENT
     ), f"Failed to delete model: {response.json()}"
 
     # Check to ensure that model is truly deleted
-    response = api_client.delete(f"/models/{model_id}/delete")
+    response = api_client.delete(f"/models/{model_id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     args = {"start_time": 0, "end_time": 0, "indicators": None}

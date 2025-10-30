@@ -1,5 +1,3 @@
-// src/pages/simulation/overview.jsx
-import React from 'react';
 import {
   Box,
   Grid,
@@ -8,39 +6,22 @@ import {
   Card,
   CardContent,
   Paper,
-} from '@mui/material';
-import TimelinePanel from '../../components/TimelinePanel';
-import GraphSlot from '../../components/GraphSlot';
-import { Add as AddIcon } from '@mui/icons-material';
+} from "@mui/material";
+import { Add as AddIcon } from "@mui/icons-material";
 
 export default function Overview() {
-  // Demo values (wire these to real state later)
-  const year = 5;
-  const week = 5;
-  const totalWeeks = 52;
-
   return (
     // NOTE: No outer Paper or sidebar here.
     // This component is rendered inside BaseSimView's shared Paper and layout.
     <Box>
-      {/* Top-right date info */}
-      <Box
-        sx={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right' }}>
-          Year {year} &nbsp;&nbsp; Week {week} of {totalWeeks}
-        </Typography>
-      </Box>
-
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
-        <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Grid
+          item
+          xs={12}
+          md={8}
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           {/* Page title */}
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Overview
@@ -50,7 +31,7 @@ export default function Overview() {
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {/* GDP */}
             <Grid item xs={12} sm={6}>
-              <Card sx={{ height: '100%' }}>
+              <Card sx={{ height: "100%" }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     GDP
@@ -58,7 +39,10 @@ export default function Overview() {
                   <Typography variant="h4" sx={{ fontWeight: 800 }}>
                     $22,540
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 700 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "success.main", fontWeight: 700 }}
+                  >
                     ↑ 0.3%
                   </Typography>
                 </CardContent>
@@ -67,7 +51,7 @@ export default function Overview() {
 
             {/* Unemployment */}
             <Grid item xs={12} sm={6}>
-              <Card sx={{ height: '100%' }}>
+              <Card sx={{ height: "100%" }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     Unemployment
@@ -75,18 +59,16 @@ export default function Overview() {
                   <Typography variant="h4" sx={{ fontWeight: 800 }}>
                     6.1%
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 700 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "error.main", fontWeight: 700 }}
+                  >
                     ↓ 0.2%
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
-
-          {/* Graph area */}
-          <Box sx={{ mb: 2 }}>
-            <GraphSlot title="Lorenz Curve" onOpen={() => console.log('Open Graph')} />
-          </Box>
 
           {/* Summary card */}
           <Card sx={{ mb: 2 }}>
@@ -105,7 +87,12 @@ export default function Overview() {
         </Grid>
 
         {/* RIGHT COLUMN */}
-        <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Grid
+          item
+          xs={12}
+          md={4}
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           {/* Policies summary */}
           <Card sx={{ mb: 2 }}>
             <CardContent>
@@ -128,7 +115,7 @@ export default function Overview() {
                 variant="outlined"
                 size="small"
                 sx={{ mt: 1, fontWeight: 700 }}
-                onClick={() => console.log('View/Edit Policies clicked')}
+                onClick={() => console.log("View/Edit Policies clicked")}
               >
                 View/Edit Policies
               </Button>
@@ -143,26 +130,34 @@ export default function Overview() {
               p: 2,
               borderRadius: 2,
               height: 240,
-              display: 'grid',
-              placeItems: 'center',
-              cursor: 'pointer',
-              userSelect: 'none',
-              transition: 'box-shadow 120ms, border-color 120ms, transform 80ms',
-              '&:hover': { boxShadow: 3, borderColor: 'primary.main' },
-              '&:active': { transform: 'scale(0.98)' },
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+              transition:
+                "box-shadow 120ms, border-color 120ms, transform 80ms",
+              "&:hover": { boxShadow: 3, borderColor: "primary.main" },
+              "&:active": { transform: "scale(0.98)" },
             }}
-            onClick={() => console.log('Add widget clicked')}
+            onClick={() => console.log("Add widget clicked")}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <AddIcon fontSize="large" />
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1 }}
+              >
                 Add widget
               </Typography>
             </Box>
           </Paper>
-
-          {/* Timeline / controls */}
-          <TimelinePanel />
         </Grid>
       </Grid>
     </Box>

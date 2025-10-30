@@ -6,8 +6,7 @@ from typing import Any
 
 from api.city_template import CityTemplate
 from engine.types.demographic import Demographic
-from engine.interface.controller import available_indicators
-import json
+from engine.types.indicators import Indicators
 import copy
 
 template_test_params = [
@@ -107,7 +106,7 @@ def test_get_and_set_policies(
     """
 
     # Get initial policies
-    response = api_client.get(f"/models/{created_model}/get_policies")
+    response = api_client.get(f"/models/{created_model}/policies")
     assert response.status_code == status.HTTP_200_OK
     initial_policies = response.json()
     assert (
@@ -117,32 +116,39 @@ def test_get_and_set_policies(
 
     # Set new policies
     new_policies = copy.deepcopy(initial_policies)
-    new_policies["personal_income_tax"] = 0.5
+    new_policies["personal_income_tax"] = {
+        demo: i * 3 for i, demo in enumerate(Demographic)
+    }
     new_policies["property_tax"] = 0.1
 
     response_set = api_client.post(
-        f"/models/{created_model}/set_policies", json=new_policies
+        f"/models/{created_model}/policies", json=new_policies
     )
     assert response_set.status_code == status.HTTP_204_NO_CONTENT
 
     # Get new policies, confirm same as what was set.
-    response_get2 = api_client.get(f"/models/{created_model}/get_policies")
+    response_get2 = api_client.get(f"/models/{created_model}/policies")
     assert response_get2.status_code == status.HTTP_200_OK
     updated_policies = response_get2.json()
-    assert updated_policies["personal_income_tax"] == 0.5
+    assert updated_policies["personal_income_tax"] == {
+        demo: i * 3 for i, demo in enumerate(Demographic)
+    }
     assert updated_policies["property_tax"] == 0.1
 
 
-def test_get_indicators(api_client: TestClient, created_model: int):
+def test_get_model_indicators(api_client: TestClient, created_model: int):
     """
-    Reasoning: Tests data retrieval. It ensures that after creating a model,
-    we can fetch its indicators. The test checks for a successful status and
-    that the returned data is in the expected DataFrame-to-JSON format (a list of objects).
+    Test for `get_model_indicators`, an API endpoint.
+    Tests that it correctly gets the indicators.
     """
     args = {
         "start_time": 0,
         "end_time": 0,
     }
+
+    # step twice
+    response = api_client.post(f"/models/{created_model}/step")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     response = api_client.post(f"/models/{created_model}/step")
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -150,11 +156,13 @@ def test_get_indicators(api_client: TestClient, created_model: int):
     response = api_client.get(f"/models/{created_model}/indicators", params=args)
     assert response.status_code == status.HTTP_200_OK
 
-    indicators = response.json()
-    assert isinstance(indicators, list)
-    assert "Week" in indicators[0]
-    for indicator in available_indicators:
-        assert indicator in indicators[0]
+    received_indicators = response.json()
+    assert isinstance(received_indicators, dict)
+    for indicator_name, indicator_data in received_indicators.items():
+        # although week is in the data, it's not an indicator
+        if indicator_name != "week":
+            assert indicator_name in Indicators.values()
+        assert len(indicator_data) == 2
 
 
 def test_step_model(api_client: TestClient, created_model: int):
@@ -174,28 +182,3 @@ def test_step_model(api_client: TestClient, created_model: int):
     # Failure path
     response = api_client.post("/models/999/step")
     assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-def test_step_model_websocket(api_client: TestClient, created_model: int):
-    """
-    Test for `step_model_websocket`, an API endpoint.
-    Tests that it can connect, simulating a possible use case and works as expected.
-    Args:
-        api_client (TestClient): the test client to connect to the FastAPI server.
-        created_model (int): the id of the model created.
-    """
-
-    # TODO: fleshout testing this function as the actual function gets fleshed out.
-    with api_client.websocket_connect(f"models/{created_model}/websocket") as websocket:
-        # Send a message to the server to trigger a step
-        websocket.send_text("step")
-        websocket.send_text("indicators")
-        json_string = websocket.receive_text()
-
-        # Manually parse the JSON string into a Python list/dict
-        indicators = json.loads(json_string)
-
-        # Assert that the data looks correct
-        assert isinstance(indicators, list)
-        assert len(indicators) == 1  # one step
-        assert indicators[0]["Week"] == 1

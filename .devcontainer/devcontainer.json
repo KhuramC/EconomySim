@@ -19,6 +19,9 @@
                 "esbenp.prettier-vscode",
                 //ci/cd
                 "github.vscode-github-actions",
+                //javascript extensions
+                "dbaeumer.vscode-eslint",
+                "rvest.vs-code-prettier-eslint"
             ]
        }
     }

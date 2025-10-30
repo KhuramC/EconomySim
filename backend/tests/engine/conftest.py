@@ -39,7 +39,7 @@ INDUSTRIES = {
 
 POLICIES = {
     "corporate_income_tax": {itype.value: i for i, itype in enumerate(IndustryType)},
-    "personal_income_tax": 2.0,
+    "personal_income_tax": {demo.value: i * 2 for i, demo in enumerate(Demographic)},
     "sales_tax": {itype.value: i ^ 2 for i, itype in enumerate(IndustryType)},
     "property_tax": 4.0,
     "tariffs": {itype.value: i * 2.5 for i, itype in enumerate(IndustryType)},

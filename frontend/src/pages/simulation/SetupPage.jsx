@@ -9,7 +9,6 @@ import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
-import { buildCreatePayload } from "../../api/payloadBuilder.js";
 import { SimulationAPI } from "../../api/SimulationAPI.js";
 
 //Function to generate default parameters for one demographic
@@ -159,16 +158,9 @@ export default function SetupPage() {
   // Send parameters to backend and navigate to simulation view
   const handleBegin = async () => {
     setBackendError(null);
-    console.log("Simulation parameters:", params);
-    const payload = buildCreatePayload(params);
-
-    console.log(
-      "Sending payload to backend:",
-      JSON.stringify(payload, null, 2)
-    );
-
     try {
-      const modelId = await SimulationAPI.createModel(payload);
+      console.log("Simulation parameters:", params);
+      const modelId = await SimulationAPI.createModel(params);
       console.log("Model created with ID:", modelId);
       // Navigate to simulation view with the new model ID
       navigate(`/BaseSimView`, { state: { modelId: modelId } });

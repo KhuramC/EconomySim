@@ -26,10 +26,11 @@ industries_schema = {
     itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
     for itype in IndustryType
 }
+"""Schema for validating the industries dictionary."""
 
 policies_schema = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": None,
+    "personal_income_tax": {demo.value: None for demo in Demographic},
     "sales_tax": {itype.value: None for itype in IndustryType},
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
@@ -65,7 +66,7 @@ class EconomyModel(Model):
 
     # Changeable by the user at any time
 
-    policies: dict[str, float | dict[IndustryType, float]]
+    policies: dict[str, float | dict[IndustryType | Demographic, float]]
     """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
 
     week: int
@@ -79,7 +80,7 @@ class EconomyModel(Model):
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         industries: dict[IndustryType, dict[str, float | int]],
-        starting_policies: dict[str, float | dict[IndustryType, float]],
+        starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
         inflation_rate: float = 0.001,
         random_events: bool = False,
     ):
@@ -102,13 +103,13 @@ class EconomyModel(Model):
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
-                "Week": self.get_week,
-                "Unemployment": self.calculate_unemployment,
-                "GDP": self.calculate_gdp,
-                "IncomePerCapita": self.calculate_income_per_capita,
-                "MedianIncome": self.calculate_median_income,
-                "HooverIndex": self.calculate_hoover_index,
-                "LorenzCurve": self.calculate_lorenz_curve,
+                "week": self.get_week,
+                "unemployment": self.calculate_unemployment,
+                "gdp": self.calculate_gdp,
+                "income per capita": self.calculate_income_per_capita,
+                "median income": self.calculate_median_income,
+                "hoover index": self.calculate_hoover_index,
+                "lorenz curve": self.calculate_lorenz_curve,
             },
             agenttype_reporters={IndustryAgent: {"Price": "price"}},
         )
@@ -229,7 +230,7 @@ class EconomyModel(Model):
                     demographic=demographic,
                     income=incomes,
                     current_money=starting_moneys,
-                    preferences={}
+                    preferences={},
                 )
 
             else:
@@ -361,7 +362,7 @@ class EconomyModel(Model):
         # TODO: Implement calculation of the GDP
         # see https://www.investopedia.com/terms/b/bea.asp for notes
         # It's from the project documentation back in the spring
-        return 0
+        return 5 + self.get_week() + random.random()
 
     def calculate_income_per_capita(self):
         """

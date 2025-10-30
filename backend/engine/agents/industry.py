@@ -103,6 +103,7 @@ class IndustryAgent(Agent):
         Gets all employees that are employed to this industry.
         """
         return self.model.get_employees(self.industry_type)
+      
     def determine_price(self):
         """  
         Description:
@@ -227,6 +228,7 @@ class IndustryAgent(Agent):
             f"spent_fixed={spent_fixed:.2f}; remaining funds {self.total_money:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
+        
     def change_employment(self):
         """
         How the industry will change their employees, whether it be by hiring more, firing more,
@@ -280,6 +282,7 @@ class IndustryAgent(Agent):
 
         variable_cost = (ow / eff) + rm
         return variable_cost
+      
     def get_production_capacity(self):
         """
         Get production capacity based on workers and funds available.
@@ -350,7 +353,6 @@ class IndustryAgent(Agent):
             # final capacity is the min of worker limit and funds limit
             return min(worker_limit, funds_limit)
 
-        
     def set_demand_graph_params(self, A: float, B: float):
         """
             Set the demand graph parameters for the industry.
@@ -371,7 +373,7 @@ class IndustryAgent(Agent):
         """
         return self.hours_worked * self.offered_wage
     
-    def sell_goods(self, quantity: float):
+    def sell_goods(self, quantity: int):
         """
         Reduces the industry's inventory by the specified quantity.
         
