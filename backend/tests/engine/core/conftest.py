@@ -1,5 +1,9 @@
 import pytest
 from engine.core.model import EconomyModel
+from engine.agents.person import PersonAgent
+from engine.agents.industry import IndustryAgent
+from engine.types.demographic import Demographic
+from engine.types.industry_type import IndustryType
 
 
 @pytest.fixture()

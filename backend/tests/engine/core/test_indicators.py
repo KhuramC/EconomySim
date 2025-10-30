@@ -62,4 +62,5 @@ def test_calculate_hoover_index(model: EconomyModel):
 
 @mark.xfail(reason="Function not implemented yet.")
 def test_calculate_lorenz_curve(model: EconomyModel):
+    
     assert False
