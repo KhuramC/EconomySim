@@ -22,20 +22,17 @@ export default function TimelinePanel({ simAPI }) {
     if(isPlaying) {
       const interval = setInterval(() => {
         simAPI.sendMessage({ action: "step" });
-      }, 1000 / fastForwardRate); // 1000 milliseconds = 1 second
+      }, 1000 / fastForwardRate);
       
-      return () => clearInterval(interval); // Cleanup function
+      return () => clearInterval(interval);
     }
   }, [isPlaying, fastForwardRate, simAPI]);
 
   const handlePlayPauseClick = () => {
-    // This currently only toggles the icon state and does not affect the simulation.
     setIsPlaying(!isPlaying);
     if(!isPlaying === false) 
       setFastForwardRate(1);
   };
-
-  //TODO: make a useEffect to successively step through the model if isPlaying is true.
 
   return (
     <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
