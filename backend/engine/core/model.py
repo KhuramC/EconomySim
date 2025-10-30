@@ -419,4 +419,27 @@ class EconomyModel(Model):
         # that is a single number, and is based on the lorenz curve anyways.
         # see https://www.datacamp.com/blog/gini-coefficient for more info on it.
 
-        return 0
+        # Get all personAgents and incomes
+        peopleAgents = self.agents_by_type[PersonAgent]
+        incomes = np.array(peopleAgents.__getattribute__("income"))
+        
+        if incomes.size == 0:
+            return {'x': [0, 1], 'y': [0, 1]} # Line of perfect equality.
+        
+        # Sort and calculate cumulative shares
+        incomes = np.sort(incomes)
+        total_income = incomes.sum()
+        if total_income == 0:
+            return {'x': [0, 1], 'y': [0, 1]}
+        
+        cumulative_income_share = np.cumsum(incomes) / total_income
+        
+        # Calculate cumulative population share (x-axis values)
+        num_agents = len(incomes)
+        population_share = np.arange(1, num_agents + 1) / num_agents
+        
+        # Insert the point (0, 0) into final output so curve starts at origin.
+        return {
+            'x': np.insert(population_share, 0, 0).tolist(),
+            'y': np.insert(cumulative_income_share, 0, 0).tolist()
+        }
