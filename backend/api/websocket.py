@@ -38,6 +38,20 @@ def handle_get_industry_data(model_id: int) -> dict:
     }
 
 
+def handle_get_current_industry_data(model_id: int) -> dict:
+    current_week = controller.get_current_week(model_id)
+    # Get data only for the current week
+    industries_df = controller.get_industry_data(
+        model_id, start_time=current_week, end_time=current_week
+    )
+    industries_df = industries_df.set_index("industry").drop(columns=["week"])
+    return {
+        "status": "success",
+        "action": "get_current_industry_data",
+        "data": industries_df.to_dict(orient="index"),
+    }
+
+
 def handle_get_indicators(model_id: int) -> dict:
     indicators_df = controller.get_indicators(model_id)
     indicators_json = json.loads(indicators_df.to_json(orient="columns"))
@@ -72,6 +86,7 @@ ACTION_HANDLERS: dict[str, Callable] = {
     "reverse_step": handle_reverse_step,
     "get_current_week": handle_get_current_week,
     "get_industry_data": handle_get_industry_data,
+    "get_current_industry_data": handle_get_current_industry_data,
     "get_indicators": handle_get_indicators,
     "get_policies": handle_get_policies,
     "set_policies": handle_set_policies,
