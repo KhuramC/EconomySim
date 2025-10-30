@@ -111,7 +111,14 @@ class EconomyModel(Model):
                 "hoover index": self.calculate_hoover_index,
                 "lorenz curve": self.calculate_lorenz_curve,
             },
-            agenttype_reporters={IndustryAgent: {"Price": "price"}},
+            agenttype_reporters={
+                IndustryAgent: {
+                    "price": "price",
+                    "inventory": "inventory",
+                    "money": "total_money",
+                    "wage": "offered_wage",
+                }
+            },
         )
 
         self.setup_person_agents(num_people, demographics)
