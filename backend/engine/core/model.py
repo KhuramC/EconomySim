@@ -443,3 +443,27 @@ class EconomyModel(Model):
             'x': np.insert(population_share, 0, 0).tolist(),
             'y': np.insert(cumulative_income_share, 0, 0).tolist()
         }
+
+    def calculate_gini_coefficient(self):
+        """
+        Calculates the Gini coefficient for a list of incomes.
+
+        Returns:
+            The Gini coefficient as a float between 0 and 1.
+        """
+        peopleAgents = self.agents_by_type[PersonAgent]
+        incomes = np.array(peopleAgents.__getattribute__("income"))
+        
+        if len(incomes) == 0:
+            return 0.0
+        
+        cumulative_incomes = np.cumsum(incomes)
+        
+        lorenz_area = (cumulative_incomes.sum() - cumulative_incomes[-1] / 2) / len(incomes)
+        equality_area = cumulative_incomes[-1] / 2
+        
+        if equality_area == 0:
+            return 0.0
+        
+        gini = (equality_area - lorenz_area) / equality_area
+        return gini
