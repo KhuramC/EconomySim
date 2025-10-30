@@ -104,6 +104,7 @@ async def model_websocket(websocket: WebSocket, model_id: int):
     - {"action": "reverse_step"}: Steps the model backwards by one week.
     - {"action": "get_current_week"}: Returns the current week.}
     - {"action": "get_industry_data"}: Returns all industries' information.
+    - {"action": "get_current_industry_data"}: Returns the current week's industries' information.
     - {"action": "get_indicators"}: Returns all model indicators.
     - {"action": "get_policies"}: Returns the current model policies.
     - {"action": "set_policies", "payload": {...}}: Sets the model policies.
