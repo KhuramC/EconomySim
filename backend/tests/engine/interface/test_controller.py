@@ -2,6 +2,7 @@ import pytest
 from pytest import mark
 from contextlib import nullcontext
 from engine.types.industry_type import IndustryType
+from engine.types.indicators import Indicators
 from engine.interface.controller import ModelController
 
 
@@ -196,7 +197,7 @@ def test_get_industry_data(
 ):
     """
     Test for `get_industry_data`.
-    Tests that time and industry filtering function as expected and 
+    Tests that time and industry filtering function as expected and
     that the dataframe returned has the correct structure.
     """
     model_id = controller.create_model(
@@ -238,9 +239,97 @@ def test_get_industry_data(
     assert set(combined_filtered_df["industry"].unique()) == {IndustryType.AUTOMOBILES}
 
 
-@mark.xfail(reason="Testing the get_indicators function has not been determined yet.")
-def test_get_indicators(controller: ModelController, demographics, policies):
-    assert False
+@mark.parametrize(
+    "kwargs, error_msg",
+    [
+        pytest.param(
+            {"start_time": -1},
+            "Invalid start_time or end_time values.",
+            id="negative_start",
+        ),
+        pytest.param(
+            {"end_time": -1},
+            "Invalid start_time or end_time values.",
+            id="negative_end",
+        ),
+        pytest.param(
+            {"start_time": 3, "end_time": 2},
+            "Invalid start_time or end_time values.",
+            id="start_after_end",
+        ),
+        pytest.param(
+            {"model_id": 999}, "Model with ID 999 does not exist.", id="bad_model_id"
+        ),
+        pytest.param(
+            {"indicators": ["not_a_real_indicator"]},
+            "One or more requested indicators are not available.",
+            id="bad_indicator",
+        ),
+    ],
+)
+def test_get_indicators_validation(
+    controller: ModelController, demographics, industries, policies, kwargs, error_msg
+):
+    """Tests parameter validation for `get_indicators`."""
+    model_id = controller.create_model(
+        max_simulation_length=52,
+        num_people=10,
+        demographics=demographics,
+        industries=industries,
+        starting_policies=policies,
+    )
+    if "model_id" not in kwargs:
+        kwargs["model_id"] = model_id
+
+    with pytest.raises(ValueError, match=error_msg):
+        controller.get_indicators(**kwargs)
+
+
+def test_get_indicators(
+    controller: ModelController, demographics, industries, policies
+):
+    """
+    Test for `get_indicators`.
+    Tests that time and indicator filtering function as expected and
+    that the dataframe returned has the correct structure.
+    """
+    model_id = controller.create_model(
+        max_simulation_length=52,
+        num_people=10,
+        demographics=demographics,
+        industries=industries,
+        starting_policies=policies,
+    )
+
+    # Step the model 5 times to generate data for weeks 1 through 5
+    for _ in range(5):
+        controller.step_model(model_id)
+
+    # Test fetching all data
+    all_data_df = controller.get_indicators(model_id)
+    assert not all_data_df.empty
+    assert set(all_data_df["week"]) == {1, 2, 3, 4, 5}
+    assert set(all_data_df.columns) == set(Indicators.values()).union({"week"})
+
+    # Test time filtering
+    time_filtered_df = controller.get_indicators(model_id, start_time=2, end_time=4)
+    assert set(time_filtered_df["week"]) == {2, 3, 4}
+
+    # Test indicator filtering
+    target_indicators = [Indicators.GDP, Indicators.UNEMPLOYMENT]
+    indicator_filtered_df = controller.get_indicators(
+        model_id, indicators=target_indicators
+    )
+    # The 'week' column should always be returned
+    assert set(indicator_filtered_df.columns) == set(target_indicators).union({"week"})
+    assert set(indicator_filtered_df["week"]) == {1, 2, 3, 4, 5}
+
+    # Test filtering by both time and indicators
+    combined_filtered_df = controller.get_indicators(
+        model_id, start_time=3, end_time=5, indicators=[Indicators.GDP]
+    )
+    assert set(combined_filtered_df["week"]) == {3, 4, 5}
+    assert set(combined_filtered_df.columns) == {Indicators.GDP, "week"}
 
 
 @mark.parametrize(
