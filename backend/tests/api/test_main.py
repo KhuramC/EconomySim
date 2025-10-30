@@ -116,7 +116,9 @@ def test_get_and_set_policies(
 
     # Set new policies
     new_policies = copy.deepcopy(initial_policies)
-    new_policies["personal_income_tax"] = 0.5
+    new_policies["personal_income_tax"] = {
+        demo: i * 3 for i, demo in enumerate(Demographic)
+    }
     new_policies["property_tax"] = 0.1
 
     response_set = api_client.post(
@@ -128,7 +130,9 @@ def test_get_and_set_policies(
     response_get2 = api_client.get(f"/models/{created_model}/policies")
     assert response_get2.status_code == status.HTTP_200_OK
     updated_policies = response_get2.json()
-    assert updated_policies["personal_income_tax"] == 0.5
+    assert updated_policies["personal_income_tax"] == {
+        demo: i * 3 for i, demo in enumerate(Demographic)
+    }
     assert updated_policies["property_tax"] == 0.1
 
 

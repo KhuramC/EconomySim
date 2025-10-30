@@ -35,7 +35,7 @@ class ModelController:
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         industries: dict[IndustryType, dict[str, float | int]],
-        starting_policies: dict[str, float | dict[IndustryType, float]],
+        starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
         inflation_rate: float = 0.0001,
         random_events: bool = False,
     ) -> int:
@@ -116,7 +116,7 @@ class ModelController:
 
     def get_policies(
         self, model_id: int
-    ) -> dict[str, float | dict[IndustryType, float]]:
+    ) -> dict[str, float | dict[IndustryType | Demographic, float]]:
         """
         Retrieve the current policies from the specified model.
 
@@ -133,7 +133,9 @@ class ModelController:
         return model.policies
 
     def set_policies(
-        self, model_id: int, policies: dict[str, float | dict[IndustryType, float]]
+        self,
+        model_id: int,
+        policies: dict[str, float | dict[IndustryType | Demographic, float]],
     ) -> None:
         """
         Update the policies in the specified model.

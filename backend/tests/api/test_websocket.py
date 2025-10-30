@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 import copy
 import pytest
 from engine.types.indicators import Indicators
+from engine.types.demographic import Demographic
 
 
 def test_websocket_invalid_model(api_client: TestClient):
@@ -172,7 +173,9 @@ def test_websocket_get_and_set_policies(
 
         # 2. Set new policies
         new_policies = copy.deepcopy(initial_policies)
-        new_policies["personal_income_tax"] = 0.5
+        new_policies["personal_income_tax"] = {
+            demo: i * 3 for i, demo in enumerate(Demographic)
+        }
         websocket.send_json({"action": "set_policies", "data": new_policies})
         response_set = websocket.receive_json()
         assert response_set == {"status": "success", "action": "set_policies"}
@@ -181,4 +184,6 @@ def test_websocket_get_and_set_policies(
         websocket.send_json({"action": "get_policies"})
         response_get2 = websocket.receive_json()
         updated_policies = response_get2["data"]
-        assert updated_policies["personal_income_tax"] == 0.5
+        assert updated_policies["personal_income_tax"] == {
+            demo: i * 3 for i, demo in enumerate(Demographic)
+        }

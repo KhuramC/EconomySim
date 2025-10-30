@@ -37,7 +37,7 @@ VALID_CONFIG = {
     },
     "policies": {
         "corporate_income_tax": {itype.value: 0.2 for itype in IndustryType},
-        "personal_income_tax": 0.15,
+        "personal_income_tax": {demo.value: 0.04 for demo in Demographic},
         "sales_tax": {itype.value: 0.05 for itype in IndustryType},
         "property_tax": 0.02,
         "tariffs": {itype.value: 0.03 for itype in IndustryType},
