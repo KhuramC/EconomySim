@@ -88,7 +88,7 @@ class EconomyModel(Model):
 
         if max_simulation_length <= 0:
             raise ValueError("Maximum simulation length must be positive.")
-        if num_people <= 0:
+        if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
@@ -116,6 +116,12 @@ class EconomyModel(Model):
 
         self.setup_person_agents(num_people, demographics)
         self.setup_industry_agents(industries)
+        
+        # Ensure AgentSets exists, even if empty
+        if PersonAgent not in self.agents_by_type:
+            self.agents_by_type[PersonAgent] = AgentSet([], self)
+        if IndustryAgent not in self.agents_by_type:
+            self.agents_by_type[IndustryAgent] = AgentSet([], self)
 
     def validate_schema(
         self, data: dict, schema: dict = policies_schema, path="policies"
@@ -421,27 +427,27 @@ class EconomyModel(Model):
 
         # Get all personAgents and incomes
         peopleAgents = self.agents_by_type[PersonAgent]
-        incomes = np.array(peopleAgents.__getattribute__("income"))
-        
+        incomes = np.array(peopleAgents.get("income"))
+
         if incomes.size == 0:
-            return {'x': [0, 1], 'y': [0, 1]} # Line of perfect equality.
-        
+            return {"x": [0, 1], "y": [0, 1]}  # Line of perfect equality.
+
         # Sort and calculate cumulative shares
         incomes = np.sort(incomes)
         total_income = incomes.sum()
         if total_income == 0:
-            return {'x': [0, 1], 'y': [0, 1]}
-        
+            return {"x": [0, 1], "y": [0, 1]}
+
         cumulative_income_share = np.cumsum(incomes) / total_income
-        
+
         # Calculate cumulative population share (x-axis values)
         num_agents = len(incomes)
         population_share = np.arange(1, num_agents + 1) / num_agents
-        
+
         # Insert the point (0, 0) into final output so curve starts at origin.
         return {
-            'x': np.insert(population_share, 0, 0).tolist(),
-            'y': np.insert(cumulative_income_share, 0, 0).tolist()
+            "x": np.insert(population_share, 0, 0).tolist(),
+            "y": np.insert(cumulative_income_share, 0, 0).tolist(),
         }
 
     def calculate_gini_coefficient(self):
@@ -452,18 +458,21 @@ class EconomyModel(Model):
             The Gini coefficient as a float between 0 and 1.
         """
         peopleAgents = self.agents_by_type[PersonAgent]
-        incomes = np.array(peopleAgents.__getattribute__("income"))
-        
+        incomes = np.array(peopleAgents.get("income"))
+
         if len(incomes) == 0:
             return 0.0
-        
+
+        incomes = np.sort(incomes)
         cumulative_incomes = np.cumsum(incomes)
-        
-        lorenz_area = (cumulative_incomes.sum() - cumulative_incomes[-1] / 2) / len(incomes)
+
+        lorenz_area = (cumulative_incomes.sum() - cumulative_incomes[-1] / 2) / len(
+            incomes
+        )
         equality_area = cumulative_incomes[-1] / 2
-        
+
         if equality_area == 0:
             return 0.0
-        
+
         gini = (equality_area - lorenz_area) / equality_area
         return gini

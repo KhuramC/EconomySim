@@ -96,32 +96,33 @@ def model(default_demographics, default_industries, default_policies) -> Economy
 
 
 @pytest.fixture
-def indicator_test_model_factory(default_policies):
+def indicator_test_model_factory(default_demographics, default_industries, default_policies):
     """
     A factory fixture to create a minimal EconomyModel with a specific list
     of agent incomes, perfect for testing economic indicators.
     """
-    
+
     def _create_model(incomes: list[float]) -> EconomyModel:
         model = EconomyModel(
             max_simulation_length=1,
             num_people=len(incomes),
-            demographics={demo: {"proportion": 0} for demo in Demographic},
-            industries={},
-            starting_policies=default_policies
+            demographics=default_demographics,
+            industries=default_industries,
+            starting_policies=default_policies,
         )
-        
+
         model.agents_by_type[PersonAgent].clear()
-        
+
         for i, income_val in enumerate(incomes):
             person = PersonAgent(
                 model=model,
                 demographic=Demographic.MIDDLE_CLASS,
                 income=income_val,
                 current_money=0,
-                preferences={}
+                preferences={},
             )
             model.agents_by_type[PersonAgent].add(person)
-            
+
         return model
+
     return _create_model
