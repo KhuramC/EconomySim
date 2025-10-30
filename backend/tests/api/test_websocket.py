@@ -86,6 +86,35 @@ def test_websocket_get_indicators(api_client: TestClient, created_model: int):
             assert len(indicator_data) == 1
 
 
+def test_websocket_get_industry_data(
+    api_client: TestClient, created_model: int, valid_config: dict
+):
+    """
+    Tests the 'get_industry_data' action.
+    """
+    with api_client.websocket_connect(f"/models/{created_model}") as websocket:
+        # Step once to generate data for week 1
+        websocket.send_json({"action": "step"})
+        websocket.receive_json()  # Consume the 'step' response
+
+        # Get industry data
+        websocket.send_json({"action": "get_industry_data"})
+        response = websocket.receive_json()
+
+        assert response["status"] == "success"
+        assert response["action"] == "get_industry_data"
+        assert "data" in response
+
+        industry_data = response["data"]
+        assert isinstance(industry_data, dict)
+
+        # Check that the data has the correct structure and length
+        expected_columns = {"week", "price", "inventory", "money", "wage", "industry"}
+        assert set(industry_data.keys()) == expected_columns
+        num_industries = len(valid_config["industries"])
+        assert len(industry_data["week"]) == num_industries
+
+
 def test_websocket_get_and_set_policies(
     api_client: TestClient, created_model: int, valid_config: dict
 ):
