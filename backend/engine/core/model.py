@@ -116,7 +116,7 @@ class EconomyModel(Model):
 
         self.setup_person_agents(num_people, demographics)
         self.setup_industry_agents(industries)
-        
+
         # Ensure AgentSets exists, even if empty
         if PersonAgent not in self.agents_by_type:
             self.agents_by_type[PersonAgent] = AgentSet([], self)
@@ -415,15 +415,11 @@ class EconomyModel(Model):
         Calculates the Lorenz Cruve at the current timestep.
 
         Returns:
-            _type_: _description_
+            dict: A dictionary with two keys, 'x' and 'y', representing the
+                  points of the Lorenz curve for plotting. 'x' is the cumulative
+                  percentage of the population, and 'y' is the cumulative
+                  percentage of total income.
         """
-        # TODO: Implement calculation of the Lorenz Curve
-        # see https://www.datacamp.com/tutorial/lorenz-curve for info
-        # it's from the project documentation back in the spring
-
-        # note: it might make more sense to use the gini coefficient since
-        # that is a single number, and is based on the lorenz curve anyways.
-        # see https://www.datacamp.com/blog/gini-coefficient for more info on it.
 
         # Get all personAgents and incomes
         peopleAgents = self.agents_by_type[PersonAgent]
