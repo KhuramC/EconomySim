@@ -30,8 +30,6 @@ export default function TimelinePanel({ simAPI }) {
 
   const handlePlayPauseClick = () => {
     setIsPlaying(!isPlaying);
-    if(!isPlaying === false) 
-      setFastForwardRate(1);
   };
 
   return (
@@ -63,7 +61,7 @@ export default function TimelinePanel({ simAPI }) {
       </IconButton>
 
       {/* Fast Forward */}
-      <IconButton aria-label="fast forward" disabled={!simAPI}
+      <IconButton classes={{outline: 'none'}} aria-label="fast forward" disabled={!simAPI}
       onClick={() => {
           if(!isPlaying)
             return;
@@ -77,7 +75,7 @@ export default function TimelinePanel({ simAPI }) {
       >
         
       
-        <FastForwardIcon />
+        {"x" + fastForwardRate}
       </IconButton>
     </Box>
   );
