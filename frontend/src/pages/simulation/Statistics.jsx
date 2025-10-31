@@ -75,7 +75,6 @@ export default function Statistics() {
               <Box sx={{ mb: 2 }}>
                 <GraphSlot
                   title={`${title} Graph`}
-                  onOpen={() => console.log(`Open ${title} Graph`)}
                   labels={
                     indicatorData?.week ? Object.values(indicatorData.week) : []
                   }
