@@ -1,6 +1,7 @@
 from typing import Iterable
 import pandas as pd
 from ..core.model import EconomyModel
+from ..agents.industry import IndustryAgent
 
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
@@ -168,6 +169,69 @@ class ModelController:
         model = self.get_model(model_id)
         return model.get_week()
 
+    def get_industry_data(
+        self,
+        model_id: int,
+        start_time: int = 0,
+        end_time: int = 0,
+        industries: Iterable[IndustryType] | None = None,
+    ) -> pd.DataFrame:
+        """
+        Retrieves industries information from the specified model.
+        Columns include "week", "industry", "price", "inventory", "money", "wage", "industry".
+
+        Args:
+            model_id (int): The unique identifier for the model to retrieve industry information from.
+            start_time (int): The starting time period for the industries.
+            end_time (int): The ending time period for the industries. An end_time of 0 goes to the current time.
+            industries (Iterable, optional): An iterable of the specific industries' whose information to retrieve. If None, retrieves all industries' information.
+        
+        Returns:
+            dataframe (DataFrame): A DataFrame containing the requested industries' information.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist or \\
+                if the start_time or end_time are invalid.
+        """
+        # parameter validation
+        if start_time < 0 or end_time < 0 or (end_time != 0 and end_time < start_time):
+            raise ValueError("Invalid start_time or end_time values.")
+
+        model = self.get_model(model_id)
+
+        industries_df: pd.DataFrame = model.datacollector.get_agenttype_vars_dataframe(
+            IndustryAgent
+        )
+
+        # TODO: check for potential edge cases for when doing reverse step
+        # if a reverse step occurs, there would be multiple rows where week is some x value
+        industries_df.reset_index(inplace=True)
+        # Rename 'Step' to 'week' to match indicators dataframe
+        industries_df.rename(columns={"Step": "week"}, inplace=True)
+
+        # map AgentID column to industry name
+        industry_agents = model.agents_by_type[IndustryAgent]
+        agent_id_to_industry = {
+            agent.unique_id: agent.industry_type for agent in industry_agents
+        }
+        industries_df["industry"] = industries_df["AgentID"].map(agent_id_to_industry)
+        industries_df = industries_df.drop(columns=["AgentID"])
+
+        # filter by time
+        current_week = model.get_week()
+        effective_end_time = current_week if end_time == 0 else end_time
+        industries_df = industries_df[
+            industries_df["week"].between(
+                start_time, effective_end_time, inclusive="both"
+            )
+        ]
+
+        # filter by industries
+        if industries:
+            industries_df = industries_df[industries_df["industry"].isin(industries)]
+
+        return industries_df
+
     def get_indicators(
         self,
         model_id: int,
@@ -177,6 +241,7 @@ class ModelController:
     ) -> pd.DataFrame:
         """
         Retrieve economic indicators from the specified model.
+        Columns include "week" and whatever indicator is requested.
 
         Args:
             model_id (int): The unique identifier for the model to retrieve indicators from.
@@ -217,7 +282,9 @@ class ModelController:
 
         # filter by indicators
         if indicators:
-            indicators_df = indicators_df[list(indicators)]
+            # Always include the "week" column along with the requested indicators
+            columns_to_keep = ["week"] + list(indicators)
+            indicators_df = indicators_df[columns_to_keep]
 
         return indicators_df
 
