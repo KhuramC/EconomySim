@@ -69,11 +69,12 @@ export function buildDemographicsPayload(demoParams) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
       const demoData = demoParams[demoValue];
-      // TODO: Update this to match backend once spending behavior is finalized
-      // Create the spending_behavior as dictionary with keys of each industry
-      const spendingRate = demoData.spendingBehavior / 100.0; // 70 -> 0.70
+      // Create a dictionary of actual spending behavior per industry
       const spendingBehaviorDict = Object.fromEntries(
-        Object.values(IndustryType).map((value) => [value, spendingRate])
+        Object.entries(IndustryType).map(([industry, label]) => [
+          label,
+          (Number(demoData[industry]) || 0) / 100.0, // convert % to decimal
+        ])
       );
 
       const backendDemoData = {
