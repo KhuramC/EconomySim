@@ -9,6 +9,7 @@ from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
+from .indicators import *
 
 demographics_schema = {
     demo.value: {
@@ -88,7 +89,7 @@ class EconomyModel(Model):
 
         if max_simulation_length <= 0:
             raise ValueError("Maximum simulation length must be positive.")
-        if num_people <= 0:
+        if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
@@ -109,13 +110,20 @@ class EconomyModel(Model):
                 "income per capita": self.calculate_income_per_capita,
                 "median income": self.calculate_median_income,
                 "hoover index": self.calculate_hoover_index,
-                "lorenz curve": self.calculate_lorenz_curve,
+                "lorenz curve": calculate_lorenz_curve,
+                "gini coefficient": calculate_gini_coefficient,
             },
             agenttype_reporters={IndustryAgent: {"Price": "price"}},
         )
 
         self.setup_person_agents(num_people, demographics)
         self.setup_industry_agents(industries)
+
+        # Ensure AgentSets exists, even if empty
+        if PersonAgent not in self.agents_by_type:
+            self.agents_by_type[PersonAgent] = AgentSet([], self)
+        if IndustryAgent not in self.agents_by_type:
+            self.agents_by_type[IndustryAgent] = AgentSet([], self)
 
     def validate_schema(
         self, data: dict, schema: dict = policies_schema, path="policies"
@@ -401,22 +409,5 @@ class EconomyModel(Model):
         # TODO: Implement calculation of the Hoover Index
         # see https://www.wallstreetoasis.com/resources/skills/economics/hoover-index
         # for the formula. It's from the project documentation back in the spring
-
-        return 0
-
-    def calculate_lorenz_curve(self):
-        """
-        Calculates the Lorenz Cruve at the current timestep.
-
-        Returns:
-            _type_: _description_
-        """
-        # TODO: Implement calculation of the Lorenz Curve
-        # see https://www.datacamp.com/tutorial/lorenz-curve for info
-        # it's from the project documentation back in the spring
-
-        # note: it might make more sense to use the gini coefficient since
-        # that is a single number, and is based on the lorenz curve anyways.
-        # see https://www.datacamp.com/blog/gini-coefficient for more info on it.
 
         return 0
