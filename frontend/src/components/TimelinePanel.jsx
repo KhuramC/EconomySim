@@ -8,15 +8,29 @@ import {
   FastForward as FastForwardIcon,
 } from "@mui/icons-material";
 
+
 export default function TimelinePanel({ simAPI }) {
   const [isPlaying, setIsPlaying] = React.useState(false);
 
+  const[fastForwardRate, setFastForwardRate] = React.useState(1);
+
+  const fastFowardMax = 3;
+
+  React.useEffect(() => {
+    if(!simAPI) return;
+
+    if(isPlaying) {
+      const interval = setInterval(() => {
+        simAPI.sendMessage({ action: "step" });
+      }, 1000 / fastForwardRate);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying, fastForwardRate, simAPI]);
+
   const handlePlayPauseClick = () => {
-    // This currently only toggles the icon state and does not affect the simulation.
     setIsPlaying(!isPlaying);
   };
-
-  //TODO: make a useEffect to successively step through the model if isPlaying is true.
 
   return (
     <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
@@ -47,9 +61,21 @@ export default function TimelinePanel({ simAPI }) {
       </IconButton>
 
       {/* Fast Forward */}
-      <IconButton aria-label="fast forward" disabled={!simAPI}>
-        {/* TODO: make onClick to speed up simulation speed if it is currently playing*/}
-        <FastForwardIcon />
+      <IconButton classes={{outline: 'none'}} aria-label="fast forward" disabled={!simAPI}
+      onClick={() => {
+          if(!isPlaying)
+            return;
+          if (fastForwardRate >= fastFowardMax) {
+            setFastForwardRate(1);
+          } else {
+            const newRate = fastForwardRate +1;
+          setFastForwardRate(newRate);
+          }
+        }}
+      >
+        
+      
+        {"x" + fastForwardRate}
       </IconButton>
     </Box>
   );
