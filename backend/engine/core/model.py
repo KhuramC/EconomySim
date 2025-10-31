@@ -410,7 +410,7 @@ class EconomyModel(Model):
 
         return 0
 
-    def calculate_lorenz_curve(self):
+    def calculate_lorenz_curve(self) -> dict:
         """
         Calculates the Lorenz Cruve at the current timestep.
 
@@ -418,54 +418,54 @@ class EconomyModel(Model):
             dict: A dictionary with two keys, 'x' and 'y', representing the
                   points of the Lorenz curve for plotting. 'x' is the cumulative
                   percentage of the population, and 'y' is the cumulative
-                  percentage of total income.
+                  percentage of total money.
         """
 
-        # Get all personAgents and incomes
+        # Get all personAgents and balances
         peopleAgents = self.agents_by_type[PersonAgent]
-        incomes = np.array(peopleAgents.get("income"))
+        balances = np.array(peopleAgents.get("balance"))
 
-        if incomes.size == 0:
+        if balances.size == 0:
             return {"x": [0, 1], "y": [0, 1]}  # Line of perfect equality.
 
         # Sort and calculate cumulative shares
-        incomes = np.sort(incomes)
-        total_income = incomes.sum()
-        if total_income == 0:
+        balances = np.sort(balances)
+        total_balance = balances.sum()
+        if total_balance == 0:
             return {"x": [0, 1], "y": [0, 1]}
 
-        cumulative_income_share = np.cumsum(incomes) / total_income
+        cumulative_balance_share = np.cumsum(balances) / total_balance
 
         # Calculate cumulative population share (x-axis values)
-        num_agents = len(incomes)
+        num_agents = len(balances)
         population_share = np.arange(1, num_agents + 1) / num_agents
 
         # Insert the point (0, 0) into final output so curve starts at origin.
         return {
             "x": np.insert(population_share, 0, 0).tolist(),
-            "y": np.insert(cumulative_income_share, 0, 0).tolist(),
+            "y": np.insert(cumulative_balance_share, 0, 0).tolist(),
         }
 
-    def calculate_gini_coefficient(self):
+    def calculate_gini_coefficient(self) -> float:
         """
-        Calculates the Gini coefficient for a list of incomes.
+        Calculates the Gini coefficient for a list of balances.
 
         Returns:
             The Gini coefficient as a float between 0 and 1.
         """
         peopleAgents = self.agents_by_type[PersonAgent]
-        incomes = np.array(peopleAgents.get("income"))
+        balances = np.array(peopleAgents.get("current money"))
 
-        if len(incomes) == 0:
+        if len(balances) == 0:
             return 0.0
 
-        incomes = np.sort(incomes)
-        cumulative_incomes = np.cumsum(incomes)
+        balances = np.sort(balances)
+        cumulative_balances = np.cumsum(balances)
 
-        lorenz_area = (cumulative_incomes.sum() - cumulative_incomes[-1] / 2) / len(
-            incomes
+        lorenz_area = (cumulative_balances.sum() - cumulative_balances[-1] / 2) / len(
+            balances
         )
-        equality_area = cumulative_incomes[-1] / 2
+        equality_area = cumulative_balances[-1] / 2
 
         if equality_area == 0:
             return 0.0
