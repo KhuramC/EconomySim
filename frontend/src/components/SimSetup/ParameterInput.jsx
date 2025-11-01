@@ -1,5 +1,11 @@
 import { Grid, TextField } from "@mui/material";
 
+/**
+ * Base input wrapper:
+ * - Wraps MUI TextField inside a Grid item with a configurable column span.
+ * - Pass `select` to turn it into a dropdown.
+ * - Accepts any TextField props via rest spread, including `helperText`.
+ */
 const ParameterInput = ({
   label,
   value,
