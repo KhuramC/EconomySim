@@ -2,13 +2,18 @@ import { Switch, FormControlLabel } from "@mui/material";
 import ParameterNumInput from "./ParameterNumInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 
+/**
+ * Environmental section:
+ * - Core: Max Simulation Length, Total People
+ * - Advanced: National Inflation Rate, Random Events
+ */
 export default function EnvironmentalAccordion({
   envParams,
   handleEnvChange,
   formErrors,
 }) {
-  return (
-    <ParameterAccordion title="Environmental Parameters" defaultExpanded>
+  const coreFields = (
+    <>
       <ParameterNumInput
         label="Max Simulation Length (weeks)"
         value={envParams.maxSimulationLength}
@@ -19,6 +24,11 @@ export default function EnvironmentalAccordion({
         value={envParams.numPeople}
         onChange={handleEnvChange("numPeople")}
       />
+    </>
+  );
+
+  const advancedFields = (
+    <>
       <ParameterNumInput
         label="National Inflation Rate (%/week)"
         value={envParams.inflationRate}
@@ -34,6 +44,17 @@ export default function EnvironmentalAccordion({
         }
         label="Random Events"
       />
+    </>
+  );
+
+  return (
+    <ParameterAccordion
+      title="Environmental Parameters"
+      defaultExpanded
+      advancedContent={advancedFields}
+      defaultAdvancedOpen={false}
+    >
+      {coreFields}
     </ParameterAccordion>
   );
 }
