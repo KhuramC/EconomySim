@@ -1,6 +1,80 @@
 import numpy as np
 from ..agents.person import PersonAgent
 from mesa import Model
+import random
+import statistics
+
+
+def calculate_unemployment(model: Model) -> float:
+    """
+    Calculates the unemployment rate at the current step.
+
+    Returns:
+        percentage(float): The percentage of unemployed people in the simulation.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    unemployed = len(peopleAgents.select(lambda agent: (agent.employer is None)))
+    total = len(peopleAgents)
+
+    return unemployed / total
+
+
+def calculate_gdp(model: Model) -> float:
+    """
+    Calculates the GDP,
+    or the value of all goods produced by industries at the current step.
+
+    Returns:
+        gdp(float): The value of goods and services produced by the industries in the simulation.
+    """
+
+    # TODO: Implement calculation of the GDP
+    # see https://www.investopedia.com/terms/b/bea.asp for notes
+    # It's from the project documentation back in the spring
+    return 5 + model.get_week() + random.random()
+
+
+def calculate_income_per_capita(model: Model):
+    """
+    Calculates the income per capita,
+    or the average per step(weekly) income per person in the simulation.
+
+    Returns:
+        average_income(float): The average income per person(capita) in the simulation.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    total = len(peopleAgents)
+    return peopleAgents.agg(
+        "income", lambda incomes: sum(incomes) / total if total > 0 else 0
+    )
+
+
+def calculate_median_income(model: Model):
+    """
+    Calculates the median income of people within the simulation.
+
+    Returns:
+        median_income(float): The median income of people in the simulation.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    return peopleAgents.agg("income", lambda incomes: statistics.median(incomes))
+
+
+def calculate_hoover_index(model: Model):
+    """
+    Calculates the Hoover Index,
+    a measure of income inequality(ranges from 0-1),
+    at the current timestep.
+
+    Returns:
+        hoover_index(float): squared income proportions from 0-1
+    """
+
+    # TODO: Implement calculation of the Hoover Index
+    # see https://www.wallstreetoasis.com/resources/skills/economics/hoover-index
+    # for the formula. It's from the project documentation back in the spring
+
+    return 0
 
 
 def calculate_lorenz_curve(model: Model) -> dict[str, list[float]]:

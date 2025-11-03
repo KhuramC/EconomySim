@@ -26,7 +26,7 @@ def test_calculate_unemployment(model: EconomyModel):
     Args:
         model (EconomyModel): a freshly created model.
     """
-    assert model.calculate_unemployment() == 1.0
+    assert indicators.calculate_unemployment(model) == 1.0
 
     # TODO: redo whenever starting unemployment logic has been updated
     peopleAgents = model.agents_by_type[PersonAgent]
@@ -36,7 +36,7 @@ def test_calculate_unemployment(model: EconomyModel):
         agent.employer = IndustryType.AUTOMOBILES
 
     expected_unemployment = float((total - employed) / total)
-    assert model.calculate_unemployment() == expected_unemployment
+    assert indicators.calculate_unemployment(model) == expected_unemployment
 
 
 @mark.xfail(reason="Function not implemented yet.")

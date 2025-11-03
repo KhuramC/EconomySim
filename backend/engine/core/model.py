@@ -1,5 +1,3 @@
-import statistics
-import random
 import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
@@ -105,11 +103,11 @@ class EconomyModel(Model):
         self.datacollector = DataCollector(
             model_reporters={
                 "week": self.get_week,
-                "unemployment": self.calculate_unemployment,
-                "gdp": self.calculate_gdp,
-                "income per capita": self.calculate_income_per_capita,
-                "median income": self.calculate_median_income,
-                "hoover index": self.calculate_hoover_index,
+                "unemployment": calculate_unemployment,
+                "gdp": calculate_gdp,
+                "income per capita": calculate_income_per_capita,
+                "median income": calculate_median_income,
+                "hoover index": calculate_hoover_index,
                 "lorenz curve": calculate_lorenz_curve,
                 "gini coefficient": calculate_gini_coefficient,
             },
@@ -344,70 +342,3 @@ class EconomyModel(Model):
             week(int): The current week.
         """
         return self.week
-
-    def calculate_unemployment(self) -> float:
-        """
-        Calculates the unemployment rate at the current step.
-
-        Returns:
-            percentage(float): The percentage of unemployed people in the simulation.
-        """
-        peopleAgents = self.agents_by_type[PersonAgent]
-        unemployed = len(peopleAgents.select(lambda agent: (agent.employer is None)))
-        total = len(peopleAgents)
-
-        return unemployed / total
-
-    def calculate_gdp(self) -> float:
-        """
-        Calculates the GDP,
-        or the value of all goods produced by industries at the current step.
-
-        Returns:
-            gdp(float): The value of goods and services produced by the industries in the simulation.
-        """
-
-        # TODO: Implement calculation of the GDP
-        # see https://www.investopedia.com/terms/b/bea.asp for notes
-        # It's from the project documentation back in the spring
-        return 5 + self.get_week() + random.random()
-
-    def calculate_income_per_capita(self):
-        """
-        Calculates the income per capita,
-        or the average per step(weekly) income per person in the simulation.
-
-        Returns:
-            average_income(float): The average income per person(capita) in the simulation.
-        """
-        peopleAgents = self.agents_by_type[PersonAgent]
-        total = len(peopleAgents)
-        return peopleAgents.agg(
-            "income", lambda incomes: sum(incomes) / total if total > 0 else 0
-        )
-
-    def calculate_median_income(self):
-        """
-        Calculates the median income of people within the simulation.
-
-        Returns:
-            median_income(float): The median income of people in the simulation.
-        """
-        peopleAgents = self.agents_by_type[PersonAgent]
-        return peopleAgents.agg("income", lambda incomes: statistics.median(incomes))
-
-    def calculate_hoover_index(self):
-        """
-        Calculates the Hoover Index,
-        a measure of income inequality(ranges from 0-1),
-        at the current timestep.
-
-        Returns:
-            hoover_index(float): squared income proportions from 0-1
-        """
-
-        # TODO: Implement calculation of the Hoover Index
-        # see https://www.wallstreetoasis.com/resources/skills/economics/hoover-index
-        # for the formula. It's from the project documentation back in the spring
-
-        return 0
