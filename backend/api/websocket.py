@@ -29,6 +29,9 @@ def handle_get_current_week(model_id: int) -> dict:
 
 
 def handle_get_industry_data(model_id: int) -> dict:
+    """
+    Creates a json of each industry variable across the whole simulation to be able to plot easily.
+    """
     industries_df = controller.get_industry_data(model_id)
     industries_json = json.loads(industries_df.to_json(orient="columns"))
     return {
@@ -39,6 +42,9 @@ def handle_get_industry_data(model_id: int) -> dict:
 
 
 def handle_get_current_industry_data(model_id: int) -> dict:
+    """
+    Creates a dictionary of the industry variables at the current timestep across each industry.
+    """
     current_week = controller.get_current_week(model_id)
     # Get data only for the current week
     industries_df = controller.get_industry_data(
