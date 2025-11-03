@@ -16,7 +16,6 @@ const getDefaultDemographicParams = () => ({
   meanIncome: 50000,
   sdIncome: 15000,
   proportion: 33,
-  spendingBehavior: 70,
   meanSavings: 10000,
   sdSavings: 5000,
   unemploymentRate: 0.05,

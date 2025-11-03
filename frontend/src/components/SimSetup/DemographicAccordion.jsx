@@ -113,18 +113,9 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
             readOnly={readOnly}
           />
-          <ParameterNumInput
-            label="Spending Behavior (% Income)"
-            value={demoParams[selectedDemographic].spendingBehavior}
-            onChange={handleDemographicChange(
-              selectedDemographic,
-              "spendingBehavior"
-            )}
-            readOnly={readOnly}
-          />
         </Grid>
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1 }}>
+        <Typography variant="subtitle1" sx={{ mb: 2 }}>
           Spending Behavior (% of income)
         </Typography>
         <Grid container spacing={1}>
@@ -137,7 +128,7 @@ export default function DemographicAccordion({
               md={4}
             >
               <ParameterNumInput
-                label={`${label.charAt(0).toUpperCase() + label.slice(1)} (%)`}
+                label={label}
                 value={demoParams[selectedDemographic]?.[upperKey] ?? ""}
                 onChange={handleDemographicChange(
                   selectedDemographic,
