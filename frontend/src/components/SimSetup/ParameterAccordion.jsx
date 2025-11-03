@@ -15,15 +15,19 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
 /**
  * Generic accordion wrapper for parameter sections.
- * - Supports an optional "advancedContent" slot toggled by a gear icon.
- * - Backward compatible: if no advancedContent is provided, it behaves as before.
+ * - Shows core settings by default.
+ * - If `advancedContent` is provided, a gear icon appears in the header.
+ * - When toggled ON: renders a divider, a title on its own line,
+ *   and then the advanced content in a separate Grid row below.
  */
 const ParameterAccordion = ({
   title,
   defaultExpanded = false,
-  children,                // Core settings -> typically <Grid item> elements
-  advancedContent = null,  // Advanced settings -> typically <Grid item> elements
+  children,                   // Core settings -> typically <Grid item>
+  advancedContent = null,     // Advanced settings -> typically <Grid item>
   defaultAdvancedOpen = false,
+  advancedTitle = "Advanced Settings",
+  advancedTitleProps = {},
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(defaultAdvancedOpen);
 
@@ -35,7 +39,6 @@ const ParameterAccordion = ({
             {title}
           </Typography>
 
-          {/* Show gear icon only when advanced content exists */}
           {advancedContent && (
             <Tooltip
               title={showAdvanced ? "Hide advanced settings" : "Show advanced settings"}
@@ -44,8 +47,7 @@ const ParameterAccordion = ({
                 size="small"
                 aria-label="toggle advanced settings"
                 onClick={(e) => {
-                  // Prevent toggling the accordion itself
-                  e.stopPropagation();
+                  e.stopPropagation();       // do not toggle the accordion itself
                   setShowAdvanced((s) => !s);
                 }}
                 onFocus={(e) => e.stopPropagation()}
@@ -58,22 +60,35 @@ const ParameterAccordion = ({
       </AccordionSummary>
 
       <AccordionDetails>
+        {/* Core row */}
         <Grid container spacing={2}>
-          {/* Core settings */}
           {children}
-
-          {/* Advanced settings */}
-          {advancedContent && showAdvanced && (
-            <>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 1 }} />
-              </Grid>
-              {advancedContent}
-            </>
-          )}
-
-          {/* Children are expected to be Grid items, although they technically don't need to be. */}
         </Grid>
+
+        {/* Advanced block (always starts on a new line) */}
+        {advancedContent && showAdvanced && (
+          <>
+            <Divider sx={{ my: 2 }} />
+
+            {/* Title row */}
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 600, color: "text.secondary", mb: 1 }}
+                  {...advancedTitleProps}
+                >
+                  {advancedTitle}
+                </Typography>
+              </Grid>
+            </Grid>
+
+            {/* Advanced fields row (independent Grid to guarantee line break) */}
+            <Grid container spacing={2}>
+              {advancedContent}
+            </Grid>
+          </>
+        )}
       </AccordionDetails>
     </Accordion>
   );

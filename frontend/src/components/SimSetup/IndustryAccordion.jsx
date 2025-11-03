@@ -20,14 +20,12 @@ export default function IndustryAccordion({
   const industryValues = useMemo(() => Object.values(IndustryType), []);
   const [selectedIndustry, setSelectedIndustry] = useState(industryValues[0]);
 
-  // Handler for industry selector dropdown
   const handleSelectedIndustryChange = (event) => {
     setSelectedIndustry(event.target.value);
   };
 
   const current = industryParams[selectedIndustry] || {};
 
-  // --- Core fields (always visible) ---
   const coreFields = (
     <>
       <ParameterMenuInput
@@ -59,7 +57,6 @@ export default function IndustryAccordion({
     </>
   );
 
-  // --- Advanced fields (shown when gear icon is toggled) ---
   const advancedFields = (
     <>
       <ParameterNumInput
@@ -68,7 +65,6 @@ export default function IndustryAccordion({
         onChange={handleIndustryChange(selectedIndustry, "startingInventory")}
         readOnly={readOnly}
       />
-
       <ParameterNumInput
         label={starting === true ? "Industry Savings ($)" : "Savings ($)"}
         value={current.industrySavings}
@@ -81,6 +77,7 @@ export default function IndustryAccordion({
   return (
     <ParameterAccordion
       title="Industry Parameters"
+      advancedTitle="Advanced Industry Settings"
       advancedContent={advancedFields}
       defaultAdvancedOpen={false}
     >

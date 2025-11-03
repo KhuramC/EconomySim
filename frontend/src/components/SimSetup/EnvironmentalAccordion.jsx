@@ -1,4 +1,4 @@
-import { Switch, FormControlLabel } from "@mui/material";
+import { Grid, Switch, FormControlLabel } from "@mui/material";
 import ParameterNumInput from "./ParameterNumInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 
@@ -6,6 +6,7 @@ import ParameterAccordion from "./ParameterAccordion.jsx";
  * Environmental section:
  * - Core: Max Simulation Length, Total People
  * - Advanced: National Inflation Rate, Random Events
+ * The advanced block is rendered under a title on a new line.
  */
 export default function EnvironmentalAccordion({
   envParams,
@@ -34,16 +35,18 @@ export default function EnvironmentalAccordion({
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}
       />
-
-      <FormControlLabel
-        control={
-          <Switch
-            checked={envParams.randomEvents}
-            onChange={handleEnvChange("randomEvents")}
-          />
-        }
-        label="Random Events"
-      />
+      {/* Wrap the switch in a Grid item to keep layout consistent */}
+      <Grid item xs={6}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={envParams.randomEvents}
+              onChange={handleEnvChange("randomEvents")}
+            />
+          }
+          label="Random Events"
+        />
+      </Grid>
     </>
   );
 
@@ -51,6 +54,7 @@ export default function EnvironmentalAccordion({
     <ParameterAccordion
       title="Environmental Parameters"
       defaultExpanded
+      advancedTitle="Advanced Environmental Settings"
       advancedContent={advancedFields}
       defaultAdvancedOpen={false}
     >
