@@ -2,6 +2,7 @@ from mesa import Agent, Model
 from .industry import IndustryAgent
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
+from ..core.model import EconomyModel
 import logging
 import math
 
@@ -52,7 +53,12 @@ class PersonAgent(Agent):
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
-        self.current_money = self.current_money + self.income
+        EModel : EconomyModel
+        EModel = Model
+        self.current_money += self.income
+        personal_income_tax = EModel.policies["personal_income_tax"][self.demographic]
+        if personal_income_tax is not None:
+            self.current_money -= self.income * personal_income_tax
 
     def demand_func(
         self, budget: float, prefs: dict[IndustryType, float], prices: dict[str, float]
@@ -168,3 +174,4 @@ class PersonAgent(Agent):
         # TODO: Implement person employment logic
         # deals with trying to find a new job if unemployed
         pass
+        
