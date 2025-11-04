@@ -1,5 +1,8 @@
 import ParameterInput from "./ParameterInput";
 
+/**
+ * Dropdown (Select) input wrapper built on top of ParameterInput.
+ */
 const ParameterMenuInput = ({
   label,
   value,
