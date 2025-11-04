@@ -12,6 +12,7 @@ class Indicators(StrEnum):
     MEDIAN_INCOME = "median income"
     HOOVER_INDEX = "hoover index"
     LORENZ_CURVE = "lorenz curve"
+    GINI_COEFFICIENT = "gini coefficient"
 
     @classmethod
     def values(cls) -> list[str]:
