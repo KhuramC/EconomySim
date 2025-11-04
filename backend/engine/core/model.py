@@ -111,7 +111,14 @@ class EconomyModel(Model):
                 "lorenz curve": calculate_lorenz_curve,
                 "gini coefficient": calculate_gini_coefficient,
             },
-            agenttype_reporters={IndustryAgent: {"Price": "price"}},
+            agenttype_reporters={
+                IndustryAgent: {
+                    "price": "price",
+                    "inventory": "inventory",
+                    "money": "total_money",
+                    "offered_wage": "offered_wage",
+                }
+            },
         )
 
         self.setup_person_agents(num_people, demographics)
