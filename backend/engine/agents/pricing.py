@@ -134,3 +134,21 @@ def linear_price(A,B,Q) -> float:
     P_at_Q = A - B * Q
     Price_Rounded = round(P_at_Q,2) #round to two decimal places
     return Price_Rounded
+
+def quantity_from_price(A,B,P) -> int:
+    """
+        Finds Quantity from price quation
+        Flip price equation.  
+        (A - P) / B = Q 
+    Args:
+        A (float): intercept of the demand graph
+        B (float): slope of the demand graph
+        P (float): Price that good is to be sold at
+
+    Returns:
+        int: quantity that industry will produce at this price
+    """
+    if B != 0:
+        Q_at_P = (A - P) / B
+        return int(Q_at_P)  #clamp to whole number
+    
