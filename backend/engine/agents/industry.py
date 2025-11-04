@@ -1,7 +1,7 @@
 from mesa import Agent
 from mesa import Model
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
-from ..types.Pricing_Type import PricingType
+from ..types.pricing_type import PricingType
 from .pricing import avg_cost, linear_profit_max, linear_price
 import logging
 import math

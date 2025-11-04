@@ -5,7 +5,7 @@ import math
 from engine.agents.industry import IndustryAgent
 
 from engine.types.industry_type import IndustryType
-from engine.types.Pricing_Type import PricingType
+from engine.types.pricing_type import PricingType
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
 def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
