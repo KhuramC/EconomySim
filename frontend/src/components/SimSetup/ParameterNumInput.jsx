@@ -1,6 +1,11 @@
 import ParameterInput from "./ParameterInput";
 import { deepmerge } from "@mui/utils";
 
+/**
+ * Number input wrapper:
+ * - Uses TextField `type="number"`.
+ * - Supports `readOnly` via slotProps (without disabling the visual).
+ */
 const ParameterNumInput = ({
   label,
   value,
