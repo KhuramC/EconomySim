@@ -16,11 +16,16 @@ const getDefaultDemographicParams = () => ({
   meanIncome: 50000,
   sdIncome: 15000,
   proportion: 33,
-  // TODO: update once spending behavior is finalized in backend
-  spendingBehavior: 70,
   meanSavings: 10000,
   sdSavings: 5000,
   unemploymentRate: 0.05,
+  GROCERIES: 25,
+  UTILITIES: 18,
+  AUTOMOBILES: 2,
+  HOUSING: 41,
+  HOUSEHOLD_GOODS: 8,
+  ENTERTAINMENT: 4,
+  LUXURY: 2,
 });
 
 //Function to generate default parameters for one industry
@@ -84,12 +89,37 @@ export default function SetupPage() {
       },
       0
     );
+
     // Clear error message when proportion sum becomes valid
     if (proportionSum !== 100) {
       errors.proportion = `Demographic proportions must add up to 100%. Current sum:
             ${proportionSum.toFixed(1)}% (${(100 - proportionSum).toFixed(1)}%
             remaining).`;
     }
+
+    const spendingBehaviorOptions = IndustryType;
+
+    // Loop through each demographic group
+    Object.entries(params.demoParams).forEach(([demoName, demoData]) => {
+      const spendingSum = Object.keys(spendingBehaviorOptions).reduce(
+        (sum, key) => sum + (Number(demoData[key]) || 0),
+        0
+      );
+
+      const formattedDemoName = demoName
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+      if (Math.abs(spendingSum - 100) > 0.1) {
+        // small tolerance for rounding
+        errors[
+          demoName
+        ] = `Spending behavior percentages for "${formattedDemoName}" must add up to 100%. Current sum: ${spendingSum.toFixed(
+          1
+        )}% (${(100 - spendingSum).toFixed(1)}% remaining).`;
+      }
+    });
 
     setFormErrors(errors);
   }, [params]);
