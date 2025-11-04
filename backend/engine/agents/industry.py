@@ -2,7 +2,8 @@ from mesa import Agent
 from mesa import Model
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.Pricing_Type import PricingType
-from .pricing import avg_cost, linear_profit_max, linear_price
+from ..core.model import EconomyModel
+from .pricing import avg_cost, linear_profit_max, linear_price, quantity_from_price
 import logging
 import math
 
@@ -50,6 +51,11 @@ class IndustryAgent(Agent):
     inventory_available_this_step: int
     """The inventory available for sale this time step."""
     
+    total_cost: float
+    """total cost of goods this tick"""
+    total_revenue: float
+    """total revenue from sold goods this tick"""
+
     def __init__(
         #TODO: associate most or all starting variables with industry_type so they don't need to be passed in via the constructor
         self,
@@ -86,6 +92,8 @@ class IndustryAgent(Agent):
         self.demand_slope = starting_demand_slope
         self.inventory_available_this_step = 0      #calculated by determine_price
         self.hours_worked = 0                       #calculated by produce_goods
+        self.total_cost = 0
+        self.total_revenue = 0
         
 
     def get_tariffs(self) -> float:
@@ -171,6 +179,13 @@ class IndustryAgent(Agent):
         #Set price based on suggested quantity
         Price = linear_price(A,B,Suggested_Quantity)
         
+        Emodel : EconomyModel
+        EModel = Model
+        price_cap = Emodel.policies["price_cap"][self.industry_type]
+        if price_cap is not None:
+            if price_cap < Price:
+                Price = price_cap
+                Suggested_Quantity = quantity_from_price(A,B,Price)
         # set results on the instance
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
@@ -220,12 +235,11 @@ class IndustryAgent(Agent):
         # Update inventory and deduct costs
         self.inventory += quantity_to_produce
         spent_variable = variable_cost_per_unit * quantity_to_produce
-        spent_fixed = self.fixed_cost
-        self.total_money = self.total_money - spent_fixed - spent_variable     
-        
+        self.total_cost = self.fixed_cost + spent_variable
+        self.total_money = self.total_money - self.total_cost 
         logging.info(
             f"Produced {quantity_to_produce:.2f} units; spent_variable={spent_variable:.2f}; "
-            f"spent_fixed={spent_fixed:.2f}; remaining funds {self.total_money:.2f}; "
+            f"spent_fixed={self.fixed_cost:.2f}; remaining funds {self.total_money:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
         
@@ -245,6 +259,11 @@ class IndustryAgent(Agent):
         How the industry will determine what to set their hiring wages at.
         """
         logging.info("Changing wages...NOT IMPLEMENTED")
+        EModel : EconomyModel
+        EModel = Model
+        minimum_wage = EModel.policies["minimum_wage"][self.industry_type]
+        if self.offered_wage < minimum_wage:
+            self.offered_wage = minimum_wage
         return self.offered_wage
         # TODO: Implement industry wage logic
 
@@ -399,3 +418,22 @@ class IndustryAgent(Agent):
         self.inventory -= quantity
         self.inventory_available_this_step -= quantity
         self.total_money += quantity * self.price
+        self.total_revenue += quantity * self.price
+        
+    def new_tick(self):
+        self.total_cost = 0
+        self.total_revenue = 0
+        
+    def get_profit(self) -> float:
+        profit = self.total_revenue-self.total_cost
+        return profit
+            
+    def deduct_corporate_tax(self):
+        profit = self.get_profit()
+        
+        Emodel : EconomyModel
+        EModel = Model
+        corporate_income_tax = EModel.policies["corportate_income_tax"][self.industry_type]
+        if corporate_income_tax is not None and profit > 0:
+            taxedAmt = profit * corporate_income_tax
+        self.total_money -= taxedAmt
