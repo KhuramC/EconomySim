@@ -1,5 +1,5 @@
 from enum import StrEnum
-from .Pricing_Type import PricingType
+from .pricing_type import PricingType
 class IndustryType(StrEnum):
     """
     An enumeration of different industry types supported by the simulation.
