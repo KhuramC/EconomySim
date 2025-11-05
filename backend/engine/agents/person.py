@@ -110,14 +110,8 @@ class PersonAgent(Agent):
         self.payday()
 
         # Get industry and pricing info
-        all_industries = [
-            industryAgent.industry_type
-            for industryAgent in self.model.agents_by_type[IndustryAgent]
-        ]  # API call to get available industries.
-        prices = {
-            industryAgent.industry_type: industryAgent.price
-            for industryAgent in self.model.agents_by_type[IndustryAgent]
-        }  # Retrieve price data for each industry
+        industry_agents = list(self.model.agents_by_type[IndustryAgent])
+        prices = {agent.industry_type: agent.price for agent in industry_agents}
 
         # Calculate desired purchases
         desired_quantities = self.demand_func(
@@ -125,11 +119,12 @@ class PersonAgent(Agent):
         )
 
         # Attempt to purchase goods
-        for industry in all_industries:
-            if industry not in desired_quantities:
+        for industry in industry_agents:
+            industry_type = industry.industry_type
+            if industry_type not in desired_quantities:
                 continue
 
-            desired_quantity = desired_quantities[industry]
+            desired_quantity = desired_quantities[industry_type]
             if desired_quantity <= 0:
                 continue
 
@@ -148,11 +143,11 @@ class PersonAgent(Agent):
                 self.current_money -= cost
                 industry.sell_goods(quantity_to_buy)
                 logging.info(
-                    f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry}"
+                    f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry.industry_type}"
                 )
             else:
                 logging.warning(
-                    f"Agent {self.unique_id} has insufficient funds for {industry}"
+                    f"Agent {self.unique_id} has insufficient funds for {industry.industry_type}"
                 )
 
     def change_employment(self):
