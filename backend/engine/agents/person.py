@@ -143,11 +143,11 @@ class PersonAgent(Agent):
                 self.current_money -= cost
                 industry.sell_goods(quantity_to_buy)
                 logging.info(
-                    f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry}"
+                    f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry.industry_type}"
                 )
             else:
                 logging.warning(
-                    f"Agent {self.unique_id} has insufficient funds for {industry}"
+                    f"Agent {self.unique_id} has insufficient funds for {industry.industry_type}"
                 )
 
     def change_employment(self):
