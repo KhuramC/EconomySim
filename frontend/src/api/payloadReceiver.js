@@ -110,8 +110,8 @@ export function receiveDemographicsPayload(backendDemographics) {
         sdIncome: backendDemo.income.sd,
         proportion: backendDemo.proportion * 100, // 0.33 -> 33
         spendingBehavior: spendingBehaviorValue * 100, // 0.7 -> 70
-        meanSavings: backendDemo.current_money.mean,
-        sdSavings: backendDemo.current_money.sd,
+        meanSavings: backendDemo.balance.mean,
+        sdSavings: backendDemo.balance.sd,
         unemploymentRate: backendDemo.unemployment_rate * 100, // 0.05 -> 5
       };
       return [demoValue, frontendDemo];
@@ -135,7 +135,7 @@ export function receiveIndustriesPayload(backendIndustries) {
       const frontendIndustry = {
         startingInventory: backendIndustry.inventory,
         startingPrice: backendIndustry.price,
-        industrySavings: backendIndustry.money,
+        industrySavings: backendIndustry.balance,
         offeredWage: backendIndustry.offered_wage,
       };
       return [industryValue, frontendIndustry];

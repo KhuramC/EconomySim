@@ -106,7 +106,7 @@ export function buildIndustriesPayload(industryParams) {
       const backendIndustryData = {
         price: industryData.startingPrice,
         inventory: industryData.startingInventory,
-        money: industryData.industrySavings,
+        balance: industryData.industrySavings,
         offered_wage: industryData.offeredWage,
       };
       return [industryKey, backendIndustryData];
