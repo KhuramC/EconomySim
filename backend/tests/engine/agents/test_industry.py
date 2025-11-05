@@ -30,11 +30,6 @@ def test_get_employees():
 
 
 @mark.xfail(reason="Function not implemented yet.")
-def test_determine_price():
-    assert False
-
-
-@mark.xfail(reason="Function not implemented yet.")
 def test_produce_goods():
     assert False
 
