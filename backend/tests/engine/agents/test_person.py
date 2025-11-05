@@ -137,10 +137,5 @@ def test_purchase_goods(mock_economy_model):
 
 
 @mark.xfail(reason="Function not implemented yet.")
-def test_purchase_goods():
-    assert False
-
-
-@mark.xfail(reason="Function not implemented yet.")
 def test_change_employment():
     assert False
