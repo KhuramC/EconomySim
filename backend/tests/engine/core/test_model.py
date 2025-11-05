@@ -115,15 +115,13 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
     Tests that:
         1. Each PersonAgent preference vector sums to 1 (within floating tolerance).
         2. There is heterogeneity (not all preference vectors are identical).
-        3. For each demographic, the empirical mean of preference vectors is close to
-           the theoretical Dirichlet mean (spending_behavior normalized).
+        3. For each demographic, the empirical mean of preference vectors is consistent
+           with the theoretical Dirichlet mean within expected sampling noise.
     """
     people = model.agents_by_type[PersonAgent]
     assert len(people) > 0, "No PersonAgents were created."
 
-    industries = [
-        industry.value for industry in IndustryType
-    ]  # List of industries in order
+    industries = [industry.value for industry in IndustryType]
 
     # Test that preferences sum to 1.
     for agent in people:
@@ -140,27 +138,29 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
             [theoretical_means[key] for key in industries]
         )
 
-        all_pref_vectors = []
-        unique_prefs_set = set()
-        for agent in demo_agents:
-            # Find all prefs
-            pref_vector = np.array([agent.preferences[key] for key in industries])
-            all_pref_vectors.append(pref_vector)
-
-            # Hash prefs to test "uniqueness"
-            hashable_pref = tuple(sorted(agent.preferences.items()))
-            unique_prefs_set.add(hashable_pref)
-
-        empirical_data = np.array(all_pref_vectors)
-        empirical_mean_vector = np.mean(empirical_data, axis=0)
-
-        # Test statistical mean
-        assert empirical_mean_vector == approx(
-            theoretical_mean_vector, rel=0.1, abs=0.05
+        all_pref_vectors = np.array(
+            [[agent.preferences[key] for key in industries] for agent in demo_agents]
         )
 
         # Test heterogeneity
-        assert len(unique_prefs_set) > 1
+        unique_prefs = {tuple(np.round(v, 8)) for v in all_pref_vectors}
+        assert len(unique_prefs) > 1
+
+        # Test mean consistency statistically
+        empirical_mean = all_pref_vectors.mean(axis=0)
+        n = len(all_pref_vectors)
+
+        # Approximate expected sampling noise for Dirichlet means
+        # Var[X_i] = α_i(α₀ - α_i) / (α₀² (α₀ + 1))
+        alphas = np.array(list(theoretical_means.values()))
+        alpha0 = np.sum(alphas)
+        var = alphas * (alpha0 - alphas) / (alpha0**2 * (alpha0 + 1))
+        std_err = np.sqrt(var / n)
+
+        # Check that theoretical mean lies within ~3 standard errors
+        diff = np.abs(empirical_mean - theoretical_mean_vector)
+        tolerance = 3 * std_err
+        assert np.all(diff <= tolerance)
 
 
 @mark.xfail(reason="Function has not been implemented yet.")
