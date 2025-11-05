@@ -56,7 +56,10 @@ class PersonAgent(Agent):
         self.balance = self.balance + self.income
 
     def demand_func(
-        self, budget: float, prefs: dict[IndustryType, float], prices: dict[str, float]
+        self,
+        budget: float,
+        prefs: dict[IndustryType, float],
+        prices: dict[IndustryType, float],
     ) -> dict[str, int]:
         """
         Calculates the quantity of each good to purchase based on the CES demand function.
