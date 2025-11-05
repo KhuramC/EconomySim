@@ -7,6 +7,35 @@ This directory contains:
 
 ## Model
 
+### Initializing `PersonAgent`s
+
+The simulation uses **heterogeneous agent creation** to model a diverse and realistic population. Instead of creating identical "representative agents" for each demographic, the model generates `n` unique `PersonAgent`s, each with their own specific income, starting money, and spending preferences. This micro-simulation approach allows for more realistic and emergent economic behavior, as individuals *within* the same demographic will react differently to economic changes (like price increases).
+
+**Lognormal Distribution**
+
+When `setup_person_agents` is called, it first calculates the exact integer number of agents for each demographic using the `num_prop` helper function, which correctly allocates `total_people` across the given proportions without rounding errors. It then generates unique `income` and `current_money` values for each new agent by sampling from a **lognormal distribution** using `generate_lognormal`. This distribution is used because income and wealth are known to be log-normally distributed in the real world (i.e., they have a long tail and cannot be negative), which is more accurate than a standard bell curve.
+
+**Dirichlet Distribution**
+
+The most important step is generating unique spending preferences. This is achieved by sampling from a **Dirichlet distribution** (`np.random.dirichlet`). The `spending_behavior` dictionary for a given demographic (e.g., `{"GROCERIES": 0.5, "LUXURY": 0.1, ...}`) is used as the `alpha` vector (the mean) for the distribution. The Dirichlet function returns `n` unique preference vectors, and each vector's components naturally sum to 1.0, making it statistically perfect for modeling spending percentages.
+
+**The Concentration Parameter**
+
+The variance of these preferences is controlled by the `preference_concentration` parameter. This value scales the `alpha` vector before it's passed to the Dirichlet function.
+
+* A **high concentration** (e.g., 100) will produce agents with preferences *very close* to their demographic's average (low variance).
+
+* A **low concentration** (e.g., 5) will produce agents with *wildly different* preferences from each other (high variance).
+
+This provides a crucial knob for tuning the simulation's "randomness" while ensuring the agents, on average, match their demographic's profile.
+
+**Other Considerations**
+
+* **Using Identical Agents**: The main alternative was to assign every agent the exact same `spending_behavior` as their demographic. This was rejected because it leads to unrealistic, synchronized behavior. If all agents have identical preferences, they will all react to price changes in the exact same way, which does not reflect a real economy.
+
+* **Random Normalization**: Simply generating random numbers for each preference and normalizing them (dividing by the sum) was also rejected. That approach provides no control over the *mean* preference. The Dirichlet distribution is the statistically correct method for sampling random vectors that are centered around a known mean (`alpha`) and sum to 1.
+
+
 ### Inflation
 
 The way we approach inflation in our simulation is by implementing **cost-push inflation**. This method directly uses our simulation's existing agent-based logic to have the effects of inflation (rising prices) emerge naturally, which then causes a decrease in buying power. 
