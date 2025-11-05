@@ -110,12 +110,14 @@ def test_purchase_goods(mock_economy_model):
         starting_price=10,
         starting_inventory=100,
     )
+    food_industry.inventory_available_this_step = food_industry.inventory
     entertainment_industry = IndustryAgent(
         mock_economy_model,
         IndustryType.ENTERTAINMENT,
         starting_price=20,
         starting_inventory=100,
     )
+    entertainment_industry.inventory_available_this_step = food_industry.inventory
 
     person = PersonAgent(
         mock_economy_model,
