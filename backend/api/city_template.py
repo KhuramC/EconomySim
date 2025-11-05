@@ -7,7 +7,7 @@ from engine.types.demographic import Demographic
 # could also make these into small_config.json, medium_config.json, large_config.json files and load them in
 _SMALL_CONFIG = {
     "num_people": 1000,
-    "inflation_rate": 0.001,
+    "inflation_rate": 0.001, # Inflation Rate is weekly
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -42,7 +42,7 @@ _SMALL_CONFIG = {
 }
 _MEDIUM_CONFIG = {
     "num_people": 10000,
-    "inflation_rate": 0.001,
+    "inflation_rate": 0.001, # Inflation Rate is weekly
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -77,7 +77,7 @@ _MEDIUM_CONFIG = {
 }
 _LARGE_CONFIG = {
     "num_people": 100000,
-    "inflation_rate": 0.001,
+    "inflation_rate": 0.001, # Inflation Rate is weekly
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
