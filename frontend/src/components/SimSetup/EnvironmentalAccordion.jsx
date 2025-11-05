@@ -31,7 +31,7 @@ export default function EnvironmentalAccordion({
   const advancedFields = (
     <>
       <ParameterNumInput
-        label="National Inflation Rate (%/week)"
+        label="National Inflation Rate (%/year)"
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}
       />
