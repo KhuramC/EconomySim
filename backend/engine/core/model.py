@@ -302,9 +302,25 @@ class EconomyModel(Model):
         )
 
     def inflation(self):
-        # TODO: implement inflation logic.
-        # could have prices go up by inflation percentage and current_money go down by the same percentage
-        pass
+        """
+        Applies the weekly inflation rate to all industry costs and
+        the minimum wage policy. This is a "cost-push" inflation model.
+        """
+
+        industryAgents = self.agents_by_type[IndustryAgent]
+        for agent in industryAgents:
+            agent.raw_mat_cost *= 1 + self.inflation_rate
+            agent.fixed_cost *= 1 + self.inflation_rate
+
+        # TODO: implement wage inflation
+        # Update the floor minimum wage as prices of good increase
+        # Should this be lagging behind raw costs increasing?
+        # Should this just be implemented in the employment logic?
+        # How do we increase wages at the same time as increasing costs, while ensuring
+        # PersonAgent's buying power is decreasing?
+
+        # Example implementation
+        # self.policies["minimum_wage"] = self.policies["minimum_wage"] * (1 + self.inflation_rate)
 
     def step(self) -> None:
         """
