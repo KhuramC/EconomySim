@@ -15,6 +15,16 @@ Currently, `IndustryAgent`s are representative agents (monopolies) that use prof
 
 By increasing these costs (`F` and `V`) by the model's `inflation_rate` each week, we are simulating the rising costs of raw materials, energy, and property. When the `IndustryAgent`s run their `determine_price` step, their profit-maximization formula will *naturally* lead them to raise their prices to protect their margins. When the `PersonAgent`s then try to purchase goods, their (unchanged) nominal `current_money` will buy fewer goods at these new, higher prices. This is the decrease in buying power.
 
+**Compounding Percentage**
+
+Since the inflation rate is applied weekly but it is received from the user as an annualized percentage, a conversion must be done. If you compounded a `weekly_rate` set at `annual_rate / 52` it would be wrong and overshoot the `annual_rate`.
+
+$$
+(1 + r_{weekly})^{52} = (1+ r_{annual})
+$$
+
+We can solve for $r_{weekly}$ to get the correct compounding weekly percentage.
+
 **Other Considerations**
 
 * Decreasing every `PersonAgent`'s `current_money` is less ideal because it acts less of an inflation model and more of a wealth tax. It doesn't simulate rising prices of goods, and it punishes saving money.
