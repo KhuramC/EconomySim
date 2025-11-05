@@ -38,10 +38,10 @@ def test_payday(mock_economy_model, income: int):
         Demographic.MIDDLE_CLASS,
         preferences={},
         income=income,
-        current_money=starting_money,
+        starting_balance=starting_money,
     )
     person.payday()
-    assert person.current_money == (starting_money + income)
+    assert person.balance == (starting_money + income)
 
 
 @mark.parametrize(
@@ -133,7 +133,7 @@ def test_purchase_goods(mock_economy_model):
     # 4. Total spent: 800
     assert food_industry.inventory == 100 - 32
     assert entertainment_industry.inventory == 100 - 24
-    assert person.current_money == approx(200)
+    assert person.balance == approx(200)
 
 
 @mark.xfail(reason="Function not implemented yet.")
