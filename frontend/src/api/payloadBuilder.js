@@ -55,7 +55,7 @@ export function buildEnvironmentPayload(envParams) {
   return {
     max_simulation_length: envParams.maxSimulationLength,
     num_people: envParams.numPeople,
-    inflation_rate: envParams.inflationRate / 100, // e.g., 1.0% -> 0.01
+    inflation_rate: envParams.inflationRate / 100 / 52, // Convert annual % to a weekly rate
     random_events: envParams.randomEvents,
   };
 }
