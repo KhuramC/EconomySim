@@ -312,16 +312,6 @@ class EconomyModel(Model):
             agent.raw_mat_cost *= 1 + self.inflation_rate
             agent.fixed_cost *= 1 + self.inflation_rate
 
-        # TODO: implement wage inflation
-        # Update the floor minimum wage as prices of good increase
-        # Should this be lagging behind raw costs increasing?
-        # Should this just be implemented in the employment logic?
-        # How do we increase wages at the same time as increasing costs, while ensuring
-        # PersonAgent's buying power is decreasing?
-
-        # Example implementation
-        # self.policies["minimum_wage"] = self.policies["minimum_wage"] * (1 + self.inflation_rate)
-
     def step(self) -> None:
         """
         Advance the simulation by one week, causing inflation, IndustryAgents and then PersonAgents to act.
