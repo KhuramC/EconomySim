@@ -7,6 +7,7 @@ from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
+from ..types.indicators import Indicators
 from .indicators import *
 
 demographics_schema = {
@@ -103,13 +104,13 @@ class EconomyModel(Model):
         self.datacollector = DataCollector(
             model_reporters={
                 "week": self.get_week,
-                "unemployment": calculate_unemployment,
-                "gdp": calculate_gdp,
-                "income per capita": calculate_income_per_capita,
-                "median income": calculate_median_income,
-                "hoover index": calculate_hoover_index,
-                "lorenz curve": calculate_lorenz_curve,
-                "gini coefficient": calculate_gini_coefficient,
+                Indicators.UNEMPLOYMENT: calculate_unemployment,
+                Indicators.GDP: calculate_gdp,
+                Indicators.INCOME_PER_CAPITA: calculate_income_per_capita,
+                Indicators.MEDIAN_INCOME: calculate_median_income,
+                Indicators.HOOVER_INDEX: calculate_hoover_index,
+                Indicators.LORENZ_CURVE: calculate_lorenz_curve,
+                Indicators.GINI_COEFFICIENT: calculate_gini_coefficient,
             },
             agenttype_reporters={
                 IndustryAgent: {
