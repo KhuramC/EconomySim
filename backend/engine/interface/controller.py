@@ -178,7 +178,7 @@ class ModelController:
     ) -> pd.DataFrame:
         """
         Retrieves industries information from the specified model.
-        Columns include "week", "industry", "price", "inventory", "money", "wage", "industry".
+        Columns include "week", "industry", "price", "inventory", "balance", "wage", "industry".
 
         Args:
             model_id (int): The unique identifier for the model to retrieve industry information from.

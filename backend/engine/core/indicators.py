@@ -90,7 +90,7 @@ def calculate_lorenz_curve(model: Model) -> dict[str, list[float]]:
 
     # Get all personAgents and balances
     peopleAgents = model.agents_by_type[PersonAgent]
-    balances = np.array(peopleAgents.get("current_money"))
+    balances = np.array(peopleAgents.get("balance"))
 
     if balances.size == 0:
         return {"x": [0, 1], "y": [0, 1]}  # Line of perfect equality.
@@ -122,7 +122,7 @@ def calculate_gini_coefficient(model: Model) -> float:
         The Gini coefficient as a float between 0 and 1.
     """
     peopleAgents = model.agents_by_type[PersonAgent]
-    balances = np.array(peopleAgents.get("current_money"))
+    balances = np.array(peopleAgents.get("balance"))
 
     if len(balances) == 0:
         return 0.0

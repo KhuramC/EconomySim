@@ -16,14 +16,14 @@ demographics_schema = {
         "proportion": None,
         "unemployment_rate": None,
         "spending_behavior": {itype.value: None for itype in IndustryType},
-        "current_money": {"mean": None, "sd": None},
+        "balance": {"mean": None, "sd": None},
     }
     for demo in Demographic
 }
 """Schema for validating the demographics dictionary."""
 
 industries_schema = {
-    itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
+    itype.value: {"price": None, "inventory": None, "balance": None, "offered_wage": None}
     for itype in IndustryType
 }
 """Schema for validating the industries dictionary."""
@@ -116,7 +116,7 @@ class EconomyModel(Model):
                 IndustryAgent: {
                     "price": "price",
                     "inventory": "inventory",
-                    "money": "total_money",
+                    "balance": "balance",
                     "offered_wage": "offered_wage",
                 }
             },
@@ -220,10 +220,10 @@ class EconomyModel(Model):
             spending_behavior_info = demo_info.get("spending_behavior", {})
             # TODO: acutally use spending behavior when creating agents
             income_info = demo_info.get("income", {})
-            current_money_info = demo_info.get("current_money", {})
+            starting_balance_info = demo_info.get("balance", {})
 
             # param checking
-            if isinstance(income_info, dict) and isinstance(current_money_info, dict):
+            if isinstance(income_info, dict) and isinstance(starting_balance_info, dict):
                 num_demo_people = demo_people[demographic]
 
                 # uses lognormal distribution; sd represents right skew
@@ -232,9 +232,9 @@ class EconomyModel(Model):
                     log_std=income_info.get("sd", 0),
                     size=num_demo_people,
                 )
-                starting_moneys = self.generate_lognormal(
-                    log_mean=current_money_info.get("mean", 0),
-                    log_std=current_money_info.get("sd", 0),
+                starting_balances = self.generate_lognormal(
+                    log_mean=starting_balance_info.get("mean", 0),
+                    log_std=starting_balance_info.get("sd", 0),
                     size=num_demo_people,
                 )
 
@@ -243,7 +243,7 @@ class EconomyModel(Model):
                     n=num_demo_people,
                     demographic=demographic,
                     income=incomes,
-                    current_money=starting_moneys,
+                    starting_balance=starting_balances,
                     preferences={},
                 )
 
@@ -272,7 +272,7 @@ class EconomyModel(Model):
                 )
             starting_price = industry_info.get("price", 0.0)
             starting_inventory = industry_info.get("inventory", 0)
-            starting_money = industry_info.get("money", 0.0)
+            starting_balance = industry_info.get("balance", 0.0)
             starting_offered_wage = industry_info.get("offered_wage", 0.0)
 
             IndustryAgent.create_agents(
@@ -281,7 +281,7 @@ class EconomyModel(Model):
                 industry_type=industry_type,
                 starting_price=starting_price,
                 starting_inventory=starting_inventory,
-                starting_money=starting_money,
+                starting_balance=starting_balance,
                 starting_offered_wage=starting_offered_wage,
             )
 

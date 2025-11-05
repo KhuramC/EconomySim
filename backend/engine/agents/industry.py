@@ -15,7 +15,7 @@ class IndustryAgent(Agent):
         industry_type (IndustryType): The type of industry this agent represents.
         price (float): The price of goods/services in this industry.
         inventory (int): The inventory level of goods/services in this industry.
-        total_money (float): The total money held by this industry. Negative indicates debt.
+        balance (float): The total money held by this industry. Negative indicates debt.
         offered_wage (float): The per time step(weekly) wage offered by this industry.
     """
 
@@ -25,7 +25,7 @@ class IndustryAgent(Agent):
     """The price of goods/services in this industry."""
     inventory: int
     """The inventory level of goods/services in this industry."""
-    total_money: float
+    balance: float
     """The total money held by this industry. Negative indicates debt."""
     #TODO: Possible feature for employment logic: have each person agent have a custom wage, with minimum wage floor, meaning some workers are cheaper than others
     offered_wage: float
@@ -57,7 +57,7 @@ class IndustryAgent(Agent):
         industry_type: IndustryType,
         starting_price: float = 0.0,    #This should only be passed in when testing.  Determine_price & determine_price_production_cap will entirely handle updates to this value
         starting_inventory: int = 200,
-        starting_money: float = 5000.00,
+        starting_balance: float = 5000.00,
         starting_offered_wage: float = 15.00,
         starting_fixed_cost: float = 200.0,
         starting_raw_mat_cost: float = 2.0,
@@ -75,7 +75,7 @@ class IndustryAgent(Agent):
         self.industry_type = industry_type
         self.price = starting_price
         self.inventory = starting_inventory
-        self.total_money = starting_money
+        self.balance = starting_balance
         self.offered_wage = starting_offered_wage
         self.fixed_cost = starting_fixed_cost
         self.raw_mat_cost = starting_raw_mat_cost
@@ -221,11 +221,11 @@ class IndustryAgent(Agent):
         self.inventory += quantity_to_produce
         spent_variable = variable_cost_per_unit * quantity_to_produce
         spent_fixed = self.fixed_cost
-        self.total_money = self.total_money - spent_fixed - spent_variable     
+        self.balance = self.balance - spent_fixed - spent_variable     
         
         logging.info(
             f"Produced {quantity_to_produce:.2f} units; spent_variable={spent_variable:.2f}; "
-            f"spent_fixed={spent_fixed:.2f}; remaining funds {self.total_money:.2f}; "
+            f"spent_fixed={spent_fixed:.2f}; remaining funds {self.balance:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
         
@@ -338,7 +338,7 @@ class IndustryAgent(Agent):
                 funds_limit = 0
             else:
                 # compute funds_limit safely — protect against unreasonable huge values
-                funds_limit_raw = (self.total_money - self.fixed_cost) / variable_cost_per_unit
+                funds_limit_raw = (self.balance - self.fixed_cost) / variable_cost_per_unit
                 # if funds_limit_raw is not finite for some reason, fall back to 0
                 if not math.isfinite(funds_limit_raw):
                     funds_limit = 0
@@ -346,7 +346,7 @@ class IndustryAgent(Agent):
                     # clamp to a sensible integer range before floor to avoid overflow
                     # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
                     funds_limit = int(max(0, math.floor(funds_limit_raw)))
-                if self.fixed_cost > self.total_money:
+                if self.fixed_cost > self.balance:
                     funds_limit = 0
                     #TODO add handler for if fixed cost is more than total money -> Bankruptcy imminent!
 
@@ -398,4 +398,4 @@ class IndustryAgent(Agent):
 
         self.inventory -= quantity
         self.inventory_available_this_step -= quantity
-        self.total_money += quantity * self.price
+        self.balance += quantity * self.price

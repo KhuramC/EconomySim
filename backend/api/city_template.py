@@ -16,7 +16,7 @@ _SMALL_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
             },
-            "current_money": {"mean": 1, "sd": 0},
+            "balance": {"mean": 1, "sd": 0},
         }
         for demo in Demographic
     },
@@ -24,7 +24,7 @@ _SMALL_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)
@@ -51,7 +51,7 @@ _MEDIUM_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
             },
-            "current_money": {"mean": 1, "sd": 0},
+            "balance": {"mean": 1, "sd": 0},
         }
         for demo in Demographic
     },
@@ -59,7 +59,7 @@ _MEDIUM_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)
@@ -86,7 +86,7 @@ _LARGE_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
             },
-            "current_money": {"mean": 1, "sd": 0},
+            "balance": {"mean": 1, "sd": 0},
         }
         for demo in Demographic
     },
@@ -94,7 +94,7 @@ _LARGE_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)
