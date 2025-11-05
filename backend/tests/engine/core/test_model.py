@@ -4,7 +4,9 @@ import numpy as np
 from contextlib import nullcontext
 from engine.core.model import EconomyModel
 from engine.types.industry_type import IndustryType
+from engine.types.demographic import Demographic
 from engine.agents.industry import IndustryAgent
+from engine.agents.person import PersonAgent
 
 
 @mark.parametrize(
@@ -58,9 +60,107 @@ def test_generate_lognormal_statistics(model: EconomyModel, mean, std):
     assert np.std(results) == pytest.approx(std, rel=0.01)
 
 
-@mark.xfail(reason="Function has not been implemented yet.")
 def test_setup_person_agents(model: EconomyModel):
-    assert False
+    """
+    Tests that the `setup_person_agents` method, called during
+    EconomyModel.__init__, correctly creates agents.
+
+    Tests for:
+        1. Correct total number of agents.
+        2. Correct proportion of agents per demographic.
+        3. All expected attributes are initialized.
+        4. Industry coverage: preferences should include all industries
+    """
+    # Test correct number of agents
+    people = model.agents_by_type[PersonAgent]
+    assert len(people) == 100  # Default in conftest.py model fixture
+
+    # Test correct demographic proportions
+    lower_class_agents = people.select(
+        lambda agent: agent.demographic == Demographic.LOWER_CLASS
+    )
+    middle_class_agents = people.select(
+        lambda agent: agent.demographic == Demographic.MIDDLE_CLASS
+    )
+    upper_class_agents = people.select(
+        lambda agent: agent.demographic == Demographic.UPPER_CLASS
+    )
+
+    # Using default proportions from conftest.py
+    assert len(lower_class_agents) == int(0.45 * 100)
+    assert len(middle_class_agents) == int(0.40 * 100)
+    assert len(upper_class_agents) == int(0.15 * 100)
+
+    # Test expected attributes
+    expected_keys = set([industry.value for industry in IndustryType])
+
+    for agent in people:
+        assert hasattr(agent, "preferences")
+        assert isinstance(agent.preferences, dict)
+        assert all(isinstance(val, float) for val in agent.preferences.values())
+
+        assert hasattr(agent, "income")
+        assert isinstance(agent.income, (int, float))
+        assert agent.income >= 0
+
+        assert hasattr(agent, "demographic")
+        assert isinstance(agent.demographic, Demographic)
+
+        # Test industry coverage
+        assert set(agent.preferences.keys()) == expected_keys
+
+
+def test_setup_person_agents_preferences(model: EconomyModel, demographics):
+    """
+    Tests that:
+        1. Each PersonAgent preference vector sums to 1 (within floating tolerance).
+        2. There is heterogeneity (not all preference vectors are identical).
+        3. For each demographic, the empirical mean of preference vectors is close to
+           the theoretical Dirichlet mean (spending_behavior normalized).
+    """
+    people = model.agents_by_type[PersonAgent]
+    assert len(people) > 0, "No PersonAgents were created."
+
+    industries = [
+        industry.value for industry in IndustryType
+    ]  # List of industries in order
+
+    # Test that preferences sum to 1.
+    for agent in people:
+        assert sum(agent.preferences.values()) == approx(1.0, abs=1e-8)
+
+    # For PersonAgents in each demographic...
+    for demo in Demographic:
+        demo_agents = people.select(lambda agent: agent.demographic == demo)
+        if len(demo_agents) <= 1:
+            continue
+
+        theoretical_means = demographics[demo]["spending_behavior"]
+        theoretical_mean_vector = np.array(
+            [theoretical_means[key] for key in industries]
+        )
+
+        all_pref_vectors = []
+        unique_prefs_set = set()
+        for agent in demo_agents:
+            # Find all prefs
+            pref_vector = np.array([agent.preferences[key] for key in industries])
+            all_pref_vectors.append(pref_vector)
+
+            # Hash prefs to test "uniqueness"
+            hashable_pref = tuple(sorted(agent.preferences.items()))
+            unique_prefs_set.add(hashable_pref)
+
+        empirical_data = np.array(all_pref_vectors)
+        empirical_mean_vector = np.mean(empirical_data, axis=0)
+
+        # Test statistical mean
+        assert empirical_mean_vector == approx(
+            theoretical_mean_vector, rel=0.1, abs=0.05
+        )
+
+        # Test heterogeneity
+        assert len(unique_prefs_set) > 1
 
 
 @mark.xfail(reason="Function has not been implemented yet.")
