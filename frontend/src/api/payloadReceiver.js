@@ -100,19 +100,21 @@ export function receiveDemographicsPayload(backendDemographics) {
       const backendDemo = backendDemographics[demoValue];
       if (!backendDemo) return [demoValue, {}]; // Should not happen with valid templates
 
-      // TODO: don't do this once spending behavior is as of each industry
-      // For spending behavior, take the first value assuming it's uniform for now.
-      const spendingBehaviorValue =
-        Object.values(backendDemo.spending_behavior)[0] || 0;
-
       const frontendDemo = {
         meanIncome: backendDemo.income.mean,
         sdIncome: backendDemo.income.sd,
         proportion: backendDemo.proportion * 100, // 0.33 -> 33
-        spendingBehavior: spendingBehaviorValue * 100, // 0.7 -> 70
         meanSavings: backendDemo.balance.mean,
         sdSavings: backendDemo.balance.sd,
         unemploymentRate: backendDemo.unemployment_rate * 100, // 0.05 -> 5
+        // Convert spending behavior from backend decimal to frontend percentage
+        // and spread them as individual properties (e.g., GROCERIES: 25)
+        ...Object.fromEntries(
+          Object.entries(backendDemo.spending_behavior).map(([industryKey, value]) => [
+            industryKey,
+            value * 100,
+          ])
+        ),
       };
       return [demoValue, frontendDemo];
     })
