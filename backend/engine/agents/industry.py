@@ -174,7 +174,7 @@ class IndustryAgent(Agent):
         # set results on the instance
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
-        self.inventory_available_this_step = Suggested_Quantity
+        self.inventory_available_this_step = round(Suggested_Quantity)
 
     def produce_goods(self):
         """  
