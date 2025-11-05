@@ -186,6 +186,7 @@ class EconomyModel(Model):
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
+        preference_concentration: float = 20.0,
     ) -> None:
         """
         Creates the PersonAgents based on the demographics dictionary.
@@ -193,11 +194,13 @@ class EconomyModel(Model):
         Args:
             total_people (int): the total number of PersonAgents to create.
             demographics (dict): the information about each demographics to create.
+            preference_concentration (float): A parameter to control preference variance.
+                Higher values mean agents will have preferences closer to the demographic's
+                average (low variance). Lower values create more diverse preferences.
 
         Raises:
             ValueError: if the demographics dictionary is invalid.
         """
-        # do same thing for each demographic
 
         # get number of people per demographic
         demo_people = self.num_prop(
@@ -212,45 +215,69 @@ class EconomyModel(Model):
             for i, demographic in enumerate(demographics.keys())
         }
 
+        # for each demographic...
         for demographic, demo_info in demographics.items():
 
-            unemployment_rate = demo_info.get("unemployment_rate", 0)
-            # TODO: set unemployment based on starting_unemployment_rate per demographic
-            # actually do something with unemployment rate
-            spending_behavior_info = demo_info.get("spending_behavior", {})
-            # TODO: acutally use spending behavior when creating agents
+            num_demo_people = demo_people[demographic]
+            if num_demo_people == 0:
+                continue
+
             income_info = demo_info.get("income", {})
             starting_balance_info = demo_info.get("balance", {})
+            spending_behavior_info = demo_info.get("spending_behavior")
 
-            # param checking
-            if isinstance(income_info, dict) and isinstance(starting_balance_info, dict):
-                num_demo_people = demo_people[demographic]
+            # TODO: set unemployment based on starting_unemployment_rate per demographic
+            # actually do something with unemployment rate
+            unemployment_rate = demo_info.get("unemployment_rate", 0)
 
-                # uses lognormal distribution; sd represents right skew
-                incomes = self.generate_lognormal(
-                    log_mean=income_info.get("mean", 0),
-                    log_std=income_info.get("sd", 0),
-                    size=num_demo_people,
-                )
-                starting_balances = self.generate_lognormal(
-                    log_mean=starting_balance_info.get("mean", 0),
-                    log_std=starting_balance_info.get("sd", 0),
-                    size=num_demo_people,
-                )
+            # TODO: set savings_rate per demographic
+            # Does this also get randomized?
+            savings_rate = demo_info.get("savings_rate", 0.10)
 
-                PersonAgent.create_agents(
-                    model=self,
-                    n=num_demo_people,
-                    demographic=demographic,
-                    income=incomes,
-                    starting_balance=starting_balances,
-                    preferences={},
-                )
+            # Generate distributed parameters for N agents
+            # Incomes from lognormal distribution
+            incomes = self.generate_lognormal(
+                log_mean=income_info.get("mean", 0),
+                log_std=income_info.get("sd", 0),
+                size=num_demo_people,
+            )
+            # Account balances from lognormal distribution
+            starting_balances = self.generate_lognormal(
+                log_mean=starting_balance_info.get("mean", 0),
+                log_std=starting_balance_info.get("sd", 0),
+                size=num_demo_people,
+            )
 
-            else:
-                raise ValueError(
-                    f"Income and current_money must be dictionaries at demographics[{demographic}]."
-                )
+            # Generate unique preferences from dirichlet distribution
+            industries = list(spending_behavior_info.keys())
+            alphas = list(spending_behavior_info.values())
+            concentrated_alpha = [
+                val * preference_concentration for val in alphas
+            ]  # Scale alphas to control variance
+            generated_preferences = np.random.dirichlet(
+                concentrated_alpha, size=num_demo_people
+            )
+
+            pref_list = []  # holds preference dict for all N agents in demographic
+            for pref_vector in generated_preferences:
+                pref_dict = {
+                    industries[i]: pref_vector[i] for i in range(len(industries))
+                }
+                pref_list.append(pref_dict)
+
+            # TODO: Distribute starting employment based on unemployment_rate
+
+            PersonAgent.create_agents(
+                model=self,
+                n=num_demo_people,
+                demographic=demographic,
+                income=incomes,
+                starting_balance=starting_balances,
+                preferences=pref_list,
+                # TODO:
+                # savings_rate=savings_rate,
+                # employer=None,
+            )
 
     def setup_industry_agents(
         self,
