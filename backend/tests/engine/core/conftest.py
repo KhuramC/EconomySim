@@ -54,7 +54,7 @@ def indicator_test_model_factory(demographics, industries, policies):
                 model=model,
                 demographic=Demographic.MIDDLE_CLASS,
                 income=0,
-                current_money=balance_val,
+                starting_balance=balance_val,
                 preferences={},
             )
             model.agents_by_type[PersonAgent].add(person)

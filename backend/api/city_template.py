@@ -7,7 +7,7 @@ from engine.types.demographic import Demographic
 # could also make these into small_config.json, medium_config.json, large_config.json files and load them in
 _SMALL_CONFIG = {
     "num_people": 1000,
-    "inflation_rate": 0.001,
+    "inflation_rate": 0.001, # Inflation Rate is weekly
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -16,7 +16,7 @@ _SMALL_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
             },
-            "current_money": {"mean": 1, "sd": 0},
+            "balance": {"mean": 1, "sd": 0},
         }
         for demo in Demographic
     },
@@ -24,7 +24,7 @@ _SMALL_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)
@@ -42,7 +42,7 @@ _SMALL_CONFIG = {
 }
 _MEDIUM_CONFIG = {
     "num_people": 10000,
-    "inflation_rate": 0.001,
+    "inflation_rate": 0.001, # Inflation Rate is weekly
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -51,7 +51,7 @@ _MEDIUM_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
             },
-            "current_money": {"mean": 1, "sd": 0},
+            "balance": {"mean": 1, "sd": 0},
         }
         for demo in Demographic
     },
@@ -59,7 +59,7 @@ _MEDIUM_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)
@@ -77,7 +77,7 @@ _MEDIUM_CONFIG = {
 }
 _LARGE_CONFIG = {
     "num_people": 100000,
-    "inflation_rate": 0.001,
+    "inflation_rate": 0.001, # Inflation Rate is weekly
     "demographics": {
         demo.value: {
             "income": {"mean": 1, "sd": 0},
@@ -86,7 +86,7 @@ _LARGE_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
             },
-            "current_money": {"mean": 1, "sd": 0},
+            "balance": {"mean": 1, "sd": 0},
         }
         for demo in Demographic
     },
@@ -94,7 +94,7 @@ _LARGE_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)

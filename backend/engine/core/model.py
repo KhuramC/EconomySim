@@ -7,6 +7,7 @@ from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
+from ..types.indicators import Indicators
 from .indicators import *
 
 demographics_schema = {
@@ -15,14 +16,14 @@ demographics_schema = {
         "proportion": None,
         "unemployment_rate": None,
         "spending_behavior": {itype.value: None for itype in IndustryType},
-        "current_money": {"mean": None, "sd": None},
+        "balance": {"mean": None, "sd": None},
     }
     for demo in Demographic
 }
 """Schema for validating the demographics dictionary."""
 
 industries_schema = {
-    itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
+    itype.value: {"price": None, "inventory": None, "balance": None, "offered_wage": None}
     for itype in IndustryType
 }
 """Schema for validating the industries dictionary."""
@@ -103,19 +104,19 @@ class EconomyModel(Model):
         self.datacollector = DataCollector(
             model_reporters={
                 "week": self.get_week,
-                "unemployment": calculate_unemployment,
-                "gdp": calculate_gdp,
-                "income per capita": calculate_income_per_capita,
-                "median income": calculate_median_income,
-                "hoover index": calculate_hoover_index,
-                "lorenz curve": calculate_lorenz_curve,
-                "gini coefficient": calculate_gini_coefficient,
+                Indicators.UNEMPLOYMENT: calculate_unemployment,
+                Indicators.GDP: calculate_gdp,
+                Indicators.INCOME_PER_CAPITA: calculate_income_per_capita,
+                Indicators.MEDIAN_INCOME: calculate_median_income,
+                Indicators.HOOVER_INDEX: calculate_hoover_index,
+                Indicators.LORENZ_CURVE: calculate_lorenz_curve,
+                Indicators.GINI_COEFFICIENT: calculate_gini_coefficient,
             },
             agenttype_reporters={
                 IndustryAgent: {
                     "price": "price",
                     "inventory": "inventory",
-                    "money": "total_money",
+                    "balance": "balance",
                     "offered_wage": "offered_wage",
                 }
             },
@@ -222,7 +223,7 @@ class EconomyModel(Model):
                 continue
 
             income_info = demo_info.get("income", {})
-            current_money_info = demo_info.get("current_money", {})
+            starting_balance_info = demo_info.get("balance", {})
             spending_behavior_info = demo_info.get("spending_behavior")
 
             # TODO: set unemployment based on starting_unemployment_rate per demographic
@@ -241,9 +242,9 @@ class EconomyModel(Model):
                 size=num_demo_people,
             )
             # Account balances from lognormal distribution
-            starting_moneys = self.generate_lognormal(
-                log_mean=current_money_info.get("mean", 0),
-                log_std=current_money_info.get("sd", 0),
+            starting_balances = self.generate_lognormal(
+                log_mean=starting_balance_info.get("mean", 0),
+                log_std=starting_balance_info.get("sd", 0),
                 size=num_demo_people,
             )
 
@@ -271,7 +272,7 @@ class EconomyModel(Model):
                 n=num_demo_people,
                 demographic=demographic,
                 income=incomes,
-                current_money=starting_moneys,
+                starting_balance=starting_balances,
                 preferences=pref_list,
                 # TODO:
                 # savings_rate=savings_rate,
@@ -298,7 +299,7 @@ class EconomyModel(Model):
                 )
             starting_price = industry_info.get("price", 0.0)
             starting_inventory = industry_info.get("inventory", 0)
-            starting_money = industry_info.get("money", 0.0)
+            starting_balance = industry_info.get("balance", 0.0)
             starting_offered_wage = industry_info.get("offered_wage", 0.0)
 
             IndustryAgent.create_agents(
@@ -307,7 +308,7 @@ class EconomyModel(Model):
                 industry_type=industry_type,
                 starting_price=starting_price,
                 starting_inventory=starting_inventory,
-                starting_money=starting_money,
+                starting_balance=starting_balance,
                 starting_offered_wage=starting_offered_wage,
             )
 

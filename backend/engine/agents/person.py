@@ -14,7 +14,8 @@ class PersonAgent(Agent):
         demographic (Demographic): the economic class of the person.
         income (int): The weekly income of the person.
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
-        current_money (int): The current amount of money the person has; negative indicating debt.
+        balance (float): The current amount of money the person has; negative indicating debt.
+        preferences (dict): Spending preferences a weight for each industry, summing to 1.
     """
 
     demographic: Demographic
@@ -23,7 +24,7 @@ class PersonAgent(Agent):
     """Weekly income of the person."""
     employer: IndustryAgent | None
     """The employer of this person, or None if unemployed."""
-    current_money: float
+    balance: float
     """The total dollars held by this person. Negative indicates debt."""
     preferences: dict[IndustryType, float]
     """Spending preferences, mapping industry name to a weight. Must sum to 1."""
@@ -36,7 +37,7 @@ class PersonAgent(Agent):
         savings_rate: float = 0.10,
         income: int = 0,
         employer: IndustryAgent | None = None,
-        current_money: float = 0.0,
+        starting_balance: float = 0.0,
     ):
         """
         Initialize a PersonAgent with its starting values.
@@ -45,17 +46,20 @@ class PersonAgent(Agent):
         self.demographic = demographic
         self.income = income
         self.employer = employer
-        self.current_money = current_money
+        self.balance = starting_balance
         self.preferences = preferences
         self.savings_rate = savings_rate
         self.sigma = DEMOGRAPHIC_SIGMAS[self.demographic]
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
-        self.current_money = self.current_money + self.income
+        self.balance = self.balance + self.income
 
     def demand_func(
-        self, budget: float, prefs: dict[IndustryType, float], prices: dict[str, float]
+        self,
+        budget: float,
+        prefs: dict[IndustryType, float],
+        prices: dict[IndustryType, float],
     ) -> dict[str, int]:
         """
         Calculates the quantity of each good to purchase based on the CES demand function.
@@ -138,9 +142,9 @@ class PersonAgent(Agent):
 
             cost = quantity_to_buy * industry.price
 
-            if self.current_money >= cost:
+            if self.balance >= cost:
                 # Execute transaction
-                self.current_money -= cost
+                self.balance -= cost
                 industry.sell_goods(quantity_to_buy)
                 logging.info(
                     f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry.industry_type}"

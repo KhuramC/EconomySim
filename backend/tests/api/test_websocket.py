@@ -110,7 +110,7 @@ def test_websocket_get_industry_data(
         assert isinstance(industry_data, dict)
 
         # Check that the data has the correct structure and length
-        expected_columns = {"week", "price", "inventory", "money", "offered_wage", "industry"}
+        expected_columns = {"week", "price", "inventory", "balance", "offered_wage", "industry"}
         assert set(industry_data.keys()) == expected_columns
         num_industries = len(valid_config["industries"])
         assert len(industry_data["week"]) == num_industries
@@ -144,7 +144,7 @@ def test_websocket_get_current_industry_data(
 
         # Check the structure of a single industry entry
         
-        expected_keys = {"price", "inventory", "money", "offered_wage"}
+        expected_keys = {"price", "inventory", "balance", "offered_wage"}
         for industry_name, industry_info in industry_data.items():
             assert set(industry_info.keys()) == expected_keys
 
