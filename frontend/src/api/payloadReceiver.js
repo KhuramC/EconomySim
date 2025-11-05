@@ -81,7 +81,7 @@ export function receivePoliciesPayload(backendPolicies) {
 export function receiveEnvironmentPayload(backendConfig) {
   return {
     numPeople: backendConfig.num_people,
-    inflationRate: ((1 + backendConfig.inflation_rate) ** 52 - 1) * 100, // convert to annual, then make percentage0.001 -> 0.1
+    inflationRate: ((1 + backendConfig.inflation_rate) ** 52 - 1) * 100, // convert to annual, then make percentage
     // Note: maxSimulationLength and randomEvents are not part of the template,
     // so they will retain their default values in SetupPage.
   };
