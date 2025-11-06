@@ -66,14 +66,37 @@ _SMALL_CONFIG = {
         for i, itype in enumerate(IndustryType)
     },
     "policies": {
-        "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
-        "personal_income_tax": {demo.value: 1 for demo in Demographic},
-        "sales_tax": {itype.value: 1 for itype in IndustryType},
-        "property_tax": 1,
-        "tariffs": {itype.value: 1 for itype in IndustryType},
+        "corporate_income_tax": {itype.value: 0.04 for itype in IndustryType},
+        "personal_income_tax": [
+            (176.75, 0.000882),  # Annual: ($9,191, 4.7%)
+            (151.50, 0.000846),  # Annual: ($7,878, 4.5%)
+            (126.25, 0.000754),  # Annual: ($6,565, 4.0%)
+            (101.00, 0.000662),  # Annual: ($5,252, 3.5%)
+            (75.75, 0.000570),  # Annual: ($3,939, 3.0%)
+            (50.50, 0.000476),  # Annual: ($2,626, 2.5%)
+            (25.25, 0.000381),  # Annual: ($1,313, 2.0%)
+            (0, 0.0),  # Annual: ($0, 0.0%)
+        ],
+        "sales_tax": {
+            itype.value: 0.000933 if itype == IndustryType.GROCERIES else 0.001476
+            for itype in IndustryType
+        },  # Annual: 4.975% for food, 7.975% general
+        "property_tax": {
+            "residential": 0.000176,
+            "commercial": 0.000410,
+        },  # Annual: 0.92%, 2.159%
+        "tariffs": {
+            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.UTILITIES: 0.0,  # (Domestic service)
+            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
+            IndustryType.HOUSING: 0.001835,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
+            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+        },
         "subsidies": {itype.value: 1 for itype in IndustryType},
-        "rent_cap": 0.0,
-        "minimum_wage": 1,
+        "rent_cap": 0.0,  # No state or local rent control
+        "minimum_wage": 550.00,  # $13.75/hr x 40 hrs
     },
 }
 
@@ -131,14 +154,35 @@ _MEDIUM_CONFIG = {
         },
     },
     "policies": {
-        "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
-        "personal_income_tax": {demo.value: 1 for demo in Demographic},
-        "sales_tax": {itype.value: 1 for itype in IndustryType},
-        "property_tax": 1,
-        "tariffs": {itype.value: 1 for itype in IndustryType},
+        "corporate_income_tax": {
+            itype.value: 0.079 for itype in IndustryType
+        },  # Flat rate
+        "personal_income_tax": [
+            (6063.65, 0.001416),  # Annual: ($315,310, 7.65%)
+            (550.77, 0.000992),  # Annual: ($28,640, 5.3%)
+            (275.38, 0.000828),  # Annual: ($14,320, 4.4%)
+            (0, 0.000662),  # Annual: ($0, 3.5%)
+        ],
+        "sales_tax": {
+            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001030
+            for itype in IndustryType
+        },  # Annual: 0.0% for food, 5.50% general
+        "property_tax": {
+            "residential": 0.000339,
+            "commercial": 0.000339,
+        },  # Annual: 1.78%
+        "tariffs": {
+            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.UTILITIES: 0.0,  # (Domestic service)
+            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
+            IndustryType.HOUSING: 0.001835,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
+            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+        },
         "subsidies": {itype.value: 1 for itype in IndustryType},
-        "rent_cap": 0.0,
-        "minimum_wage": 1,
+        "rent_cap": 0.0,  # No state or local rent control
+        "minimum_wage": 290.00,  # $7.25/hr x 40 hrs
     },
 }
 
@@ -205,14 +249,40 @@ _LARGE_CONFIG = {
         for i, itype in enumerate(IndustryType)
     },
     "policies": {
-        "corporate_income_tax": {itype.value: 1 for itype in IndustryType},
-        "personal_income_tax": {demo.value: 1 for demo in Demographic},
-        "sales_tax": {itype.value: 1 for itype in IndustryType},
-        "property_tax": 1,
-        "tariffs": {itype.value: 1 for itype in IndustryType},
+        "corporate_income_tax": {
+            itype.value: 0.0884 for itype in IndustryType
+        },  # Flat rate
+        "personal_income_tax": [
+            (13871.42, 0.002235),  # Annual: ($721,314, 12.3%)
+            (8322.83, 0.002061),  # Annual: ($432,787, 11.3%)
+            (6935.75, 0.001886),  # Annual: ($360,659, 10.3%)
+            (1357.81, 0.001713),  # Annual: ($70,606, 9.3%)
+            (1074.35, 0.001479),  # Annual: ($55,866, 8.0%)
+            (773.94, 0.001121),  # Annual: ($40,245, 6.0%)
+            (490.37, 0.000754),  # Annual: ($25,499, 4.0%)
+            (206.85, 0.000381),  # Annual: ($10,756, 2.0%)
+            (0, 0.000191),  # Annual: ($0, 1.0%)
+        ],
+        "sales_tax": {
+            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001586
+            for itype in IndustryType
+        },  # Annual: 0.0% for food, 8.625% general
+        "property_tax": {
+            "residential": 0.000126,
+            "commercial": 0.000126,
+        },  # Annual: 0.66%
+        "tariffs": {
+            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.UTILITIES: 0.0,  # (Domestic service)
+            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
+            IndustryType.HOUSING: 0.001835,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
+            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+        },
         "subsidies": {itype.value: 1 for itype in IndustryType},
-        "rent_cap": 0.0,
-        "minimum_wage": 1,
+        "rent_cap": 0.000267,  # Annual: 1.4%
+        "minimum_wage": 767.20,  # $19.18/hr x 40 hrs
     },
 }
 

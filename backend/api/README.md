@@ -15,11 +15,11 @@ This directory will contain the logic for the FastAPI server and API endpoints.
 Within the backend directory, assuming everything is up to date, one can run
 `poetry run dev` to start the FastAPI server. FastAPI has an easy way to test the server by going to `docs` like this: [http://localhost:8000/docs](http://localhost:8000/docs) once it is running.
 
-## City Templates
+# City Templates
 
-### Structure
+## Structure
 
-**Cities**
+### Cities
 
 The simulation uses three city-size templates, which are based on the real-world profiles of three representative U.S. cities.
 
@@ -29,13 +29,13 @@ The simulation uses three city-size templates, which are based on the real-world
 
 * **Large (San Francisco, CA):** Represents a high-cost, high-inequality global city dominated by tech and finance. It has extensive public transit.
 
-**Classes**
+### Classes
 
 The model simplifies the complex U.S. class structure into three groups: `LOWER_CLASS`, `MIDDLE_CLASS`, and `UPPER_CLASS`. The proportional size of these classes is conceptually based on the *Pew Research Center's* definition, which classifies "middle-income" as households earning between two-thirds (2/3) and double (2x) the U.S. median household income. "Lower-income" falls below this, and "upper-income" falls above it.
 
-### Modeling Population & Income
+## Modeling Population & Income
 
-#### **Income Distribution: Log-Normal**
+### Income Distribution: Log-Normal
 
 A standard normal distribution (bell curve) is a poor fit for income. Real-world income is heavily right-skewed, with a long tail of very-high-earners, as noted in our project docs. Therefore, we use a **Log-Normal Distribution** for all `income` and `balance` (savings) parameters.
 
@@ -45,7 +45,7 @@ Functions like `numpy.random.lognormal(mean, sd)` require parameters for the und
 
 * `sd` ($\sigma$): This is the standard deviation of the log of the income. It directly controls the inequality or spread of the distribution. A higher $\sigma$ means a wider, more unequal class.
 
-#### **Parameter Derivation by City**
+### Parameter Derivation by City
 
 **Proportion**
 
@@ -92,7 +92,7 @@ This parameter also uses a log-normal distribution, as savings are similarly rig
 
 ### Modeling Spending Behavior
 
-#### Guiding Principles & Data
+### Guiding Principles & Data
 
 * **Primary Source:** All baseline spending proportions are derived from the **U.S. Bureau of Labor Statistics (BLS) Consumer Expenditure Survey (CEX)** (2023 data).
 
@@ -102,7 +102,7 @@ This parameter also uses a log-normal distribution, as savings are similarly rig
 
     * **TODO**: How can we make it so that `PersonAgent`s are making the decisions of how to spend their money in other places due to rising housing costs, etc. Currently, they are spending a percentage of thei budget on housing, but there is no minimum!
 
-#### Category Mapping
+### Category Mapping
 
 Mapped `IndustryType` categories to the CEX data as follows:
 
@@ -116,7 +116,7 @@ Mapped `IndustryType` categories to the CEX data as follows:
 
 * `LUXURY`: This is a non-BLS proxy category for high-discretionary spending, created by summing: "Food away from home," "Apparel and services," "Alcoholic beverages," and "Personal care products".
 
-#### Spending Profile Derivation (by city)
+### Spending Profile Derivation (by city)
 
 Based on the above mappings, here is the **national baseline**:
 
@@ -136,7 +136,151 @@ After establishing this baseline, we adjusted it for each city's unique profile.
 
 * **Large (San Francisco, CA):** Housing costs are dramatically higher (~160%+) than the national average. As a result, `HOUSING` proportions are the highest, severely "crowding out" `LUXURY` and `ENTERTAINMENT` for the Lower and Middle classes. "Extensive public transit"  implies a significantly lower `AUTOMOBILES` share. 
 
+
+## Policies
+
+The `policies` dictionary establishes the starting parameters for the simulation. The values are not arbitrary; they are based on data-driven research into the municipal, county, state, and federal laws governing our three model cities: Columbia, MO (Small); Madison, WI (Medium); and San Francisco, CA (Large).
+
+**Core Design Decision: Weekly Compounding Rates**
+
+The simulation operates on a *weekly* time step. To ensure financial accuracy, all annual percentage rates (APRs) for taxes and rent caps have been converted into weekly compounding rates. This prevents the simulation from merely dividing an annual rate by 52, which is mathematically incorrect for compounding effects.
+
+The formula used for this conversion is: $weekly\_rate = (1 + annual\_rate)^{(1/52)} - 1$
+
+### Corporate Income Tax
+
+This policy is defined as a dictionary mapping each `IndustryType` to a flat tax rate applied to its profits. Research confirms this is a **state-level tax** with a flat rate, not a progressive one. Therefore, all industries within a given city preset share the same rate.   
+
+**City-Specific Values (2025):**
+
+* **Small (Columbia): 4.0%.** Missouri has one of the lowest corporate tax rates in the nation.
+
+* **Medium (Madison): 7.9%.** This is Wisconsin's flat corporate income and franchise tax rate. 
+
+* **Large (San Francisco): 8.84%.** This is California's general corporate tax rate.
+
+### Personal Income Tax
+
+This policy is modeled as a progressive bracket system, per the simulation's design. It is implemented as a list of tuples: `(weekly_income_threshold, weekly_compounding_rate)`. The simulation applies these rates to agent income. This is a **state-level tax**.   
+
+**City-Specific Values (2025):**
+
+* **Small (Columbia):** An 8-bracket progressive system. The thresholds and rates are derived from Missouri's 2025 tax tables.
+
+    * *Note on Low Threshold: The top bracket of **4.7%** applying to all annual income over **$9,191** is correct. This is a "compressed" system, a deliberate state policy to move toward a flatter tax structure. In the simulation, this functions as a de facto flat tax for all agents except the very lowest earners.* 
+
+* **Medium (Madison):** A 4-bracket progressive system based on Wisconsin's 2025 tables. The top rate is **7.65%** on income over **$315,310**.   
+
+* **Large (San Francisco):** A 9-bracket, highly progressive system based on California's 2025 tables. The top rate is **12.3%** on income over **$721,314**.
+
+### Sales Tax
+
+This policy is a dictionary mapping `IndustryType` to a weekly compounding rate. Research revealed a critical, non-negotiable distinction in all three states: food/groceries are taxed differently than general merchandise. The simulation must reflect this.
+
+**City-Specific Values (2025):**
+
+* **Small (Columbia):**
+
+    * General Rate: **7.975%** (a combination of 4.225% state + 1.75% county + 2.0% city).   
+
+    * Food/Grocery Rate: **4.975%** (Missouri's state rate is reduced to 1.225% for food, but local taxes still apply).   
+
+* **Medium (Madison):**
+
+    * General Rate: **5.5%** (5.0% state + 0.5% Dane County).   
+
+    * Food/Grocery Rate: **0.0%** (Most food for home consumption is exempt in Wisconsin).   
+
+* **Large (San Francisco):**
+
+    * General Rate: **8.625%** (7.25% state + 1.375% city/county).   
+
+    * Food/Grocery Rate: **0.0%** (Most food for home consumption is exempt in California).
+
+### Property Tax
+
+This policy was changed from a fixed dollar amount to a **weekly compounding effective percentage** to better integrate with the simulation's logic. Research shows that commercial and residential properties are often assessed at different rates. The policy is a dictionary with "residential" and "commercial" keys.
+
+**City-Specific Values (2025):**
+
+* **Small (Columbia):**
+
+    * Residential: **0.92%** (This is the average effective rate on market value for Boone County).   
+
+    * Commercial: **2.159%** (This is derived from the official assessment ratio of 32% for commercial property multiplied by the local levy of 6.7462% ).   
+
+* **Medium (Madison):**
+
+    * Residential: **1.78%** (This is the average effective rate for Dane County, which assesses property at 100% of market value).   
+
+    * Commercial: **1.78%** (The effective rate is applied to both classes).   
+
+* **Large (San Francisco):**
+
+    * Residential: **0.66%** (This is the average effective rate in San Francisco County. Due to Proposition 13, this is much lower than the 1.18% levy rate  a new buyer would pay, as it accounts for long-time owners with lower assessed values).   
+
+    * Commercial: **0.66%** (The same effective rate is used for commercial properties).
+
+### Tariffs
+
+This policy represents a **percentage markup on the variable cost** of imported goods for a given industry. As a federal policy, the rates are identical across all three cities. The values are based on the 2025 high-tariff environment, with an average effective rate around 18%. Rates are applied as weekly compounding percentages.
+
+**Industry-Specific Values (2025):**
+
+* `GROCERIES`: **25%** (Rate for non-USMCA food imports).   
+
+* `UTILITIES`: **0.0%** (Considered a domestic, non-imported service).
+
+* `AUTOMOBILES`: **25%** (Baseline tariff on imported automobiles).   
+
+* `HOUSING`: **10%** (Based on new tariffs applied to timber, lumber, and wood products).
+
+* `HOUSEHOLD_GOODS`: **25%** (Based on tariffs applied to furniture and cabinets).
+
+* `ENTERTAINMENT`: **0.0%** (Considered a domestic service).
+
+* `LUXURY`: **10%** (Based on the baseline "reciprocal" tariff and rates for electronics, which serve as a proxy for luxury goods).
+
+### Subsidies
+
+This policy functions as a boolean toggle (`1` for "on", `0` for "off") for each industry. An active subsidy (1) flags the simulation to apply a cost-reduction rule (e.g., lower corporate tax, reduced variable costs). The toggles are set based on the primary target industries of each state's major incentive programs.
+
+**Some City Specific Research (2025):**
+
+* **Small (Columbia):** Targets Manufacturing and R&D, based on programs like "Missouri Works" and the "BUILD" Program.   
+
+* **Medium (Madison):** Targets Manufacturing and Food/Groceries, based on the state's "Manufacturing and Agriculture Credit (MAC)" and "Food processing... credit".   
+
+* **Large (San Francisco):** Targets Technology, Manufacturing, Film/Entertainment, and Food/Groceries, based on the "California Competes Tax Credit (CCTC)" and "CAEATFA" programs
+
+### Rent Cap
+
+This policy is a float representing the maximum weekly compounding rent increase the `HOUSING` industry can apply.
+
+**City-Specific Values (2025):**
+
+* **Small (Columbia): 0.0.** There are no state or local rent control laws in Missouri.   
+
+* **Medium (Madison): 0.0.** Wisconsin state law explicitly prohibits municipalities from enacting rent control.   
+
+* **Large (San Francisco): 0.000267** (This is the weekly compounding equivalent of the 1.4% annual increase allowed from March 1, 2025, to February 28, 2026, under the city's Rent Ordinance).
+
+### Minimum Wage
+
+This policy is a float representing the legal **total weekly minimum wage**, assuming a 40-hour work week. The corresponding hourly rate is noted in the comments.
+
+**City-Specific Values (2025):**
+
+* **Small (Columbia): $550.00** (Based on the Missouri state minimum wage of $13.75/hour effective Jan 1, 2025).   
+
+* **Medium (Madison): $290.00** (Based on the Wisconsin state minimum wage, which defaults to the federal minimum of $7.25/hour).   
+
+* **Large (San Francisco): $767.20** (Based on the city's local minimum wage ordinance of $19.18/hour effective July 1, 2025).
+
+
 ## Cited Research
+
+### Population
 
 [1.1] Pew Research Center. (2022). "How the American Middle Class Has Changed."
 
@@ -157,3 +301,83 @@ After establishing this baseline, we adjusted it for each city's unique profile.
 [6.2] Wisconsin REALTORS Association. (2024). "Monthly Housing Market Report."
 
 [7.1] Council for Community and Economic Research (C2ER). (2024). "Cost of Living Index - San Francisco, CA."
+
+### Policies
+
+**Corporate Income Tax**
+
+Missouri Department of Revenue. (2025). "Corporation Income Tax."
+
+Tax Foundation. (2025). "Wisconsin State Tax Data."    
+
+California Franchise Tax Board. (2025). "Tax rates by entity."    
+
+**Personal Income Tax**
+
+Missouri Department of Revenue. (2025). "2025 Tax Year Changes - Indexed for Inflation."    
+
+Tax Foundation. (2024). "Missouri Considers Path to Flat Income Tax."
+
+AARP. (2025). "Wisconsin State Taxes Guide."    
+
+NerdWallet. (2025). "California State Tax Rates."    
+
+**Sales Tax**
+
+Zamp. (2025). "Columbia Missouri Sales Tax."    
+
+Missouri Department of Revenue. (2025). "Sales Tax Reduction on Food."    
+
+Kintsugi. (2025). "Madison Wisconsin Sales Tax Guide."    
+
+Wisconsin Administrative Code. (2025). "Tax 11.51 - Grocers' guidelist."    
+
+Quaderno. (2025). "San Francisco Sales Tax Guide for Businesses in 2025."    
+
+Kintsugi. (2025). "California Non-Taxable Food Items and Grocery Tax Exemptions."    
+
+**Property Tax**
+
+City of Columbia, Missouri. (2025). "2025 Property Tax Comparison Report."    
+
+City of Madison. (2025). "2025 Property Tax Base of the City of Madison."    
+
+SmartAsset. (2025). "Wisconsin Property Tax Calculator - Dane County."    
+
+San Francisco Treasurer. (2025). "Secured Property Taxes."    
+
+SmartAsset. (2025). "California Property Tax Calculator - San Francisco County."    
+
+**Tariffs**
+
+Yale Budget Lab. (2025). "The State of U.S. Tariffs."    
+
+U.S. Presidential Proclamation. (2025). "Adjusting Imports of Automobiles and Automobile Parts."    
+
+National Association of Home Builders (NAHB). (2025). "New Tariffs on Lumber, Wood Product Imports."
+
+U.S. White House. (2025). "Fact Sheet: U.S.-China Trade and Economic Deal."    
+
+**Subsidies**
+
+Missouri Department of Economic Development. (2025). "Missouri Works Program."    
+
+The New North. (2025). "Wisconsin Tax Credits and Special Program Incentives."    
+
+State of California (GO-Biz). (2025). "California Competes Tax Credit (CCTC)."    
+
+**Rent Cap**
+
+City of Columbia, Missouri. (2016). "Landlord-Tenant Law Guidelines."    
+
+Tenant Resource Center. (2023). "Raising the Rent."    
+
+City and County of San Francisco. (2025). "Learn about rent increases in San Francisco."    
+
+**Minimum Wage**
+
+Missouri Department of Labor. (2025). "Minimum Wage Increases to $13.75 per Hour for 2025."    
+
+ToastTab. (2025). "Wisconsin Minimum Wage Guide 2025."    
+
+City and County of San Francisco. (2025). "Official Notice: Minimum Wage Ordinance (July 1, 2025)."
