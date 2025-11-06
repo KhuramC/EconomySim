@@ -41,7 +41,7 @@ def test_payday(mock_economy_model, income: int):
         current_money=starting_money,
     )
     person.payday()
-    assert person.current_money == (starting_money + income)
+    assert person.current_money == (starting_money + income - (income * mock_economy_model.policies["personal_income_tax"]['middle class']))
 
 
 @mark.parametrize(

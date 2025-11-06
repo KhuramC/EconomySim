@@ -2,7 +2,6 @@ from mesa import Agent
 from mesa import Model
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.Pricing_Type import PricingType
-from ..core.model import EconomyModel
 from .pricing import avg_cost, linear_profit_max, linear_price, quantity_from_price
 import logging
 import math
@@ -20,7 +19,6 @@ class IndustryAgent(Agent):
         offered_wage (float): The per time step(weekly) wage offered by this industry.
     """
     #Static Values
-    model : EconomyModel
     industry_type: IndustryType
     """The type of industry this agent represents."""
     debt_allowed: bool
@@ -73,7 +71,7 @@ class IndustryAgent(Agent):
     def __init__(
         #TODO: associate most or all starting variables with industry_type so they don't need to be passed in via the constructor
         self,
-        model: EconomyModel,
+        model: Model,
         industry_type: IndustryType,
         starting_price: float = 0.0,    #This should only be passed in when testing.  Determine_price & determine_price_production_cap will entirely handle updates to this value
         starting_inventory: int = 200,
@@ -322,7 +320,7 @@ class IndustryAgent(Agent):
         #Both modify the cost of raw materials, which is then fed into the variable cost calculation
         #subsidies and tarriffs treated as percentages
         subsidies = self.model.policies["subsidies"][self.industry_type]
-        tarriffs = self.model.policies["tarriffs"][self.industry_type]
+        tarriffs = self.model.policies["tariffs"][self.industry_type]
         rawMaterialCostModifier = 0.0
         if subsidies is not None:
             rawMaterialCostModifier -= subsidies    #subsidies reduce the cost of raw materials

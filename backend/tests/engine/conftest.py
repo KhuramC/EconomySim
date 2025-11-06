@@ -44,7 +44,7 @@ POLICIES = {
     "property_tax": 4.0,
     "tariffs": {itype.value: i * 2.5 for i, itype in enumerate(IndustryType)},
     "subsidies": {itype.value: i * -2 for i, itype in enumerate(IndustryType)},
-    "rent_cap": 0.0,
+    "price_cap": {itype.value: 99999999 for itype in IndustryType},
     "minimum_wage": 7.25,
 }
 """A sample policies variable that should pass a validate_schema call by an EconomyModel."""
