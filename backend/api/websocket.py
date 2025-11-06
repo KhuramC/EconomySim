@@ -81,11 +81,10 @@ def handle_get_current_industry_data(model_id: int) -> dict:
 
 def handle_get_indicators(model_id: int) -> dict:
     indicators_df = controller.get_indicators(model_id)
-    indicators_json = json.loads(indicators_df.to_json(orient="columns"))
     return {
         "status": "success",
         "action": "get_indicators",
-        "data": indicators_json,
+        "data": indicators_df.to_dict(orient="list"),
     }
 
 
