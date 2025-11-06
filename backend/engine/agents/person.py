@@ -17,7 +17,8 @@ class PersonAgent(Agent):
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
         current_money (int): The current amount of money the person has; negative indicating debt.
     """
-
+    model:EconomyModel
+    
     demographic: Demographic
     """Economic class of the person."""
     income: int
@@ -31,7 +32,7 @@ class PersonAgent(Agent):
 
     def __init__(
         self,
-        model: Model,
+        model: EconomyModel,
         demographic: Demographic,
         preferences: dict[IndustryType, float],
         savings_rate: float = 0.10,
@@ -53,10 +54,8 @@ class PersonAgent(Agent):
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
-        EModel : EconomyModel
-        EModel = Model
         self.current_money += self.income
-        personal_income_tax = EModel.policies["personal_income_tax"][self.demographic]
+        personal_income_tax = self.model.policies["personal_income_tax"][self.demographic]
         if personal_income_tax is not None:
             self.current_money -= self.income * personal_income_tax
 

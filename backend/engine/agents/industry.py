@@ -19,7 +19,8 @@ class IndustryAgent(Agent):
         total_money (float): The total money held by this industry. Negative indicates debt.
         offered_wage (float): The per time step(weekly) wage offered by this industry.
     """
-
+    model : EconomyModel
+    
     industry_type: IndustryType
     """The type of industry this agent represents."""
     price: float
@@ -59,7 +60,7 @@ class IndustryAgent(Agent):
     def __init__(
         #TODO: associate most or all starting variables with industry_type so they don't need to be passed in via the constructor
         self,
-        model: Model,
+        model: EconomyModel,
         industry_type: IndustryType,
         starting_price: float = 0.0,    #This should only be passed in when testing.  Determine_price & determine_price_production_cap will entirely handle updates to this value
         starting_inventory: int = 200,
@@ -179,9 +180,8 @@ class IndustryAgent(Agent):
         #Set price based on suggested quantity
         Price = linear_price(A,B,Suggested_Quantity)
         
-        Emodel : EconomyModel
-        EModel = Model
-        price_cap = Emodel.policies["price_cap"][self.industry_type]
+
+        price_cap = self.model.policies["price_cap"][self.industry_type]
         if price_cap is not None:
             if price_cap < Price:
                 Price = price_cap
@@ -259,9 +259,7 @@ class IndustryAgent(Agent):
         How the industry will determine what to set their hiring wages at.
         """
         logging.info("Changing wages...NOT IMPLEMENTED")
-        EModel : EconomyModel
-        EModel = Model
-        minimum_wage = EModel.policies["minimum_wage"][self.industry_type]
+        minimum_wage = self.model.policies["minimum_wage"][self.industry_type]
         if self.offered_wage < minimum_wage:
             self.offered_wage = minimum_wage
         return self.offered_wage
@@ -298,8 +296,11 @@ class IndustryAgent(Agent):
         if eff <= 0.0:
             # semantics: if eff==0 we cannot produce — treat per-unit cost as infinite
             return float("inf")
-
+        
+        
+        
         variable_cost = (ow / eff) + rm
+        
         return variable_cost
       
     def get_production_capacity(self):
@@ -431,9 +432,7 @@ class IndustryAgent(Agent):
     def deduct_corporate_tax(self):
         profit = self.get_profit()
         
-        Emodel : EconomyModel
-        EModel = Model
-        corporate_income_tax = EModel.policies["corportate_income_tax"][self.industry_type]
+        corporate_income_tax = self.model.policies["corporate_income_tax"][self.industry_type]
         if corporate_income_tax is not None and profit > 0:
             taxedAmt = profit * corporate_income_tax
         self.total_money -= taxedAmt
