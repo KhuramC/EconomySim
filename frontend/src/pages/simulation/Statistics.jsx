@@ -25,7 +25,7 @@ export default function Statistics() {
   const [metric, setMetric] = useState(Object.values(Indicators)[0]);
   const [indicatorData, setIndicatorData] = useState(null);
   const [startUnit, setStartUnit] = useState("week");
-  const [graphs, setGraphs] = useState([["gdp", "week"]]);
+  const [graphs, setGraphs] = useState([[Indicators.GDP, "week"]]);
 
   useEffect(() => {
     if (!simAPI) return;
@@ -108,7 +108,6 @@ export default function Statistics() {
           md={4}
           sx={{ display: "flex", flexDirection: "column" }}
         >
-          {/* Current Policies */}
 
           {/* Add New Graph panel */}
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2 }}>
