@@ -55,7 +55,7 @@ export function buildEnvironmentPayload(envParams) {
   return {
     max_simulation_length: envParams.maxSimulationLength,
     num_people: envParams.numPeople,
-    inflation_rate: envParams.inflationRate / 100, // e.g., 1.0% -> 0.01
+    inflation_rate: (1 + envParams.inflationRate / 100)**(1/52) - 1, // Convert annual % to a weekly rate
     random_events: envParams.randomEvents,
   };
 }
@@ -69,11 +69,12 @@ export function buildDemographicsPayload(demoParams) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
       const demoData = demoParams[demoValue];
-      // TODO: Update this to match backend once spending behavior is finalized
-      // Create the spending_behavior as dictionary with keys of each industry
-      const spendingRate = demoData.spendingBehavior / 100.0; // 70 -> 0.70
+      // Create a dictionary of actual spending behavior per industry
       const spendingBehaviorDict = Object.fromEntries(
-        Object.values(IndustryType).map((value) => [value, spendingRate])
+        Object.entries(IndustryType).map(([industry, label]) => [
+          label,
+          (Number(demoData[industry]) || 0) / 100.0, // convert % to decimal
+        ])
       );
 
       const backendDemoData = {
@@ -84,7 +85,7 @@ export function buildDemographicsPayload(demoParams) {
         proportion: demoData.proportion / 100.0, // 33 -> 0.33
         unemployment_rate: demoData.unemploymentRate / 100.0, // 5.0 -> 0.05
         spending_behavior: spendingBehaviorDict,
-        current_money: {
+        balance: {
           mean: demoData.meanSavings,
           sd: demoData.sdSavings,
         },
@@ -105,7 +106,7 @@ export function buildIndustriesPayload(industryParams) {
       const backendIndustryData = {
         price: industryData.startingPrice,
         inventory: industryData.startingInventory,
-        money: industryData.industrySavings,
+        balance: industryData.industrySavings,
         offered_wage: industryData.offeredWage,
       };
       return [industryKey, backendIndustryData];

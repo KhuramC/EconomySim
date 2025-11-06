@@ -5,7 +5,7 @@ import math
 from engine.agents.industry import IndustryAgent
 
 from engine.types.industry_type import IndustryType
-from engine.types.Pricing_Type import PricingType
+from engine.types.pricing_type import PricingType
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
 def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
@@ -26,11 +26,6 @@ def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
 
 @mark.xfail(reason="TODO.")
 def test_get_employees():
-    assert False
-
-
-@mark.xfail(reason="Function not implemented yet.")
-def test_determine_price():
     assert False
 
 
@@ -61,7 +56,7 @@ def test_max_production_capacity(mock_economy_model):
     ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.AUTOMOBILES,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=10000.0,
+                       starting_balance=10000.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
@@ -87,7 +82,7 @@ def test_max_production_capacity_no_debt(mock_economy_model):
     ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.AUTOMOBILES,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=300.0,
+                       starting_balance=300.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
@@ -108,7 +103,7 @@ def test_variable_cost_per_unit(mock_economy_model):
     ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.AUTOMOBILES,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=10000.0,
+                       starting_balance=10000.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
@@ -136,7 +131,7 @@ def test_determine_price_avg_cost(mock_economy_model):
     ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.UTILITIES,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=10000.0,
+                       starting_balance=10000.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
@@ -216,7 +211,7 @@ def test_determine_price_linear_profit_max(mock_economy_model):
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=10000.0,
+                       starting_balance=10000.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
@@ -270,7 +265,7 @@ def test_avg_cost_linear_profit_fallback(mock_economy_model):
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.UTILITIES,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=10000.0,
+                       starting_balance=10000.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=10.0,
                        starting_raw_mat_cost=2.0,
@@ -291,7 +286,7 @@ def test_get_weekly_pay(mock_economy_model):
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=10000.0,
+                       starting_balance=10000.0,
                        starting_offered_wage=15.0,
                        starting_fixed_cost=200.0,
                        starting_raw_mat_cost=2.0,
@@ -316,7 +311,7 @@ def test_determine_price_realistic(mock_economy_model):
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
                        starting_price=0.0,
                        starting_inventory=0,
-                       starting_money=1000000.0,
+                       starting_balance=1000000.0,
                        starting_offered_wage=20.0,
                        starting_fixed_cost=4000.0,
                        starting_raw_mat_cost=5.0,
@@ -380,7 +375,7 @@ def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
         industry_type=IndustryType.LUXURY,
         starting_price=0.0,
         starting_inventory=0,
-        starting_money=1000000.0,
+        starting_balance=1000000.0,
         starting_offered_wage=wage,
         starting_fixed_cost=4000.0,
         starting_raw_mat_cost=raw_cost,
@@ -462,7 +457,7 @@ def make_industry_agent_production(
         industry_type=IndustryType.LUXURY,
         starting_price=0.0,
         starting_inventory=0,
-        starting_money=total_money,
+        starting_balance=total_money,
         starting_offered_wage=wage,
         starting_fixed_cost=fixed_cost,
         starting_raw_mat_cost=raw_cost,

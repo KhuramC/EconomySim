@@ -1,5 +1,3 @@
-import statistics
-import random
 import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
@@ -9,6 +7,8 @@ from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
+from ..types.indicators import Indicators
+from .indicators import *
 
 demographics_schema = {
     demo.value: {
@@ -16,14 +16,14 @@ demographics_schema = {
         "proportion": None,
         "unemployment_rate": None,
         "spending_behavior": {itype.value: None for itype in IndustryType},
-        "current_money": {"mean": None, "sd": None},
+        "balance": {"mean": None, "sd": None},
     }
     for demo in Demographic
 }
 """Schema for validating the demographics dictionary."""
 
 industries_schema = {
-    itype.value: {"price": None, "inventory": None, "money": None, "offered_wage": None}
+    itype.value: {"price": None, "inventory": None, "balance": None, "offered_wage": None}
     for itype in IndustryType
 }
 """Schema for validating the industries dictionary."""
@@ -88,7 +88,7 @@ class EconomyModel(Model):
 
         if max_simulation_length <= 0:
             raise ValueError("Maximum simulation length must be positive.")
-        if num_people <= 0:
+        if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
@@ -104,18 +104,32 @@ class EconomyModel(Model):
         self.datacollector = DataCollector(
             model_reporters={
                 "week": self.get_week,
-                "unemployment": self.calculate_unemployment,
-                "gdp": self.calculate_gdp,
-                "income per capita": self.calculate_income_per_capita,
-                "median income": self.calculate_median_income,
-                "hoover index": self.calculate_hoover_index,
-                "lorenz curve": self.calculate_lorenz_curve,
+                Indicators.UNEMPLOYMENT: calculate_unemployment,
+                Indicators.GDP: calculate_gdp,
+                Indicators.INCOME_PER_CAPITA: calculate_income_per_capita,
+                Indicators.MEDIAN_INCOME: calculate_median_income,
+                Indicators.HOOVER_INDEX: calculate_hoover_index,
+                Indicators.LORENZ_CURVE: calculate_lorenz_curve,
+                Indicators.GINI_COEFFICIENT: calculate_gini_coefficient,
             },
-            agenttype_reporters={IndustryAgent: {"Price": "price"}},
+            agenttype_reporters={
+                IndustryAgent: {
+                    "price": "price",
+                    "inventory": "inventory",
+                    "balance": "balance",
+                    "offered_wage": "offered_wage",
+                }
+            },
         )
 
         self.setup_person_agents(num_people, demographics)
         self.setup_industry_agents(industries)
+
+        # Ensure AgentSets exists, even if empty
+        if PersonAgent not in self.agents_by_type:
+            self.agents_by_type[PersonAgent] = AgentSet([], self)
+        if IndustryAgent not in self.agents_by_type:
+            self.agents_by_type[IndustryAgent] = AgentSet([], self)
 
     def validate_schema(
         self, data: dict, schema: dict = policies_schema, path="policies"
@@ -172,6 +186,7 @@ class EconomyModel(Model):
         demographics: dict[
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
+        preference_concentration: float = 20.0,
     ) -> None:
         """
         Creates the PersonAgents based on the demographics dictionary.
@@ -179,11 +194,13 @@ class EconomyModel(Model):
         Args:
             total_people (int): the total number of PersonAgents to create.
             demographics (dict): the information about each demographics to create.
+            preference_concentration (float): A parameter to control preference variance.
+                Higher values mean agents will have preferences closer to the demographic's
+                average (low variance). Lower values create more diverse preferences.
 
         Raises:
             ValueError: if the demographics dictionary is invalid.
         """
-        # do same thing for each demographic
 
         # get number of people per demographic
         demo_people = self.num_prop(
@@ -198,45 +215,69 @@ class EconomyModel(Model):
             for i, demographic in enumerate(demographics.keys())
         }
 
+        # for each demographic...
         for demographic, demo_info in demographics.items():
 
-            unemployment_rate = demo_info.get("unemployment_rate", 0)
+            num_demo_people = demo_people[demographic]
+            if num_demo_people == 0:
+                continue
+
+            income_info = demo_info.get("income", {})
+            starting_balance_info = demo_info.get("balance", {})
+            spending_behavior_info = demo_info.get("spending_behavior")
+
             # TODO: set unemployment based on starting_unemployment_rate per demographic
             # actually do something with unemployment rate
-            spending_behavior_info = demo_info.get("spending_behavior", {})
-            # TODO: acutally use spending behavior when creating agents
-            income_info = demo_info.get("income", {})
-            current_money_info = demo_info.get("current_money", {})
+            unemployment_rate = demo_info.get("unemployment_rate", 0)
 
-            # param checking
-            if isinstance(income_info, dict) and isinstance(current_money_info, dict):
-                num_demo_people = demo_people[demographic]
+            # TODO: set savings_rate per demographic
+            # Does this also get randomized?
+            savings_rate = demo_info.get("savings_rate", 0.10)
 
-                # uses lognormal distribution; sd represents right skew
-                incomes = self.generate_lognormal(
-                    log_mean=income_info.get("mean", 0),
-                    log_std=income_info.get("sd", 0),
-                    size=num_demo_people,
-                )
-                starting_moneys = self.generate_lognormal(
-                    log_mean=current_money_info.get("mean", 0),
-                    log_std=current_money_info.get("sd", 0),
-                    size=num_demo_people,
-                )
+            # Generate distributed parameters for N agents
+            # Incomes from lognormal distribution
+            incomes = self.generate_lognormal(
+                log_mean=income_info.get("mean", 0),
+                log_std=income_info.get("sd", 0),
+                size=num_demo_people,
+            )
+            # Account balances from lognormal distribution
+            starting_balances = self.generate_lognormal(
+                log_mean=starting_balance_info.get("mean", 0),
+                log_std=starting_balance_info.get("sd", 0),
+                size=num_demo_people,
+            )
 
-                PersonAgent.create_agents(
-                    model=self,
-                    n=num_demo_people,
-                    demographic=demographic,
-                    income=incomes,
-                    current_money=starting_moneys,
-                    preferences={},
-                )
+            # Generate unique preferences from dirichlet distribution
+            industries = list(spending_behavior_info.keys())
+            alphas = list(spending_behavior_info.values())
+            concentrated_alpha = [
+                val * preference_concentration for val in alphas
+            ]  # Scale alphas to control variance
+            generated_preferences = np.random.dirichlet(
+                concentrated_alpha, size=num_demo_people
+            )
 
-            else:
-                raise ValueError(
-                    f"Income and current_money must be dictionaries at demographics[{demographic}]."
-                )
+            pref_list = []  # holds preference dict for all N agents in demographic
+            for pref_vector in generated_preferences:
+                pref_dict = {
+                    industries[i]: pref_vector[i] for i in range(len(industries))
+                }
+                pref_list.append(pref_dict)
+
+            # TODO: Distribute starting employment based on unemployment_rate
+
+            PersonAgent.create_agents(
+                model=self,
+                n=num_demo_people,
+                demographic=demographic,
+                income=incomes,
+                starting_balance=starting_balances,
+                preferences=pref_list,
+                # TODO:
+                # savings_rate=savings_rate,
+                # employer=None,
+            )
 
     def setup_industry_agents(
         self,
@@ -258,7 +299,7 @@ class EconomyModel(Model):
                 )
             starting_price = industry_info.get("price", 0.0)
             starting_inventory = industry_info.get("inventory", 0)
-            starting_money = industry_info.get("money", 0.0)
+            starting_balance = industry_info.get("balance", 0.0)
             starting_offered_wage = industry_info.get("offered_wage", 0.0)
 
             IndustryAgent.create_agents(
@@ -267,7 +308,7 @@ class EconomyModel(Model):
                 industry_type=industry_type,
                 starting_price=starting_price,
                 starting_inventory=starting_inventory,
-                starting_money=starting_money,
+                starting_balance=starting_balance,
                 starting_offered_wage=starting_offered_wage,
             )
 
@@ -289,9 +330,15 @@ class EconomyModel(Model):
         )
 
     def inflation(self):
-        # TODO: implement inflation logic.
-        # could have prices go up by inflation percentage and current_money go down by the same percentage
-        pass
+        """
+        Applies the weekly inflation rate to all industry costs and
+        the minimum wage policy. This is a "cost-push" inflation model.
+        """
+
+        industryAgents = self.agents_by_type[IndustryAgent]
+        for agent in industryAgents:
+            agent.raw_mat_cost *= 1 + self.inflation_rate
+            agent.fixed_cost *= 1 + self.inflation_rate
 
     def step(self) -> None:
         """
@@ -336,87 +383,3 @@ class EconomyModel(Model):
             week(int): The current week.
         """
         return self.week
-
-    def calculate_unemployment(self) -> float:
-        """
-        Calculates the unemployment rate at the current step.
-
-        Returns:
-            percentage(float): The percentage of unemployed people in the simulation.
-        """
-        peopleAgents = self.agents_by_type[PersonAgent]
-        unemployed = len(peopleAgents.select(lambda agent: (agent.employer is None)))
-        total = len(peopleAgents)
-
-        return unemployed / total
-
-    def calculate_gdp(self) -> float:
-        """
-        Calculates the GDP,
-        or the value of all goods produced by industries at the current step.
-
-        Returns:
-            gdp(float): The value of goods and services produced by the industries in the simulation.
-        """
-
-        # TODO: Implement calculation of the GDP
-        # see https://www.investopedia.com/terms/b/bea.asp for notes
-        # It's from the project documentation back in the spring
-        return 5 + self.get_week() + random.random()
-
-    def calculate_income_per_capita(self):
-        """
-        Calculates the income per capita,
-        or the average per step(weekly) income per person in the simulation.
-
-        Returns:
-            average_income(float): The average income per person(capita) in the simulation.
-        """
-        peopleAgents = self.agents_by_type[PersonAgent]
-        total = len(peopleAgents)
-        return peopleAgents.agg(
-            "income", lambda incomes: sum(incomes) / total if total > 0 else 0
-        )
-
-    def calculate_median_income(self):
-        """
-        Calculates the median income of people within the simulation.
-
-        Returns:
-            median_income(float): The median income of people in the simulation.
-        """
-        peopleAgents = self.agents_by_type[PersonAgent]
-        return peopleAgents.agg("income", lambda incomes: statistics.median(incomes))
-
-    def calculate_hoover_index(self):
-        """
-        Calculates the Hoover Index,
-        a measure of income inequality(ranges from 0-1),
-        at the current timestep.
-
-        Returns:
-            hoover_index(float): squared income proportions from 0-1
-        """
-
-        # TODO: Implement calculation of the Hoover Index
-        # see https://www.wallstreetoasis.com/resources/skills/economics/hoover-index
-        # for the formula. It's from the project documentation back in the spring
-
-        return 0
-
-    def calculate_lorenz_curve(self):
-        """
-        Calculates the Lorenz Cruve at the current timestep.
-
-        Returns:
-            _type_: _description_
-        """
-        # TODO: Implement calculation of the Lorenz Curve
-        # see https://www.datacamp.com/tutorial/lorenz-curve for info
-        # it's from the project documentation back in the spring
-
-        # note: it might make more sense to use the gini coefficient since
-        # that is a single number, and is based on the lorenz curve anyways.
-        # see https://www.datacamp.com/blog/gini-coefficient for more info on it.
-
-        return 0

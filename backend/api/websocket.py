@@ -28,6 +28,36 @@ def handle_get_current_week(model_id: int) -> dict:
     }
 
 
+def handle_get_industry_data(model_id: int) -> dict:
+    """
+    Creates a json of each industry variable across the whole simulation to be able to plot easily.
+    """
+    industries_df = controller.get_industry_data(model_id)
+    industries_json = json.loads(industries_df.to_json(orient="columns"))
+    return {
+        "status": "success",
+        "action": "get_industry_data",
+        "data": industries_json,
+    }
+
+
+def handle_get_current_industry_data(model_id: int) -> dict:
+    """
+    Creates a dictionary of the industry variables at the current timestep across each industry.
+    """
+    current_week = controller.get_current_week(model_id)
+    # Get data only for the current week
+    industries_df = controller.get_industry_data(
+        model_id, start_time=current_week, end_time=current_week
+    )
+    industries_df = industries_df.set_index("industry").drop(columns=["week"])
+    return {
+        "status": "success",
+        "action": "get_current_industry_data",
+        "data": industries_df.to_dict(orient="index"),
+    }
+
+
 def handle_get_indicators(model_id: int) -> dict:
     indicators_df = controller.get_indicators(model_id)
     indicators_json = json.loads(indicators_df.to_json(orient="columns"))
@@ -61,6 +91,8 @@ ACTION_HANDLERS: dict[str, Callable] = {
     "step": handle_step,
     "reverse_step": handle_reverse_step,
     "get_current_week": handle_get_current_week,
+    "get_industry_data": handle_get_industry_data,
+    "get_current_industry_data": handle_get_current_industry_data,
     "get_indicators": handle_get_indicators,
     "get_policies": handle_get_policies,
     "set_policies": handle_set_policies,
@@ -77,6 +109,8 @@ async def model_websocket(websocket: WebSocket, model_id: int):
     - {"action": "step"}: Steps the model by one week.
     - {"action": "reverse_step"}: Steps the model backwards by one week.
     - {"action": "get_current_week"}: Returns the current week.}
+    - {"action": "get_industry_data"}: Returns all industries' information.
+    - {"action": "get_current_industry_data"}: Returns the current week's industries' information.
     - {"action": "get_indicators"}: Returns all model indicators.
     - {"action": "get_policies"}: Returns the current model policies.
     - {"action": "set_policies", "payload": {...}}: Sets the model policies.
@@ -103,7 +137,10 @@ async def model_websocket(websocket: WebSocket, model_id: int):
                     else:
                         response = handler(model_id)
                 else:
-                    response = {"status": "error", "message": f"Unknown action: {action}"}
+                    response = {
+                        "status": "error",
+                        "message": f"Unknown action: {action}",
+                    }
                 await websocket.send_json(response)
 
             except ValueError as e:

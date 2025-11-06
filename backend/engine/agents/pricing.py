@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Tuple, Dict
+from typing import Optional
 
 def solve_quadratic_choose_higher(B: float, V: float, A: float, F: float) -> Optional[float]:
     """

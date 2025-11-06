@@ -15,7 +15,7 @@ class IndustryAgent(Agent):
         industry_type (IndustryType): The type of industry this agent represents.
         price (float): The price of goods/services in this industry.
         inventory (int): The inventory level of goods/services in this industry.
-        total_money (float): The total money held by this industry. Negative indicates debt.
+        balance (float): The total money held by this industry. Negative indicates debt.
         offered_wage (float): The per time step(weekly) wage offered by this industry.
     """
     #Static Values
@@ -75,7 +75,7 @@ class IndustryAgent(Agent):
         industry_type: IndustryType,
         starting_price: float = 0.0,    #This should only be passed in when testing.  Determine_price & determine_price_production_cap will entirely handle updates to this value
         starting_inventory: int = 200,
-        starting_money: float = 5000.00,
+        starting_balance: float = 5000.00,
         starting_offered_wage: float = 15.00,
         starting_fixed_cost: float = 200.0,
         starting_raw_mat_cost: float = 2.0,
@@ -97,7 +97,7 @@ class IndustryAgent(Agent):
         self.industry_type = industry_type
         self.price = starting_price
         self.inventory = starting_inventory
-        self.total_money = starting_money
+        self.balance = starting_balance
         self.offered_wage = starting_offered_wage
         self.fixed_cost = starting_fixed_cost
         self.raw_mat_cost = starting_raw_mat_cost
@@ -208,7 +208,7 @@ class IndustryAgent(Agent):
         # set results on the instance
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
-        self.inventory_available_this_step = Suggested_Quantity
+        self.inventory_available_this_step = round(Suggested_Quantity)
 
     def produce_goods(self):
         """  
@@ -401,7 +401,7 @@ class IndustryAgent(Agent):
                 funds_limit = 0
             else:
                 # compute funds_limit safely — protect against unreasonable huge values
-                funds_limit_raw = (self.total_money - self.fixed_cost) / variable_cost_per_unit
+                funds_limit_raw = (self.balance - self.fixed_cost) / variable_cost_per_unit
                 # if funds_limit_raw is not finite for some reason, fall back to 0
                 if not math.isfinite(funds_limit_raw):
                     funds_limit = 0
@@ -409,7 +409,7 @@ class IndustryAgent(Agent):
                     # clamp to a sensible integer range before floor to avoid overflow
                     # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
                     funds_limit = int(max(0, math.floor(funds_limit_raw)))
-                if self.fixed_cost > self.total_money:
+                if self.fixed_cost > self.balance:
                     funds_limit = 0
                     #TODO add handler for if fixed cost is more than total money -> Bankruptcy imminent!
 

@@ -22,7 +22,7 @@ VALID_CONFIG = {
             "spending_behavior": {
                 itype.value: 1 / len(IndustryType) for itype in IndustryType
             },
-            "current_money": {"mean": 500 + (i * 2000), "sd": 100},
+            "balance": {"mean": 500 + (i * 2000), "sd": 100},
         }
         for i, demo in enumerate(Demographic)
     },
@@ -30,7 +30,7 @@ VALID_CONFIG = {
         itype: {
             "price": 10.0 + i * 5.0,
             "inventory": 1000 + i * 500,
-            "money": 50000 + i * 10000,
+            "balance": 50000 + i * 10000,
             "offered_wage": 15.0 + i * 2.5,
         }
         for i, itype in enumerate(IndustryType)
