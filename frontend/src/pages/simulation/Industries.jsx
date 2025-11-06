@@ -1,30 +1,19 @@
-import { useContext, useState, useEffect, useMemo } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
 import { SimulationContext } from "./BaseSimView.jsx";
 import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
-import { IndustryType } from "../../types/IndustryType.js";
 import UnchangeableParameters from "../../components/SimView/UnchangeableParameters.jsx";
 import { receiveIndustriesPayload } from "../../api/payloadReceiver.js";
 
-const getDefaultIndustryParams = () => ({
-  startingInventory: 1000,
-  startingPrice: 10,
-  industrySavings: 50000,
-  offeredWage: 15,
-});
 /**
  * Read-only Industries view
  */
-export default function Industries() {
+export default function Industries({ oldindustryParams }) {
   const simAPI = useContext(SimulationContext);
   const [error, setError] = useState(null);
+  const [week, setWeek] = useState(0);
   const [industryParams, setIndustryParams] = useState(
-    Object.fromEntries(
-      Object.values(IndustryType).map((value) => [
-        value,
-        getDefaultIndustryParams(),
-      ])
-    )
+    week === 0 ? oldindustryParams : null
   );
 
   useEffect(() => {
@@ -37,16 +26,29 @@ export default function Industries() {
       simAPI.sendMessage({ action: "get_current_industry_data" });
     };
 
-    fetchIndustries(); // Initial fetch
+    // Only fetch if it's not week 0
+    if (week > 0 && !industryParams) {
+      fetchIndustries();
+    }
 
     const handleWebSocketMessage = (message) => {
-      // Refetch industryParams if they were changed if a step occurs
+      // only update week if it's a get_current_week action
+      if (message.action === "get_current_week" && message.data) {
+        setWeek(message.data.week);
+        // If we just moved off week 0, fetch for the first time
+        if (week === 0 && message.data.week > 0) {
+          fetchIndustries();
+        }
+      }
+
+      // get new industries if a step occurs
       if (message.action === "step" || message.action === "reverse_step") {
         console.log(
           "Simulation timestep moved via WebSocket, refetching industry parameters"
         );
         fetchIndustries();
       }
+
       if (message.action === "get_current_industry_data" && message.data) {
         const newIndustryParams = receiveIndustriesPayload(message.data, false);
         console.log("changed fetched industry parameters:", newIndustryParams);
@@ -55,10 +57,11 @@ export default function Industries() {
     };
 
     if (simAPI) {
+      simAPI.sendMessage({ action: "get_current_week" }); // Get initial week
       simAPI.addMessageListener(handleWebSocketMessage);
       return () => simAPI.removeMessageListener(handleWebSocketMessage);
     }
-  }, [simAPI]); // Re-run effect if simAPI changes
+  }, [simAPI, week, industryParams, oldindustryParams]); // Re-run effect if dependencies change
 
   return (
     <Box>

@@ -193,7 +193,9 @@ export default function SetupPage() {
       const modelId = await SimulationAPI.createModel(params);
       console.log("Model created with ID:", modelId);
       // Navigate to simulation view with the new model ID
-      navigate(`/BaseSimView`, { state: { modelId: modelId } });
+      navigate(`/BaseSimView`, {
+        state: { modelId: modelId, industryParams: params.industryParams },
+      });
     } catch (error) {
       console.error("Error creating model:", error.message);
       setBackendError(error.message);
