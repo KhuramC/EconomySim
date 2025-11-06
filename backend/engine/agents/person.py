@@ -53,12 +53,12 @@ class PersonAgent(Agent):
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
-        self.current_money += self.income
+        self.balance += self.income
         taxed_amt = 0.0
         personal_income_tax = self.model.policies["personal_income_tax"][self.demographic]
         if personal_income_tax is not None:
             taxed_amt = (self.income * personal_income_tax)
-        self.current_money -= taxed_amt
+        self.balance -= taxed_amt
 
     def demand_func(
         self,
@@ -151,7 +151,7 @@ class PersonAgent(Agent):
             if sales_tax is not None:
                 cost += (cost * sales_tax)
                 
-            if self.current_money >= cost:
+            if self.balance >= cost:
                 # Execute transaction
                 self.balance -= cost
                 industry.sell_goods(quantity_to_buy)
