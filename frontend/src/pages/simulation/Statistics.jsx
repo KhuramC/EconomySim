@@ -17,11 +17,10 @@ import AddIcon from "@mui/icons-material/Add";
 import { SimulationContext } from "./BaseSimView.jsx";
 import GraphSlot from "../../components/GraphSlot";
 import { Indicators } from "../../types/Indicators";
+import { IndustryMetrics } from "../../types/IndustryMetrics.js";
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
-
-  const industryMetrics = ["price", "inventory", "balance", "offered_wage"];
 
   // State for economic indicators (GDP, etc.)
   const [indicatorData, setIndicatorData] = useState(null);
@@ -29,13 +28,10 @@ export default function Statistics() {
   const [industryData, setIndustryData] = useState(null);
 
   // Controls for adding new graphs
-  const [metric, setMetric] = useState(industryMetrics[0]);
+  const [metric, setMetric] = useState(Indicators.GDP);
   const [startUnit, setStartUnit] = useState("week");
   // Default graphs to show
-  const [graphs, setGraphs] = useState([
-    Indicators.GDP,
-    Indicators.UNEMPLOYMENT,
-  ]);
+  const [graphs, setGraphs] = useState([Indicators.GDP]);
 
   useEffect(() => {
     if (!simAPI) return;
@@ -89,7 +85,8 @@ export default function Statistics() {
 
           {graphs.map((title, index) => {
             const isIndicator = Object.values(Indicators).includes(title);
-            const isIndustryMetric = industryMetrics.includes(title);
+            const isIndustryMetric =
+              Object.values(IndustryMetrics).includes(title);
 
             return (
               <React.Fragment key={index}>
@@ -168,7 +165,7 @@ export default function Statistics() {
                   </MenuItem>
                 ))}
                 <Divider />
-                {industryMetrics.map((value) => (
+                {Object.values(IndustryMetrics).map((value) => (
                   <MenuItem key={value} value={value}>
                     <span style={{ textTransform: "capitalize" }}>
                       {value} (by Industry)
