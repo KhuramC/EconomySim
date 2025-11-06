@@ -21,24 +21,40 @@ import { Indicators } from "../../types/Indicators";
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
 
-  // Demo controls for "Add New Graph"
-  const [metric, setMetric] = useState(Object.values(Indicators)[0]);
+  const industryMetrics = ["price", "inventory", "balance", "offered_wage"];
+
+  // State for economic indicators (GDP, etc.)
   const [indicatorData, setIndicatorData] = useState(null);
+  // State for industry-specific data (price, etc.)
+  const [industryData, setIndustryData] = useState(null);
+
+  // Controls for adding new graphs
+  const [metric, setMetric] = useState(industryMetrics[0]);
   const [startUnit, setStartUnit] = useState("week");
-  const [graphs, setGraphs] = useState([[Indicators.GDP, "week"]]);
+  // Default graphs to show
+  const [graphs, setGraphs] = useState([
+    Indicators.GDP,
+    Indicators.UNEMPLOYMENT,
+  ]);
 
   useEffect(() => {
     if (!simAPI) return;
 
     const handleWebSocketMessage = (message) => {
-      // When a step happens, request the latest indicators
+      // When a step happens, request the latest indicators/
       if (message.action === "step" || message.action === "reverse_step") {
         simAPI.sendMessage({ action: "get_indicators" });
+        simAPI.sendMessage({ action: "get_industry_data" });
       }
       // When indicator data arrives, update our state
       if (message.action === "get_indicators" && message.data) {
         console.log("Received indicator data:", message.data);
         setIndicatorData(message.data);
+      }
+      // When industry data arrives, update our state
+      if (message.action === "get_industry_data" && message.data) {
+        console.log("Received industry data:", message.data);
+        setIndustryData(message.data);
       }
     };
 
@@ -46,6 +62,7 @@ export default function Statistics() {
     simAPI.addMessageListener(handleWebSocketMessage);
     // Fetch initial data on component mount
     simAPI.sendMessage({ action: "get_indicators" });
+    simAPI.sendMessage({ action: "get_industry_data" });
 
     // Cleanup: remove the listener when the component unmounts
     return () => {
@@ -54,7 +71,7 @@ export default function Statistics() {
   }, [simAPI]); // Rerun if simAPI instance changes
 
   const handleGenerate = () => {
-    setGraphs((prevGraphs) => [...prevGraphs, [metric, startUnit]]);
+    setGraphs((prevGraphs) => [...prevGraphs, metric]);
   };
   return (
     <Box>
@@ -70,35 +87,56 @@ export default function Statistics() {
             Statistics
           </Typography>
 
-          {graphs.map(([title, period], index) => (
-            <React.Fragment key={index}>
-              <Box sx={{ mb: 2 }}>
-                <GraphSlot
-                  title={`${title} Graph`}
-                  labels={
-                    indicatorData?.week ? Object.values(indicatorData.week) : []
-                  }
-                  data={
-                    indicatorData?.[title]
-                      ? Object.values(indicatorData[title])
-                      : []
-                  }
-                />
-              </Box>
+          {graphs.map((title, index) => {
+            const isIndicator = Object.values(Indicators).includes(title);
+            const isIndustryMetric = industryMetrics.includes(title);
 
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: -1,
-                  mb: 2,
-                  fontWeight: 600,
-                  color: "text.secondary",
-                }}
-              >
-                {title} Distribution Over Time
-              </Typography>
-            </React.Fragment>
-          ))}
+            return (
+              <React.Fragment key={index}>
+                <Box sx={{ mb: 2 }}>
+                  {isIndicator && indicatorData && (
+                    <GraphSlot
+                      title={`${title} Graph`}
+                      labels={indicatorData?.week || []}
+                      datasets={[
+                        {
+                          label: title,
+                          data: indicatorData?.[title]
+                            ? indicatorData[title]
+                            : [],
+                        },
+                      ]}
+                    />
+                  )}
+                  {isIndustryMetric && industryData && (
+                    <GraphSlot
+                      title={`${
+                        title.charAt(0).toUpperCase() + title.slice(1)
+                      } by Industry`}
+                      labels={indicatorData?.week || []}
+                      datasets={Object.entries(industryData || {}).map(
+                        ([industryName, industryDetails]) => ({
+                          label: industryName,
+                          data: industryDetails[title] || [],
+                        })
+                      )}
+                    />
+                  )}
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: -1,
+                    mb: 2,
+                    fontWeight: 600,
+                    color: "text.secondary",
+                  }}
+                >
+                  {title} Distribution Over Time
+                </Typography>
+              </React.Fragment>
+            );
+          })}
         </Grid>
 
         {/* RIGHT COLUMN */}
@@ -108,7 +146,6 @@ export default function Statistics() {
           md={4}
           sx={{ display: "flex", flexDirection: "column" }}
         >
-
           {/* Add New Graph panel */}
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
@@ -124,10 +161,18 @@ export default function Statistics() {
                 value={metric}
                 onChange={(e) => setMetric(e.target.value)}
               >
-                {Object.entries(Indicators).map(([key, value]) => (
+                {Object.values(Indicators).map((value) => (
                   // Create a MenuItem for each Indicator
                   <MenuItem key={value} value={value}>
-                    <span style={{ textTransform: "capitalize" }}>{value}</span>
+                    <span>{value}</span>
+                  </MenuItem>
+                ))}
+                <Divider />
+                {industryMetrics.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    <span style={{ textTransform: "capitalize" }}>
+                      {value} (by Industry)
+                    </span>
                   </MenuItem>
                 ))}
               </Select>
