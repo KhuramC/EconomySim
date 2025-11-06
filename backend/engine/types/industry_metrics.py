@@ -10,3 +10,7 @@ class IndustryMetrics(StrEnum):
     INVENTORY = "Inventory"
     BALANCE = "Balance"
     WAGE = "Wage"
+
+    @classmethod
+    def values(cls) -> list[str]:
+        return [metric.value for metric in cls]
