@@ -143,11 +143,15 @@ class PersonAgent(Agent):
             # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
             # This unspent money is effectively saved for the next cycle.
 
-            available_quantity = industry.inventory
+            available_quantity = industry.inventory_available_this_step
             quantity_to_buy = min(desired_quantity, available_quantity)
 
+            #sales tax logic
             cost = quantity_to_buy * industry.price
-
+            sales_tax = self.model.policies["sales_tax"][industry.industry_type]
+            if sales_tax is not None:
+                cost += (cost * sales_tax)
+                
             if self.current_money >= cost:
                 # Execute transaction
                 self.current_money -= cost
