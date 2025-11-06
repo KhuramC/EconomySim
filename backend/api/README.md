@@ -132,6 +132,28 @@ After establishing this baseline, we adjusted it for each city's unique profile.
 
 * **Small (Columbia, MO):** Housing costs are ~20% lower than the national average. This frees up budget. Transportation is noted as "primarily car-dependent", so we increased its share.
 
-* Medium (Madison, WI): Housing costs are slightly higher (~6-8%) than the national average. The city is "walkable", implying a lower transportation share.
+* **Medium (Madison, WI):** Housing costs are slightly higher (~6-8%) than the national average. The city is "walkable", implying a lower transportation share.
 
-* Large (San Francisco, CA): Housing costs are dramatically higher (~160%+) than the national average. As a result, `HOUSING` proportions are the highest, severely "crowding out" `LUXURY` and `ENTERTAINMENT` for the Lower and Middle classes. "Extensive public transit"  implies a significantly lower `AUTOMOBILES` share. 
+* **Large (San Francisco, CA):** Housing costs are dramatically higher (~160%+) than the national average. As a result, `HOUSING` proportions are the highest, severely "crowding out" `LUXURY` and `ENTERTAINMENT` for the Lower and Middle classes. "Extensive public transit"  implies a significantly lower `AUTOMOBILES` share. 
+
+## Cited Research
+
+[1.1] Pew Research Center. (2022). "How the American Middle Class Has Changed."
+
+[2.1] Gibrat, R. (1931). "Les Inégalités Économiques." (Gibrat's Law on log-normal distribution of income).
+
+[3.1] U.S. Bureau of Labor Statistics. (2024). "Consumer Expenditure Survey, 2023 - Table 1." (Average expenditures by income quintile).
+
+[3.2] U.S. Bureau of Labor Statistics. (2024). "Consumer Expenditure Survey, 2023 - Table 1101." (Detailed expenditures on housing, food, and apparel).
+
+[4.1] Houthakker, H. S. (1957). "An International Comparison of Household Expenditure Patterns, Commemorating the Centenary of Engel's Law." Econometrica.
+
+[5.1] Council for Community and Economic Research (C2ER). (2024). "Cost of Living Index - Columbia, MO."
+
+[5.2] U.S. Department of Agriculture. (2024). "Gas Prices by State - Missouri."
+
+[6.1] Council for Community and Economic Research (C2ER). (2024). "Cost of Living Index - Madison, WI."
+
+[6.2] Wisconsin REALTORS Association. (2024). "Monthly Housing Market Report."
+
+[7.1] Council for Community and Economic Research (C2ER). (2024). "Cost of Living Index - San Francisco, CA."
