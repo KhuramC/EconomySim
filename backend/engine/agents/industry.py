@@ -19,23 +19,28 @@ class IndustryAgent(Agent):
         total_money (float): The total money held by this industry. Negative indicates debt.
         offered_wage (float): The per time step(weekly) wage offered by this industry.
     """
+    #Static Values
     model : EconomyModel
-    
     industry_type: IndustryType
     """The type of industry this agent represents."""
+    debt_allowed: bool
+    """Whether this industry is allowed to go into debt."""
+
     price: float
     """The price of goods/services in this industry."""
     inventory: int
-    """The inventory level of goods/services in this industry."""
+    """The total inventory level of goods/services in this industry."""
+    inventory_available_this_step: int
+    """The inventory available for sale this time step."""
     total_money: float
     """The total money held by this industry. Negative indicates debt."""
+    raw_mat_cost: float
+    """The cost of raw materials per unit produced."""
+
+    #Employment Variables
     #TODO: Possible feature for employment logic: have each person agent have a custom wage, with minimum wage floor, meaning some workers are cheaper than others
     offered_wage: float
     """The weekly wage offered by this industry."""
-    fixed_cost: float
-    """The fixed cost incurred by this industry per time step."""
-    raw_mat_cost: float
-    """The cost of raw materials per unit produced."""
     num_employees: int
     """The number of employees in this industry."""
     #TODO: Possible feature for employment logic: have each person agent have a custom efficiency, meaning some workers produce more goods than others
@@ -43,15 +48,23 @@ class IndustryAgent(Agent):
     """The efficiency of workers in this industry (units produced per worker per hour)."""
     hours_worked: float
     """Number of hours worked by each employee this tick, used for updating employee pay"""
-    debt_allowed: bool
-    """Whether this industry is allowed to go into debt."""
+    
+    #Values that define the demand graph for a good
     demand_intercept: float
     """The demand intercept (A) for the industry's demand curve."""
     demand_slope: float
     """The demand slope (B) for the industry's demand curve."""
-    inventory_available_this_step: int
-    """The inventory available for sale this time step."""
     
+    
+    #fixed costs
+    salary_cost: float      #aggregate cost of all salaried employees per tick
+    property_value: float   #value of all property owned by industryAgent.  used with property tax to calculate cost per tick
+    insurance : float       #insurance payments per tick
+    equipment_cost: float   #cost of equipment/machines per tick
+    fixed_cost : float      #shorthand value used for testing. Will eventually be phased out in favor of calls to get_fixed_cost, which will work similarly to get_variable_cost
+    """The fixed cost incurred by this industry per time step."""
+    
+    #Used in profit calculation
     total_cost: float
     """total cost of goods this tick"""
     total_revenue: float
@@ -74,6 +87,10 @@ class IndustryAgent(Agent):
         #TODO: Demand logic will be pulled from another file, either demand.py or person.py.  These values are currently black box standins to enable determine_price logic
         starting_demand_intercept: float = 400.0,
         starting_demand_slope: float = 1.0,
+        salary_cost = 0.0,
+        equipment_cost = 0.0,
+        property_value = 0.0,
+        insurance = 0.0
     ):
         """
         Initialize an IndustryAgent with its starting values.
@@ -93,8 +110,12 @@ class IndustryAgent(Agent):
         self.demand_slope = starting_demand_slope
         self.inventory_available_this_step = 0      #calculated by determine_price
         self.hours_worked = 0                       #calculated by produce_goods
-        self.total_cost = 0
-        self.total_revenue = 0
+        self.total_cost = 0.0
+        self.total_revenue = 0.0
+        self.salary_cost = salary_cost
+        self.equipment_cost = equipment_cost
+        self.property_value = property_value
+        self.insurance = insurance
         
 
     def get_tariffs(self) -> float:
@@ -259,8 +280,8 @@ class IndustryAgent(Agent):
         How the industry will determine what to set their hiring wages at.
         """
         logging.info("Changing wages...NOT IMPLEMENTED")
-        minimum_wage = self.model.policies["minimum_wage"][self.industry_type]
-        if self.offered_wage < minimum_wage:
+        minimum_wage = self.model.policies["minimum_wage"]
+        if minimum_wage is not None and self.offered_wage < minimum_wage:
             self.offered_wage = minimum_wage
         return self.offered_wage
         # TODO: Implement industry wage logic
@@ -297,12 +318,36 @@ class IndustryAgent(Agent):
             # semantics: if eff==0 we cannot produce — treat per-unit cost as infinite
             return float("inf")
         
+        #Tarriffs/Subsidies logic, treated as direct opposites of one another for now
+        #Both modify the cost of raw materials, which is then fed into the variable cost calculation
+        #subsidies and tarriffs treated as percentages
+        subsidies = self.model.policies["subsidies"][self.industry_type]
+        tarriffs = self.model.policies["tarriffs"][self.industry_type]
+        rawMaterialCostModifier = 0.0
+        if subsidies is not None:
+            rawMaterialCostModifier -= subsidies    #subsidies reduce the cost of raw materials
+        if tarriffs is not None:
+            rawMaterialCostModifier += tarriffs     #Tarriffs increase the cost of raw materials
         
+        rm += (rm * rawMaterialCostModifier)
         
         variable_cost = (ow / eff) + rm
         
         return variable_cost
-      
+    def get_fixed_cost(self):
+        """
+            update fixed cost based on salary, property cost, insurance, equipment cost, and property tax
+        """
+        
+        property_cost = 0.0
+        property_tax = self.model.policies["property_tax"] 
+        if property_tax is not None:
+            property_cost = round(self.property_value * property_tax,2)
+        
+        #NOTE: self.fixed_cost will eventually be phased out.  It is kept now for testing purposes
+        #When it is phased out, this function will return a value instead of just updating a variable
+        self.fixed_cost = self.salary_cost + property_cost + self.insurance + self.equipment_cost
+        
     def get_production_capacity(self):
         """
         Get production capacity based on workers and funds available.
