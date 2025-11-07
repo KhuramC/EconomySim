@@ -585,3 +585,5 @@ def test_fixed_cost_greater_than_money(mock_economy_model):
         debt_allowed=False
     )
     assert ind.get_production_capacity() == 0
+    
+    
