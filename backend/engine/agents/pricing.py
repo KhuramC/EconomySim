@@ -150,5 +150,5 @@ def quantity_from_price(A,B,P) -> int:
     """
     if B != 0:
         Q_at_P = (A - P) / B
-        return int(Q_at_P)  #clamp to whole number
+        return round(Q_at_P)  #round to whole number
     

@@ -222,7 +222,28 @@ def test_determine_price_linear_profit_max(mock_economy_model):
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 26.46, ind.inventory_available_this_step == 106
-
+@mark.parametrize("price_cap, expected_price, expected_quantity", [(0,0,400), (1,1,389), (25,25,122), (32,26.46,106)])
+def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quantity):
+    """
+    Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
+    linear profit max suggests selling 106 units at $26.46/unit.
+    This test checks that the price determined matches the linear profit max calculation.
+    """
+    mock_economy_model.policies["price_cap"]['Luxury'] = price_cap
+    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
+                       starting_price=0.0,
+                       starting_inventory=0,
+                       starting_balance=10000.0,
+                       starting_offered_wage=15.0,
+                       starting_fixed_cost=200.0,
+                       starting_raw_mat_cost=2.0,
+                       starting_number_of_employees=5,
+                       starting_worker_efficiency=1.0,
+                       starting_demand_intercept=36.0,
+                       starting_demand_slope=0.09)
+    ind.determine_price()
+    ind.produce_goods()
+    assert ind.price == expected_price, ind.inventory_available_this_step == expected_quantity
 """
 Try negative val for this:
 (V-A)^2) - 4(B*F)

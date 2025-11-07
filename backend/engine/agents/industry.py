@@ -236,6 +236,12 @@ class IndustryAgent(Agent):
         """  
         #produce needed inventory without re-producing inventory aready in storage
         quantity_to_produce = self.inventory_available_this_step - self.inventory
+
+        if quantity_to_produce <= 0: #no production this turn, already have enough inventory
+            self.hours_worked = 0
+            self.total_cost = self.fixed_cost #fixed cost is still factored into losses this tick
+            self.balance -= self.fixed_cost
+            pass
         
         variable_cost_per_unit = self.get_variable_cost()
         total_variable_cost = variable_cost_per_unit * quantity_to_produce
@@ -465,10 +471,20 @@ class IndustryAgent(Agent):
         self.total_revenue += quantity * self.price
         
     def new_tick(self):
-        self.total_cost = 0
+        """
+            Run this to reset values that are specific to this tick and aren't adjusted anywhere else
+            IDEA: incorperate all functions that need to be run every tick into this?
+        """
+        #self.total_cost = 0    Actually reset by produce_goods
         self.total_revenue = 0
         
     def get_profit(self) -> float:
+        """
+            uses cost and revenue values to calculate the profit for this tick.
+            Note: make sure to reset total_revenue next tick!
+        Returns:
+            profit (float): total profit this turn
+        """
         profit = self.total_revenue-self.total_cost
         return profit
             
