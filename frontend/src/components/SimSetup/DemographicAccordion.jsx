@@ -33,32 +33,31 @@ export default function DemographicAccordion({
   const industryEntries = useMemo(() => Object.entries(IndustryType), []);
   const [selectedDemographic, setSelectedDemographic] = useState(demographics[0]);
 
-  const selected = selectedDemographic;
-  const selectedDemo = demoParams[selected] || {};
+  const selectedDemo = demoParams[selectedDemographic] || {};
 
   // Extract nested error flags for the selected demo, if present
-  const nestedErr = (formErrors && formErrors[selected]) || {};
+  const nestedErr = (formErrors && formErrors[selectedDemographic]) || {};
 
   // Backward-compatible helpers to detect errors from either nested flags or flat keys
   const hasProportionError =
     !!nestedErr.proportion || !!formErrors.proportion;
 
   const hasUnempError =
-    !!nestedErr.unemploymentRate || !!formErrors[`demo_unemp_${selected}`];
+    !!nestedErr.unemploymentRate || !!formErrors[`demo_unemp_${selectedDemographic}`];
 
   const hasMeanIncomeError =
     !!nestedErr.meanIncome ||
-    !!formErrors[`demo_meanIncome_${selected}`] ||
-    !!formErrors[`demo_meanIncome_monotonic_${selected}`];
+    !!formErrors[`demo_meanIncome_${selectedDemographic}`] ||
+    !!formErrors[`demo_meanIncome_monotonic_${selectedDemographic}`];
 
   const hasSdIncomeError =
-    !!nestedErr.sdIncome || !!formErrors[`demo_sdIncome_${selected}`];
+    !!nestedErr.sdIncome || !!formErrors[`demo_sdIncome_${selectedDemographic}`];
 
   const hasMeanSavingsError =
-    !!nestedErr.meanSavings || !!formErrors[`demo_meanSavings_${selected}`];
+    !!nestedErr.meanSavings || !!formErrors[`demo_meanSavings_${selectedDemographic}`];
 
   const hasSdSavingsError =
-    !!nestedErr.sdSavings || !!formErrors[`demo_sdSavings_${selected}`];
+    !!nestedErr.sdSavings || !!formErrors[`demo_sdSavings_${selectedDemographic}`];
 
   // Spending row: mark all cells red ONLY when:
   // - nested flags per cell exist, OR
@@ -66,7 +65,7 @@ export default function DemographicAccordion({
   // NOTE: Do NOT use `formErrors[selected]` as a fallback (it over-highlights unrelated errors).
   const spendingRowInvalid =
     industryEntries.some(([k]) => !!nestedErr[k]) ||
-    !!formErrors[`demo_spending_${selected}`];
+    !!formErrors[`demo_spending_${selectedDemographic}`];
 
   // Compute row total for visual hint (not required, but helpful)
   const spendingTotal = industryEntries.reduce(
@@ -89,12 +88,12 @@ export default function DemographicAccordion({
         <Grid container spacing={2}>
           <ParameterMenuInput
             label="Demographic"
-            value={selected}
+            value={selectedDemographic}
             onChange={handleSelectedDemographicChange}
             xs={12}
           >
             {demographics.map((value) => (
-              
+              // Create a MenuItem for each Demographic
               <MenuItem key={value} value={value}>
                 <span style={{ textTransform: "capitalize" }}>{value}</span>
               </MenuItem>
@@ -104,7 +103,7 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Proportion of Population (%)"
             value={selectedDemo.proportion}
-            onChange={handleDemographicChange(selected, "proportion")}
+            onChange={handleDemographicChange(selectedDemographic, "proportion")}
             error={hasProportionError}
             readOnly={readOnly}
           />
@@ -116,7 +115,7 @@ export default function DemographicAccordion({
                 : "Unemployment Rate (%)"
             }
             value={selectedDemo.unemploymentRate}
-            onChange={handleDemographicChange(selected, "unemploymentRate")}
+            onChange={handleDemographicChange(selectedDemographic, "unemploymentRate")}
             error={hasUnempError}
             readOnly={readOnly}
           />
@@ -124,7 +123,7 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Mean Income ($/week)"
             value={selectedDemo.meanIncome}
-            onChange={handleDemographicChange(selected, "meanIncome")}
+            onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
             error={hasMeanIncomeError}
             readOnly={readOnly}
           />
@@ -132,7 +131,7 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Income Std. Deviation ($)"
             value={selectedDemo.sdIncome}
-            onChange={handleDemographicChange(selected, "sdIncome")}
+            onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
             error={hasSdIncomeError}
             readOnly={readOnly}
           />
@@ -140,7 +139,7 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Mean Savings ($)"
             value={selectedDemo.meanSavings}
-            onChange={handleDemographicChange(selected, "meanSavings")}
+            onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
             error={hasMeanSavingsError}
             readOnly={readOnly}
           />
@@ -148,7 +147,7 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Savings Std. Deviation ($)"
             value={selectedDemo.sdSavings}
-            onChange={handleDemographicChange(selected, "sdSavings")}
+            onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
             error={hasSdSavingsError}
             readOnly={readOnly}
           />
@@ -166,7 +165,7 @@ export default function DemographicAccordion({
               <ParameterNumInput
                 label={label}
                 value={selectedDemo?.[upperKey] ?? ""}
-                onChange={handleDemographicChange(selected, upperKey)}
+                onChange={handleDemographicChange(selectedDemographic, upperKey)}
                 readOnly={readOnly}
                 // Mark each cell red if the row is invalid OR that cell is flagged.
                 error={spendingRowInvalid || !!nestedErr[upperKey]}
