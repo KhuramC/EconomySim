@@ -32,39 +32,59 @@ def handle_get_industry_data(model_id: int) -> dict:
     """
     Creates a json of each industry variable across the whole simulation to be able to plot easily.
     """
+
     industries_df = controller.get_industry_data(model_id)
-    industries_json = json.loads(industries_df.to_json(orient="columns"))
+
+    industries_dict = {}
+    # make each industries its own column, with the other stuff being the value as a dict.
+    for industry_name, group in industries_df.groupby("industry"):
+        industries_dict[str(industry_name)] = group.drop(columns=["industry"]).to_dict(
+            orient="list"
+        )
     return {
         "status": "success",
         "action": "get_industry_data",
-        "data": industries_json,
+        "data": industries_dict,
     }
 
 
 def handle_get_current_industry_data(model_id: int) -> dict:
     """
-    Creates a dictionary of the industry variables at the current timestep across each industry.
+    Creates a dictionary of the latest industry variables for each industry.
     """
     current_week = controller.get_current_week(model_id)
     # Get data only for the current week
     industries_df = controller.get_industry_data(
         model_id, start_time=current_week, end_time=current_week
     )
-    industries_df = industries_df.set_index("industry").drop(columns=["week"])
+
+    industries_dict = {}
+    # make each industries its own column, with the other stuff being the value as a dict.
+    for industry_name, group in industries_df.groupby("industry"):
+        industries_dict[str(industry_name)] = group.drop(columns=["industry"]).to_dict(
+            orient="list"
+        )
+
+    current_data = {}
+    for industry, data in industries_dict.items():
+        # Extract the last (and only) value for each metric
+        current_data[industry] = {
+            metric: values[0] for metric, values in data.items() if metric != "week"
+        }
+
     return {
         "status": "success",
         "action": "get_current_industry_data",
-        "data": industries_df.to_dict(orient="index"),
+        "data": current_data,
     }
 
 
 def handle_get_indicators(model_id: int) -> dict:
     indicators_df = controller.get_indicators(model_id)
-    indicators_json = json.loads(indicators_df.to_json(orient="columns"))
     return {
         "status": "success",
         "action": "get_indicators",
-        "data": indicators_json,
+        "data": indicators_df.to_dict(orient="list"),
     }
 
 

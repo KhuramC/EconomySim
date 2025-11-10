@@ -2,6 +2,7 @@ import pytest
 from pytest import mark
 from contextlib import nullcontext
 from engine.types.industry_type import IndustryType
+from engine.types.industry_metrics import IndustryMetrics
 from engine.types.indicators import Indicators
 from engine.interface.controller import ModelController
 
@@ -217,7 +218,7 @@ def test_get_industry_data(
     assert not all_data_df.empty
     assert set(all_data_df["week"].unique()) == {1, 2, 3, 4, 5}
     assert len(all_data_df["industry"].unique()) == len(industries)
-    expected_columns = {"week", "price", "inventory", "balance", "offered_wage", "industry"}
+    expected_columns = set(IndustryMetrics.values()).union({"week"})
     assert expected_columns.issubset(all_data_df.columns)
 
     # Test time filtering

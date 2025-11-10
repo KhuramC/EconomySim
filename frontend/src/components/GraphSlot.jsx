@@ -26,30 +26,37 @@ ChartJS.register(
 export default function GraphSlot({
   title = "Untitled Graph",
   labels = [],
-  data = [],
+  datasets = [],
 }) {
   // Check if there's data to display
-  const hasData = useMemo(() => data && data.length > 0, [data]);
+  const hasData = useMemo(
+    () => datasets.some((d) => d.data && d.data.length > 0),
+    [datasets]
+  );
 
   // useMemo will re-calculate chartData only when `labels` or `data` props change.
   // This ensures the chart gets a new object reference and triggers a re-render.
   const chartData = useMemo(() => {
-    console.log("Labels:", labels);
-    console.log("Data:", data);
-    console.log("hasData:", hasData);
+    const colors = [
+      "rgb(75, 192, 192)",
+      "rgb(255, 99, 132)",
+      "rgb(54, 162, 235)",
+      "rgb(255, 206, 86)",
+      "rgb(153, 102, 255)",
+      "rgb(255, 159, 64)",
+      "rgb(199, 199, 199)",
+    ];
+
     return {
       labels: labels,
-      datasets: [
-        {
-          label: title.replace(" Graph", ""), // Use the base metric name for the legend
-          data: data,
-          fill: false,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
-        },
-      ],
+      datasets: datasets.map((dataset, index) => ({
+        ...dataset,
+        fill: false,
+        borderColor: colors[index % colors.length],
+        tension: 0.1,
+      })),
     };
-  }, [labels, data, title]);
+  }, [labels, datasets]);
 
   const chartOptions = {
     responsive: true,
@@ -103,7 +110,7 @@ export default function GraphSlot({
             underline="hover"
             onClick={() => {
               console.log("hasData:", hasData);
-              if (hasData){
+              if (hasData) {
                 handleOpen();
               }
             }}
@@ -157,13 +164,18 @@ export default function GraphSlot({
             border: "2px solid #000",
             boxShadow: 24,
             p: 4,
-            textAlign:"center",
+            textAlign: "center",
           }}
         >
-          <Typography variant="title1" fontWeight={800} align="center" alignItems="center" >
+          <Typography
+            variant="title1"
+            fontWeight={800}
+            align="center"
+            alignItems="center"
+          >
             {title}
           </Typography>
-          
+
           {hasData ? (
             <Line data={chartData} options={chartOptions} />
           ) : (
@@ -176,7 +188,6 @@ export default function GraphSlot({
               </Typography>
             </Stack>
           )}
-          
         </Box>
       </Modal>
     </div>

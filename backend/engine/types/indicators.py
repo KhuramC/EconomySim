@@ -6,13 +6,13 @@ class Indicators(StrEnum):
     An enumeration of the different economic indicators supported by the simulation.
     """
 
-    UNEMPLOYMENT = "unemployment"
-    GDP = "gdp"
-    INCOME_PER_CAPITA = "income per capita"
-    MEDIAN_INCOME = "median income"
-    HOOVER_INDEX = "hoover index"
-    LORENZ_CURVE = "lorenz curve"
-    GINI_COEFFICIENT = "gini coefficient"
+    UNEMPLOYMENT = "Unemployment"
+    GDP = "GDP"
+    INCOME_PER_CAPITA = "Income Per Capita"
+    MEDIAN_INCOME = "Median Income"
+    HOOVER_INDEX = "Hoover Index"
+    LORENZ_CURVE = "Lorenz Curve"
+    GINI_COEFFICIENT = "Gini Coefficient"
 
     @classmethod
     def values(cls) -> list[str]:
