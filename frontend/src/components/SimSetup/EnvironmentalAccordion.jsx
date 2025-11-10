@@ -4,14 +4,14 @@ import ParameterAccordion from "./ParameterAccordion.jsx";
 
 /**
  * Environmental section:
- * - Core: Max Simulation Length, Total People
- * - Advanced: National Inflation Rate, Random Events
+ * - Red highlights are controlled via `formErrors` flags from SetupPage.
+ *  * - Advanced: National Inflation Rate, Random Events
  * The advanced block is rendered under a title on a new line.
  */
 export default function EnvironmentalAccordion({
   envParams,
   handleEnvChange,
-  formErrors,
+  formErrors = {},
 }) {
   const coreFields = (
     <>
@@ -19,11 +19,13 @@ export default function EnvironmentalAccordion({
         label="Max Simulation Length (weeks)"
         value={envParams.maxSimulationLength}
         onChange={handleEnvChange("maxSimulationLength")}
+        error={!!formErrors.maxSimulationLength}
       />
       <ParameterNumInput
         label="Total People"
         value={envParams.numPeople}
         onChange={handleEnvChange("numPeople")}
+        error={!!formErrors.numPeople}
       />
     </>
   );
@@ -31,7 +33,7 @@ export default function EnvironmentalAccordion({
   const advancedFields = (
     <>
       <ParameterNumInput
-        label="National Inflation Rate (%/year)"
+        label="National Inflation Rate (%/week)"
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}
       />
