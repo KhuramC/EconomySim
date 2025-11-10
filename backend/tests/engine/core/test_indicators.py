@@ -1,6 +1,7 @@
 from pytest import mark, approx
 from engine.core.model import EconomyModel
 from engine.agents.person import PersonAgent
+from engine.agents.industry import IndustryAgent
 from engine.types.industry_type import IndustryType
 import engine.core.indicators as indicators
 
@@ -39,9 +40,35 @@ def test_calculate_unemployment(model: EconomyModel):
     assert indicators.calculate_unemployment(model) == expected_unemployment
 
 
-@mark.xfail(reason="Function not implemented yet.")
-def test_calculate_gdp(model: EconomyModel):
-    assert False
+@mark.parametrize(
+    "production, price, expected",
+    [
+        ([0, 0, 0], [100, 50, 75], 0.0),  # No production = 0 GDP
+        ([10, 0, 0], [100, 50, 75], 1000.0),  # Only one industry
+        ([10, 5, 20], [100, 50, 75], 2750.0),  # Mixed production
+        ([100, 100, 100], [1, 1, 1], 300.0),  # Low prices, high volume
+    ],
+)
+def test_calculate_gdp(model: EconomyModel, production, price, expected):
+    """
+    Tests that GDP is correctly calculated as the sum of (production × price)
+    across all industries.
+
+    Args:
+        model (EconomyModel): a freshly created model.
+    """
+
+    industryAgents = model.agents_by_type[IndustryAgent]
+
+    for i, industry in enumerate(industryAgents):
+        if i < len(production):
+            industry.goods_produced = production[i]
+            industry.price = price[i]
+        else:
+            industry.goods_produced = 0
+
+    calculated_gdp = indicators.calculate_gdp(model)
+    assert calculated_gdp == approx(expected)
 
 
 @mark.xfail(reason="Demographic's income feature not implemented yet.")
