@@ -33,7 +33,7 @@ The simulation uses three city-size templates, which are based on the real-world
 
 The model simplifies the complex U.S. class structure into three groups: `LOWER_CLASS`, `MIDDLE_CLASS`, and `UPPER_CLASS`. The proportional size of these classes is conceptually based on the *Pew Research Center's* definition, which classifies "middle-income" as households earning between two-thirds (2/3) and double (2x) the U.S. median household income. "Lower-income" falls below this, and "upper-income" falls above it.
 
-## Modeling Population & Income
+## **Population**
 
 ### Income Distribution: Log-Normal
 
@@ -137,7 +137,7 @@ After establishing this baseline, we adjusted it for each city's unique profile.
 * **Large (San Francisco, CA):** Housing costs are dramatically higher (~160%+) than the national average. As a result, `HOUSING` proportions are the highest, severely "crowding out" `LUXURY` and `ENTERTAINMENT` for the Lower and Middle classes. "Extensive public transit"  implies a significantly lower `AUTOMOBILES` share. 
 
 
-## Policies
+## **Policies**
 
 The `policies` dictionary establishes the starting parameters for the simulation. The values are not arbitrary; they are based on data-driven research into the municipal, county, state, and federal laws governing our three model cities: Columbia, MO (Small); Madison, WI (Medium); and San Francisco, CA (Large).
 
@@ -278,6 +278,134 @@ This policy is a float representing the legal **total weekly minimum wage**, ass
 * **Large (San Francisco): $767.20** (Based on the city's local minimum wage ordinance of $19.18/hour effective July 1, 2025).
 
 
+## **Industry**
+
+Industry parameters define the starting economic conditions for the seven representative industry agents within the simulation.1 These values are calibrated from real-world economic data corresponding to each city template (Columbia, MO; Madison, WI; San Francisco, CA) to ensure a realistic and data-driven simulation.
+
+### `starting_price`
+
+The initial price for one unit of the industry's goods or services. This value is calibrated using localized consumer price data for each city template.
+
+* **GROCERIES**: Derived from average monthly grocery costs for a renter, normalized to a weekly, per-person "unit".
+
+* **UTILITIES**: Derived from the average monthly residential electricity/energy bill in each city.
+
+* **AUTOMOBILES**: Based on the average price of a used car in the region, as this is a high-cost, low-frequency purchase.
+
+* **HOUSING**: Represents one week's rent. Derived from the average monthly rent for a 1-bedroom apartment in each city.
+
+* **ENTERTAINMENT**: Based on the average price of a movie ticket (a representative entertainment unit) in or near the city.
+
+* **HOUSEHOLD_GOODS**: A blended, assumed price for a representative basket of goods (e.g., decor, small appliances), scaled by the city's general cost of living.
+
+* **LUXURY**: An assumed national-level price for a representative high-end good (e.g., handbag, watch).
+
+### `starting_offered_wage`
+
+The weekly wage offered to employees. This parameter is data-driven, based on the U.S. Bureau of Labor Statistics (BLS) Mean Hourly Wage for the most relevant "Major Occupational Group" in each metropolitan area.
+
+* **Formula**: `starting_offered_wage` = (Mean Hourly Wage $\times$ 40 hours).
+
+* **GROCERIES, AUTOMOBILES, HOUSEHOLD_GOODS**: Mapped to "Sales and related" occupations.
+
+* **UTILITIES**: Mapped to "Installation, maintenance, and repair" occupations.
+
+* **HOUSING**: Mapped to "Property, Real Estate, and Community Association Managers" or "Real estate sales agents".
+
+* **ENTERTAINMENT**: Mapped to "Arts, design, entertainment, sports, and media" occupations.
+
+* **LUXURY**: Mapped to "Sales and related" occupations but with a 50% "efficiency wage" premium, modeling the industry's tendency to pay above-market rates.
+
+### `starting_number_of_employees`
+
+Represents the total employment for that industry's NAICS sector within the city's county. This reflects the IndustryAgent's role as a monopolistic representative for the entire sector.
+
+* Data is sourced from county-level employment statistics
+
+* **Data Gap Mitigation**: For sectors where local data is unavailable (e.g., Utilities in Columbia), employment is estimated using a per-capita employment ratio derived from a data-rich city (San Francisco) and applied to the target city's population.
+
+* **NAICS Disaggregation**: "Retail Trade" (NAICS 44-45) employment is disaggregated to serve multiple agents using a research-justified allocation:
+
+    * GROCERIES (NAICS 4451): 20%
+    * AUTOMOBILES (NAICS 441): 15%
+    * HOUSEHOLD_GOODS (NAICS 442): 10%
+    * LUXURY (high-end retail): 1%
+    
+### `starting_raw_mat_cost`
+
+The variable cost (or Cost of Goods Sold - COGS) to produce one unit. It is derived from the `starting_price` and typical gross margin data for that industry.
+
+* **Formula**: `starting_raw_mat_cost` = `starting_price` $\times$ (1 - Gross Margin %)
+
+* **GROCERIES**: ~68% COGS.
+
+* **UTILITIES**: ~21% variable (fuel) cost.
+
+* **AUTOMOBILES**: ~90% COGS (blended new/used).
+
+* **HOUSING**: ~5% variable cost (management, turnover).
+
+* **HOUSEHOLD_GOODS**: ~40% COGS (60% margin).
+
+* **ENTERTAINMENT**: ~27.5% blended COGS (derived from ticket 112 and concession 113 margins).
+
+* **LUXURY**: ~10% COGS (90% margin).
+
+### `starting_fixed_cost`
+
+The weekly non-variable costs, primarily commercial real estate. This is derived from city-specific commercial lease rates (per square foot per year) for a representative facility size.
+
+**Exceptions:** 
+
+* **UTILITIES**: Fixed costs are derived algebraically to satisfy the Average Cost Pricing model specified in the Agent Behavior research, ensuring zero economic profit at initialization.
+
+* **HOUSING**: Fixed costs (representing capital assets) are derived algebraically to achieve a target net profit margin (e.g., 10%) under the Profit Maximization model.
+
+### `starting_demand_intercept` (A) and `starting_demand_slope` (B)
+
+These parameters define the agent's linear demand curve ($Price = A - BQ$). They are not set manually; they are derived algebraically using the `starting_price`, an estimated weekly quantity demanded (`Q_demand`), and the Price Elasticity of Demand (PED) for that good.
+
+* `Q_demand` **(Weekly Quantity)**: Estimated based on city population 1 and purchase frequency assumptions (e.g., 1 grocery unit per person/week; 1 car unit per household every 8 years).
+
+* `PED` **(Price Elasticity of Demand)**: Sourced from economic literature.
+
+    * **GROCERIES**: Inelastic (PED $\approx -0.60$).
+    * **UTILITIES**: Highly Inelastic (PED $\approx -0.13$).
+    * **AUTOMOBILES**: Unit Elastic (PED $\approx -1.0$).
+    * **HOUSING**: Highly Inelastic (PED $\approx -0.30$).
+    * **HOUSEHOLD_GOODS**: Inelastic (PED $\approx -0.45$).
+    * **ENTERTAINMENT**: Elastic (PED $\approx -1.20$).
+    * **LUXURY**: Highly Elastic (PED $\approx -1.50$).
+    
+* **Formulas**: 
+
+    * `starting_demand_slope` ($B$) = $\frac{-P}{(Q \times PED)}$
+    
+    * `starting_demand_intercept` ($A$) = $P + (B \times Q)$
+    
+### `starting_worker_efficiency`
+
+This is a balancing parameter, not directly researched. It is derived to ensure the agent's labor force (`starting_number_of_employees`) can meet the city's weekly demand (Q_demand) when working a 40-hour week.
+
+**Formula**: `worker_efficiency` = $\frac{Q_{\text{demand}}}{(\text{starting\_number\_of\_employees} \times 40 \text{ hours})}$
+
+### `starting_inventory`
+
+Modeled as a 4-week buffer of production to ensure the agent can meet initial demand.
+
+**Formula**: `starting_inventory` = $Q_{\text{demand}} \times 4$
+
+### `starting_balance` (Savings/debt)
+
+Modeled as a 6-month (26-week) capital reserve to ensure the agent can cover its starting_fixed_cost and initial payroll.
+
+**Formula**: `starting_balance` = `starting_fixed_cost` $\times 26$
+
+### `starting_debt_allowed`
+
+Set to True per the IndustryAgent class default, allowing firms to operate at a deficit.
+
+
 ## Cited Research
 
 ### Population
@@ -381,3 +509,117 @@ Missouri Department of Labor. (2025). "Minimum Wage Increases to $13.75 per Hour
 ToastTab. (2025). "Wisconsin Minimum Wage Guide 2025."    
 
 City and County of San Francisco. (2025). "Official Notice: Minimum Wage Ordinance (July 1, 2025)."
+
+### Industry
+
+Columbia, MO - May 2023 OEWS Metropolitan and Nonmetropolitan ..., accessed November 7, 2025, https://www.bls.gov/oes/2023/may/oes_17860.htm
+
+Occupational Employment and Wages in Madison — May 2024 ..., accessed November 7, 2025, https://www.bls.gov/regions/midwest/news-release/occupationalemploymentandwages_madison.htm
+
+Occupational Employment and Wages in San Francisco-Oakland ..., accessed November 7, 2025, https://www.bls.gov/regions/west/news-release/occupationalemploymentandwages_sanfrancisco.htm
+Boone County, MO | Data USA, accessed November 7, 2025, https://datausa.io/profile/geo/boone-county-mo
+
+Boone County and the City of Columbia Housing Study, accessed November 7, 2025, https://www.como.gov/wp-content/uploads/2024/10/boone-county-columbia-housing-study.pdf
+
+Employment by Industry Data - Labor Market Information - CA.gov, accessed November 7, 2025, https://labormarketinfo.edd.ca.gov/data/employment-by-industry.html
+
+10 Grocery Store Industry Financial Statistics: Sales, Expenses, Profit and More, accessed November 7, 2025, https://www.projectionhub.com/post/grocery-store-industry-financial-statistics
+accessed November 7, 2025, https://www.fortnightly.com/fortnightly/2015/12-0/electricitys-variable-cost-all-time-low-percentage#:~:text=Revenues%20from%20the%20sale%20of%20electricity%20were%20393%20billion.,approximately%2021%20percent%20of%20revenues.
+
+Electricity's Variable Cost All-Time Low Percentage? - Fortnightly, accessed November 7, 2025, https://www.fortnightly.com/fortnightly/2015/12-0/electricitys-variable-cost-all-time-low-percentage
+
+How Much Profit Does a Car Dealership Make? | Used Car Dealer Profit Margin | ACV Auctions, accessed November 7, 2025, https://www.acvauctions.com/blog/car-dealership-profit-margin
+
+How profitable are car dealerships? - BusinessDojo, accessed November 7, 2025, https://dojobusiness.com/blogs/news/how-profitable-are-car-dealerships
+
+Variable Costs Explained - Re-Leased, accessed November 7, 2025, https://www.re-leased.com/terms/variable-costs
+
+Variable Costs - Glossary of CRE Terms, accessed November 7, 2025, https://www.adventuresincre.com/glossary/variable-costs/
+
+What is the profit margin of a home goods store? - BusinessDojo, accessed November 7, 2025, https://dojobusiness.com/blogs/news/home-goods-store-profit-margin
+
+10 The economics of the operation - Independent Cinema Office, accessed November 7, 2025, https://www.independentcinemaoffice.org.uk/advice-support/how-to-start-a-cinema/the-economics-of-the-operation/
+
+Can someone explain me about theaters cut and how much a movie actually makes? : r/boxoffice - Reddit, accessed November 7, 2025, https://www.reddit.com/r/boxoffice/comments/1iyc3l3/can_someone_explain_me_about_theaters_cut_and_how/
+
+A Study of Luxury Companies — Recurve Capital LLC, accessed November 7, 2025, https://recurvecap.com/insights/a-study-of-luxury-companies
+
+Mid Missouri Listings | Maly Commercial Realty: Commercial Real Estate Columbia MO, accessed November 7, 2025, https://malyrealty.com/mid-missouri-listings/
+
+Listings - Madison - Key Commercial Real Estate, accessed November 7, 2025, https://keycomre.com/listings/
+
+San Francisco Office Rent Price & Sales Report - Commercial Cafe, accessed November 7, 2025, https://www.commercialcafe.com/office-market-trends/us/ca/san-francisco/
+
+Average Rental Price in Columbia, MO - Zillow, accessed November 7, 2025, https://www.zillow.com/rental-manager/market-trends/columbia-mo/
+
+Average Rental Price in Madison, WI - Zillow, accessed November 7, 2025, https://www.zillow.com/rental-manager/market-trends/madison-wi/
+
+Average Rent in San Francisco, CA - Latest Rent Prices by Neighborhood - Apartments.com, accessed November 7, 2025, https://www.apartments.com/rent-market-trends/san-francisco-ca/
+
+Electricity Cost in Columbia, MO: 2025 Electric Rates | EnergySage, accessed November 7, 2025, https://www.energysage.com/local-data/electricity-cost/mo/boone-county/columbia/
+
+Electricity Cost in Madison, WI: 2025 Electric Rates - EnergySage, accessed November 7, 2025, https://www.energysage.com/local-data/electricity-cost/wi/dane-county/madison/
+
+Cost of electricity in San Francisco County, CA - EnergySage, accessed November 7, 2025, https://www.energysage.com/local-data/electricity-cost/ca/san-francisco-county/
+accessed November 7, 2025, https://pmc.ncbi.nlm.nih.gov/articles/PMC2804646/#:~:text=Considerable%20data%20are%20available%20on,most%20inelastic%20demand%20for%20eggs.
+
+Price Elasticity for Energy Use in Buildings in the United States - EIA, accessed November 7, 2025, https://www.eia.gov/analysis/studies/buildings/energyuse/pdf/price_elasticities.pdf
+
+Price Elasticity of Demand - Harvard University, accessed November 7, 2025, https://scholar.harvard.edu/files/alada/files/price_elasticity_of_demand_handout.pdf
+
+An Analysis of the Price Elasticity of Demand for Household Appliances - eScholarship, accessed November 7, 2025, https://escholarship.org/uc/item/5qr2f2nz
+
+Price Elasticity and Substitutes Create Less Movie Going - Econlife, accessed November 7, 2025, https://econlife.com/2014/03/price-elasticity-and-substitutes-diminish-movie-goers/
+
+5 Price Elasticity of Demand Examples - Symson, accessed November 7, 2025, https://www.symson.com/blog/price-elasticity-of-demand-examples
+
+What is the Price Elasticity of Housing Demand? - Eric A. Hanushek, accessed November 7, 2025, https://hanushek.stanford.edu/sites/default/files/publications/Hanushek+Quigley%201980%20REStat%2062(3)_0.pdf
+
+The Impact of Food Prices on Consumption: A Systematic Review of Research on the Price Elasticity of Demand for Food - NIH, accessed November 7, 2025, https://pmc.ncbi.nlm.nih.gov/articles/PMC2804646/
+
+How elastic is housing demand? : r/AskEconomics - Reddit, accessed November 7, 2025, https://www.reddit.com/r/AskEconomics/comments/1f5y0wl/how_elastic_is_housing_demand/
+
+Estimating Price Elasticity using Market-Level Appliance Data | Energy Technologies Area, accessed November 7, 2025, https://eta.lbl.gov/publications/estimating-price-elasticity-using
+
+From movie to event theatre – Assessing the value of a cinema ticket. - Centre des Professions Financières |, accessed November 7, 2025, https://professionsfinancieres.com/sites/professionsfinancieres.com/files/32_MNA_From%20movie%20to%20event%20theatre%20%E2%80%93%20Assessing%20the%20value%20of%20a%20cinema%20ticket.pdf
+
+Normal Goods & Luxury Goods | INOMICS, accessed November 7, 2025, https://inomics.com/terms/normal-goods-luxury-goods-1531734
+
+Cost of Living in Columbia MO - Apartments.com, accessed November 7, 2025, https://www.apartments.com/cost-of-living/columbia-mo/
+
+Cost of Living in Madison WI - Apartments.com, accessed November 7, 2025, https://www.apartments.com/cost-of-living/madison-wi/
+
+Cost of Living in San Francisco CA - Apartments.com, accessed November 7, 2025, https://www.apartments.com/cost-of-living/san-francisco-ca/
+
+Used Cars, Trucks and SUVs for Sale in Columbia, MO - Joe Machens Ford, accessed November 7, 2025, https://www.machensford.com/used-inventory/index.htm
+
+Shop Used Cars Priced Below $20K for Sale Madison, Wisconsin - Wilde East Towne Honda, accessed November 7, 2025, https://www.wildeeasttownehonda.com/used-inventory/vehicles-under-20000-madison-wi.htm
+
+Used cars in Madison, WI for sale - CarMax, accessed November 7, 2025, https://www.carmax.com/cars?location=madison+wi
+
+Used Cars for Sale in San Francisco, CA | Edmunds, accessed November 7, 2025, https://www.edmunds.com/used-cars-san-francisco-ca/
+
+Car Market Analysis Report July 2024 - California Dealer Academy, accessed November 7, 2025, https://www.californiadealeracademy.com/learn/?p=car-market-analysis-report-july-2024-240715
+
+This Is the Average Price of a Used Car in Each State - iSeeCars.com, accessed November 7, 2025, https://www.iseecars.com/used-car-prices-by-state-study
+
+Average Rent in Columbia, MO - RentCafe, accessed November 7, 2025, https://www.rentcafe.com/average-rent-market-trends/us/mo/columbia/
+
+Average Rent in Columbia, MO - Latest Rent Prices by Neighborhood - Apartments.com, accessed November 7, 2025, https://www.apartments.com/rent-market-trends/columbia-mo/
+Rental Market Trends & Average Rent in Madison, WI, accessed November 7, 2025, https://www.rent.com/wisconsin/madison-apartments/rent-trends
+
+Average Rent in Madison, WI: 2025 Rent Prices by Neighborhood - RentCafe, accessed November 7, 2025, https://www.rentcafe.com/average-rent-market-trends/us/wi/madison/
+
+Average Rent in San Francisco, CA and Rent Price Trends - Zumper, accessed November 7, 2025, https://www.zumper.com/rent-research/san-francisco-ca
+
+Average Rent in San Francisco, CA: 2025 Rent Prices by Neighborhood - RentCafe, accessed November 7, 2025, https://www.rentcafe.com/average-rent-market-trends/us/ca/san-francisco/
+
+How Much Does a Movie Ticket Cost in 2025? State-by-State Prices and Date Night Totals, accessed November 7, 2025, https://www.cabletv.com/entertainment/cost-of-a-movie-ticket
+
+Regal cinema ticket prices : r/boone - Reddit, accessed November 7, 2025, https://www.reddit.com/r/boone/comments/1d111r0/regal_cinema_ticket_prices/
+
+What Is the ​Cost of Living in Madison WI? A Dive Into the Average Cost of Living in Madison WI - Straightline Moving, accessed November 7, 2025, https://straightlinemovingcompany.com/blog/cost_of_living_in_madison_wi/
+
+The Cheapest & Best Movie Theaters in SF, accessed November 7, 2025, https://brokeassstuart.com/p/the-cheapest-best-movie-theaters-in-sf
+
+Guide for Luxury Bag Brands Price Increases in 2024 - Collector's Cage, accessed November 7, 2025, https://collectorscage.com/blogs/guides/guide-for-luxury-bag-brands-price-increases-in-2024
