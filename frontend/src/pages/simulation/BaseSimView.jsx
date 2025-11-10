@@ -20,6 +20,7 @@ export default function BaseSimView() {
   // Latch the modelId from location.state into component state.
   // This ensures it persists across navigations within this view.
   const [modelId] = useState(location.state?.modelId);
+  const [initialIndustryParams] = useState(location.state?.industryParams);
   const [week, setWeek] = useState(0);
 
   // useMemo ensures the API instance is created only once for a given modelId.
@@ -118,7 +119,10 @@ export default function BaseSimView() {
                 element={<Navigate to="overview" replace state={{ modelId }} />}
               />
               <Route path="overview" element={<Overview />} />
-              <Route path="industries" element={<Industries />} />
+              <Route
+                path="industries"
+                element={<Industries oldindustryParams={initialIndustryParams} />}
+              />
               <Route path="policies" element={<Policies />} />
               <Route path="demographics" element={<Demographics />} />
               <Route path="statistics" element={<Statistics />} />

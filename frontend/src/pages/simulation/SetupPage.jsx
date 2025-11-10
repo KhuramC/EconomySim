@@ -301,7 +301,11 @@ export default function SetupPage() {
       // If backend requires numbers, coerce here before POST.
       console.log("Simulation parameters:", params);
       const modelId = await SimulationAPI.createModel(params);
-      navigate(`/BaseSimView`, { state: { modelId } });
+      console.log("Model created with ID:", modelId);
+      // Navigate to simulation view with the new model ID
+      navigate(`/BaseSimView`, {
+        state: { modelId: modelId, industryParams: params.industryParams },
+      });
     } catch (error) {
       console.error("Error creating model:", error.message);
       setBackendError(error.message);
