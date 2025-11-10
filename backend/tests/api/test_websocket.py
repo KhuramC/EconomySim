@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 import copy
 import pytest
+from engine.types.industry_type import IndustryType
+from engine.types.industry_metrics import IndustryMetrics
 from engine.types.indicators import Indicators
 from engine.types.demographic import Demographic
 
@@ -97,6 +99,9 @@ def test_websocket_get_industry_data(
         # Step once to generate data for week 1
         websocket.send_json({"action": "step"})
         websocket.receive_json()  # Consume the 'step' response
+        
+        websocket.send_json({"action": "step"})
+        websocket.receive_json()  # Consume the 'step' response
 
         # Get industry data
         websocket.send_json({"action": "get_industry_data"})
@@ -110,10 +115,15 @@ def test_websocket_get_industry_data(
         assert isinstance(industry_data, dict)
 
         # Check that the data has the correct structure and length
-        expected_columns = {"week", "price", "inventory", "balance", "offered_wage", "industry"}
-        assert set(industry_data.keys()) == expected_columns
-        num_industries = len(valid_config["industries"])
-        assert len(industry_data["week"]) == num_industries
+        assert set(industry_data.keys()) == set(IndustryType)
+        for industry_info in industry_data.values():
+            assert isinstance(industry_info, dict)
+            for industry_metric, value in industry_info.items():
+                if industry_metric != "week":
+                    assert industry_metric in IndustryMetrics.values()
+
+                assert isinstance(value, list)
+                assert len(value) == 2
 
 
 def test_websocket_get_current_industry_data(
@@ -143,10 +153,14 @@ def test_websocket_get_current_industry_data(
         assert set(industry_data.keys()) == set(expected_industries)
 
         # Check the structure of a single industry entry
-        
-        expected_keys = {"price", "inventory", "balance", "offered_wage"}
-        for industry_name, industry_info in industry_data.items():
-            assert set(industry_info.keys()) == expected_keys
+        assert set(industry_data.keys()) == set(IndustryType)
+        for industry_info in industry_data.values():
+            assert isinstance(industry_info, dict)
+            for industry_metric, value in industry_info.items():
+                if industry_metric != "week":
+                    assert industry_metric in IndustryMetrics.values()
+
+                assert isinstance(value, (int, float))
 
 
 def test_websocket_get_and_set_policies(

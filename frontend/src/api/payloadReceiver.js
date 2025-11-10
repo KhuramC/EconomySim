@@ -110,10 +110,9 @@ export function receiveDemographicsPayload(backendDemographics) {
         // Convert spending behavior from backend decimal to frontend percentage
         // and spread them as individual properties (e.g., GROCERIES: 25)
         ...Object.fromEntries(
-          Object.entries(backendDemo.spending_behavior).map(([industryKey, value]) => [
-            industryKey,
-            value * 100,
-          ])
+          Object.entries(backendDemo.spending_behavior).map(
+            ([industryKey, value]) => [industryKey, value * 100]
+          )
         ),
       };
       return [demoValue, frontendDemo];
@@ -126,20 +125,31 @@ export function receiveDemographicsPayload(backendDemographics) {
  * expected by the frontend's industryParams state.
  *
  * @param {object} backendIndustries - The industries object from the backend config.
+ * @param {boolean} isSetup - whether this is for setting up, or for something else.
  * @returns {object} The industryParams object for the frontend.
  */
-export function receiveIndustriesPayload(backendIndustries) {
+export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
   return Object.fromEntries(
     Object.values(IndustryType).map((industryValue) => {
       const backendIndustry = backendIndustries[industryValue];
       if (!backendIndustry) return [industryValue, {}];
+      let frontendIndustry = {};
+      if (isSetup) {
+        frontendIndustry = {
+          startingInventory: backendIndustry.inventory,
+          startingPrice: backendIndustry.price,
+          industrySavings: backendIndustry.balance,
+          offeredWage: backendIndustry.offered_wage,
+        };
+      } else {
+        frontendIndustry = {
+          startingInventory: backendIndustry.Inventory,
+          startingPrice: backendIndustry.Price,
+          industrySavings: backendIndustry.Balance,
+          offeredWage: backendIndustry.Wage,
+        };
+      }
 
-      const frontendIndustry = {
-        startingInventory: backendIndustry.inventory,
-        startingPrice: backendIndustry.price,
-        industrySavings: backendIndustry.balance,
-        offeredWage: backendIndustry.offered_wage,
-      };
       return [industryValue, frontendIndustry];
     })
   );
