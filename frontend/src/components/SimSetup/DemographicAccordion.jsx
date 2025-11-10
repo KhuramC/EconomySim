@@ -91,6 +91,7 @@ export default function DemographicAccordion({
             value={selectedDemographic}
             onChange={handleSelectedDemographicChange}
             xs={12}
+            helpText="Choose which demographic group you are editing. Values below apply only to this group."
           >
             {demographics.map((value) => (
               // Create a MenuItem for each Demographic
@@ -106,6 +107,7 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "proportion")}
             error={hasProportionError}
             readOnly={readOnly}
+            helpText="Share of the total population in this group. All groups together must sum to 100%."
           />
 
           <ParameterNumInput
@@ -118,6 +120,7 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "unemploymentRate")}
             error={hasUnempError}
             readOnly={readOnly}
+            helpText="Percent of people in this group who are unemployed. Higher unemployment lowers income and demand."
           />
 
           <ParameterNumInput
@@ -126,6 +129,7 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
             error={hasMeanIncomeError}
             readOnly={readOnly}
+            helpText="Target average weekly income used for sampling individual incomes. Larger values raise purchasing power."
           />
 
           <ParameterNumInput
@@ -134,6 +138,7 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
             error={hasSdIncomeError}
             readOnly={readOnly}
+            helpText="Spread of weekly incomes around the mean (lognormal). Higher values increase inequality and volatility."
           />
 
           <ParameterNumInput
@@ -142,6 +147,7 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
             error={hasMeanSavingsError}
             readOnly={readOnly}
+            helpText="Average starting cash on hand. Higher savings allow households to smooth consumption."
           />
 
           <ParameterNumInput
@@ -150,6 +156,7 @@ export default function DemographicAccordion({
             onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
             error={hasSdSavingsError}
             readOnly={readOnly}
+            helpText="Variation in starting savings between people. Larger values create more heterogeneous behavior."
           />
         </Grid>
 
@@ -169,6 +176,7 @@ export default function DemographicAccordion({
                 readOnly={readOnly}
                 // Mark each cell red if the row is invalid OR that cell is flagged.
                 error={spendingRowInvalid || !!nestedErr[upperKey]}
+                helpText={`Share of this group's income allocated to ${label.toLowerCase()}. Row should total 100%.`}
               />
             </Grid>
           ))}

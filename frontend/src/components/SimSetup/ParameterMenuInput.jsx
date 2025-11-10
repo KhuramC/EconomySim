@@ -2,6 +2,8 @@ import ParameterInput from "./ParameterInput";
 
 /**
  * Dropdown (Select) input wrapper built on top of ParameterInput.
+ * - Use with <MenuItem> children.
+ * - Supports `helpText` for a tooltip next to the label.
  */
 const ParameterMenuInput = ({
   label,
@@ -9,6 +11,7 @@ const ParameterMenuInput = ({
   onChange,
   xs = 12,
   error = false,
+  helpText,          // tooltip content
   children,
   ...otherProps
 }) => {
@@ -20,6 +23,7 @@ const ParameterMenuInput = ({
       select
       xs={xs}
       error={error}
+      helpText={helpText}                        
       {...otherProps}
     >
       {children}
