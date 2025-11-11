@@ -141,7 +141,7 @@ def test_determine_price_avg_cost(mock_economy_model):
                        starting_demand_slope=0.09)
     ind.determine_price()
     ind.produce_goods() # Should produce 200 units, which is the break-even quantity
-    print(ind.inventory_available_this_step)
+    assert ind.inventory_available_this_step == 200
     assert ind.price == 18.0
 
 
@@ -222,12 +222,16 @@ def test_determine_price_linear_profit_max(mock_economy_model):
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 26.46, ind.inventory_available_this_step == 106
-@mark.parametrize("price_cap, expected_price, expected_quantity", [(0,0,400), (1,1,389), (25,25,122), (32,26.46,106)])
+    
+@mark.parametrize("price_cap, expected_price, expected_quantity", [(0,0,0), (1,1,0), (25,25,122), (32,26.46,106), (99999999,26.46,106)])
 def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quantity):
     """
-    Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
-    linear profit max suggests selling 106 units at $26.46/unit.
+    Test how price cap effects the inventory produced by industry
+    
+    linear profit max suggests selling 106 units at $26.46/unit under normal conditions.
     This test checks changed quantity when price_cap is active
+    
+    If price cap is less than variable cost, production is halted, as there is no profitable production level
     """
     mock_economy_model.policies["price_cap"]['Luxury'] = price_cap
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
@@ -243,10 +247,9 @@ def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quant
                        starting_demand_slope=0.09)
     ind.determine_price()
     ind.produce_goods()
-    assert ind.price == expected_price, ind.inventory_available_this_step == expected_quantity
+    assert ind.price == expected_price
+    assert ind.inventory_available_this_step == expected_quantity
 
-@mark.parametrize("tariff,variable_cost", [(0,0,400), (0.02,1,389), (0.1,25,122), (1,26.46,106)])
-def test_tariffs(mock_economy_model, tariff, variable_cost)
 """
 Try negative val for this:
 (V-A)^2) - 4(B*F)
@@ -345,7 +348,65 @@ def test_determine_price_realistic(mock_economy_model):
                        starting_demand_slope=0.001)
     ind.determine_price()
     ind.produce_goods()
-    assert ind.price == 15.2, ind.inventory_available_this_step == 9800
+    assert ind.price == 15.2
+    assert ind.inventory_available_this_step == 9800
+    assert ind.total_cost == 56920.0
+
+"""
+Testing get_profit and deduct_corporate_tax based on "realistic" prices
+"""
+@mark.parametrize("corporate_income_tax,expected_profit", [(1,0), (2,-92040), (0.02,90199.20), (0.1,82836), (1/3,61360), (0,92040)])
+def test_get_profit_corpo_tax_realistic(mock_economy_model,corporate_income_tax,expected_profit):
+    """
+    Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
+    This test uses more realistic values for a large industry
+    This test checks that the price and quantity determined matches the linear profit max calculation.
+
+    Variable Cost = 5.4
+    Inventory produced = 9,800
+    Total variable cost = 52,920.00
+    Fixed Cost = 4,000.00
+    Total Cost = 56,920.00
+    Price = 15.2
+    Revenue (if all product sold) = 148,960.00
+    Profit (before tax) = 148,960 - 56,920 = 92,040
+    balance at end of turn (before tax) = 92,040 + 1,000,000 = $1,092,040.00 
+    """
+    mock_economy_model.policies["corporate_income_tax"]['Luxury'] = corporate_income_tax
+    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
+                       starting_price=0.0,
+                       starting_inventory=0,
+                       starting_balance=1000000.0,
+                       starting_offered_wage=20.0,
+                       starting_fixed_cost=4000.0,
+                       starting_raw_mat_cost=5.0,
+                       starting_number_of_employees=20,
+                       starting_worker_efficiency=50.0,
+                       starting_demand_intercept=25.0,
+                       starting_demand_slope=0.001)
+    ind.determine_price()
+    ind.produce_goods()
+    ind.total_revenue = 148960.00
+    ind.balance += ind.total_revenue
+    ind.deduct_corporate_tax()
+    assert ind.get_profit() == 92040
+    assert (ind.balance - 1000000) == pytest.approx(expected_profit)
+    
+@mark.parametrize("property_tax,expected_fixed_cost", [(1,5850), (0.00096,854.8), (0.02,950), (0.1,1350), (1/3,2516.66666667), (0,850)])
+def test_fixed_cost_property_tax(mock_economy_model,property_tax,expected_fixed_cost):
+    """
+    Tests the fixed cost function and the property tax policy
+    Will change the industry's fixed cost to a non-rounded number
+    """
+    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.AUTOMOBILES,
+                        salary_cost=500,
+                        insurance=50,
+                        equipment_cost=300,
+                        property_value=5000,
+                        starting_fixed_cost=0)
+    mock_economy_model.policies["property_tax"] = property_tax
+    ind.get_fixed_cost()
+    assert ind.fixed_cost == pytest.approx(expected_fixed_cost)
     
     
 """
@@ -394,6 +455,8 @@ Expected Behavior Summary:
 
 # factory function
 def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
+    mock_economy_model.policies["tariffs"]['Luxury'] = 0.0
+    mock_economy_model.policies["subsidies"]['Luxury'] = 0.0
     return IndustryAgent(
         mock_economy_model,
         industry_type=IndustryType.LUXURY,
@@ -410,6 +473,39 @@ def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
     )
 
 # ---- TESTS ----
+@mark.parametrize("tariff,expected_variable_cost", [(0,7.0), (0.02,7.1), (0.1,7.5), (1,12)])
+def test_tariffs(mock_economy_model, tariff, expected_variable_cost):
+    """
+        Tarriff Testing: affects raw material cost directly
+        
+        Reminder of Variable cost calculation: variable_cost = (offered wage / efficiency) + raw material
+
+    Args:
+        mock_economy_model (_type_): economy model containing the policies chosen by the user
+        tariff (_type_): percentage of raw material cost to tariff
+        expected_variable_cost (_type_): the variable cost that the function should return
+    """
+    
+    ind = make_industry_agent(mock_economy_model, 20, 10, 5)   #under normal circumstances, produces a variable cost of 7.0
+    mock_economy_model.policies["tariffs"]['Luxury'] = tariff
+    assert ind.get_variable_cost() == expected_variable_cost
+@mark.parametrize("subsidy,expected_variable_cost", [(0,7.0), (0.02,6.9), (0.1,6.5), (1,2), (2,-3.0)])
+def test_subsidies(mock_economy_model, subsidy, expected_variable_cost):
+    """
+        Subsidy Testing: affects raw material cost directly
+        
+        Reminder of Variable cost calculation: variable_cost = (offered wage / efficiency) + raw material
+        
+        If subsidy value is so high that the negative raw material cost exceeds the wage part of the calculation, variable cost can be negative.
+        This will not break the pricing models, it simply means that achieving a profitable return is much easier.
+    Args:
+        mock_economy_model (_type_): economy model containing the policies chosen by the user
+        subsidy (_type_): percentage of raw material cost to subsidize
+        expected_variable_cost (_type_): the variable cost that the function should return
+    """
+    ind = make_industry_agent(mock_economy_model, 20, 10, 5)   #under normal circumstances, produces a variable cost of 7.0
+    mock_economy_model.policies["subsidies"]['Luxury'] = subsidy
+    assert ind.get_variable_cost() == expected_variable_cost
 
 def test_normal_case(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, 20, 10, 5)
