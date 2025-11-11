@@ -227,7 +227,7 @@ def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quant
     """
     Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
     linear profit max suggests selling 106 units at $26.46/unit.
-    This test checks that the price determined matches the linear profit max calculation.
+    This test checks changed quantity when price_cap is active
     """
     mock_economy_model.policies["price_cap"]['Luxury'] = price_cap
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
@@ -244,6 +244,9 @@ def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quant
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == expected_price, ind.inventory_available_this_step == expected_quantity
+
+@mark.parametrize("tariff,variable_cost", [(0,0,400), (0.02,1,389), (0.1,25,122), (1,26.46,106)])
+def test_tariffs(mock_economy_model, tariff, variable_cost)
 """
 Try negative val for this:
 (V-A)^2) - 4(B*F)
