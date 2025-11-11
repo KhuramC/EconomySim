@@ -137,7 +137,7 @@ def linear_price(A,B,Q) -> float:
 
 def quantity_from_price(A,B,P) -> int:
     """
-        Finds Quantity from price quation
+        Finds Quantity from price equation
         Flip price equation.  
         (A - P) / B = Q 
     Args:
