@@ -204,7 +204,10 @@ class IndustryAgent(Agent):
         if price_cap is not None:
             if price_cap < Price:
                 Price = price_cap
-                Suggested_Quantity = quantity_from_price(A,B,Price)
+                if(price_cap <= V): #price cap is less than variable cost, meaning producing anything would result in a net loss
+                    Suggested_Quantity = 0
+                else:
+                    Suggested_Quantity = quantity_from_price(A,B,Price)
         # set results on the instance
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
@@ -346,7 +349,7 @@ class IndustryAgent(Agent):
         property_cost = 0.0
         property_tax = self.model.policies["property_tax"] 
         if property_tax is not None:
-            property_cost = round(self.property_value * property_tax,2)
+            property_cost = self.property_value * property_tax
         
         #NOTE: self.fixed_cost will eventually be phased out.  It is kept now for testing purposes
         #When it is phased out, this function will return a value instead of just updating a variable
@@ -480,6 +483,7 @@ class IndustryAgent(Agent):
         
     def get_profit(self) -> float:
         """
+        Summary:
             uses cost and revenue values to calculate the profit for this tick.
             Note: make sure to reset total_revenue next tick!
         Returns:
@@ -489,8 +493,11 @@ class IndustryAgent(Agent):
         return profit
             
     def deduct_corporate_tax(self):
+        """
+            Summary: deducts corporate tax from profit generated this turn.  Does not deduct anything if profit was zero
+        """
         profit = self.get_profit()
-        
+        profit = max(0.0,profit)    #if profit is negative, clamp to zero
         corporate_income_tax = self.model.policies["corporate_income_tax"][self.industry_type]
         if corporate_income_tax is not None and profit > 0:
             taxedAmt = profit * corporate_income_tax
