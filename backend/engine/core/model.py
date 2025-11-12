@@ -1,3 +1,5 @@
+import re
+from typing import Iterable
 import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
@@ -94,7 +96,8 @@ class EconomyModel(Model):
         # check demographics/industries/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
         self.validate_schema(industries, industries_schema, path="industries")
-        self.validate_schema(starting_policies)
+        allowed = {("policies","price_cap","*")}   # or {("policies","price_cap","*")}
+        self.validate_schema(starting_policies, policies_schema, path="policies", allowed_none=allowed)
 
         self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
@@ -133,26 +136,91 @@ class EconomyModel(Model):
             self.agents_by_type[IndustryAgent] = AgentSet([], self)
 
     def validate_schema(
-        self, data: dict, schema: dict = policies_schema, path="policies"
+        self,
+        data: dict,
+        schema: dict = policies_schema,
+        path: str = "policies",
+        allowed_none: Iterable = None,
+        _path_list: list | None = None,
     ):
         """
-        Recursively validate the dictionary against the schema.
+        Recursively validate `data` against `schema`.
 
-        Args:
-            data (dict): The dictionary to validate.
-            path (str, optional): Name of dict variable. Defaults to "policies".
-
-        Raises:
-            ValueError: If the data dictionary does not match the schema.
+        allowed_none: iterable of paths allowed to be None. Each item may be:
+            - a tuple/list of keys: ("policies", "price_cap", "manufacturing")
+            - a string in bracket notation: "policies[price_cap][manufacturing]"
+            - include "*" as the last element to wildcard children: ("policies","price_cap","*")
         """
 
+        # normalize allowed_none into a set of tuples for fast matching
+        allowed_none = allowed_none or set()
+        allowed_tuples = set()
+
+        def _parse_allowed_item(item):
+            if isinstance(item, (list, tuple)):
+                return tuple(item)
+            if isinstance(item, str):
+                parts = re.split(r"\[|\]", item)
+                tokens = [p for p in parts if p != ""]
+                return tuple(tokens)
+            raise TypeError("allowed_none items must be str or tuple/list")
+
+        for it in allowed_none:
+            allowed_tuples.add(_parse_allowed_item(it))
+
+        def _is_allowed_none(path_list: list):
+            tup = tuple(path_list)
+            if tup in allowed_tuples:
+                return True
+            for a in allowed_tuples:
+                if len(a) >= 1 and a[-1] == "*":
+                    if tup[: len(a) - 1] == a[: len(a) - 1]:
+                        return True
+            return False
+
+        if _path_list is None:
+            _path_list = [path]
+
+        # top-level: ensure required keys present in data
         missing = set(schema.keys()) - set(data.keys())
         if missing:
             raise ValueError(f"Missing keys at {path}: {missing}")
 
         for key, subschema in schema.items():
+            current_path = f"{path}[{key}]"
+            current_path_list = _path_list + [key]
+
+            if key not in data:
+                raise ValueError(f"Missing key {key} at {path}")
+
+            value = data[key]
+
+            # --- FIXED: check for None before forcing `dict` type when subschema is a dict ---
             if isinstance(subschema, dict):
-                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
+                # allow the entire branch to be None if explicitly permitted
+                if value is None:
+                    if _is_allowed_none(current_path_list):
+                        # allowed to be None, skip validation of this branch
+                        continue
+                    else:
+                        raise ValueError(f"Value at {current_path} is None but not allowed to be None")
+                # otherwise it must be a dict to recurse
+                if not isinstance(value, dict):
+                    raise ValueError(f"Expected dict at {current_path}, got {type(value).__name__}")
+                # recurse into the dict
+                self.validate_schema(
+                    value,
+                    subschema,
+                    path=current_path,
+                    allowed_none=allowed_none,
+                    _path_list=current_path_list,
+                )
+            else:
+                # leaf node in schema (typical pattern: subschema is None)
+                if value is None and not _is_allowed_none(current_path_list):
+                    raise ValueError(f"Value at {current_path} is None but not allowed to be None")
+                # optionally: add type checks for non-None leaves here
+
 
     def num_prop(self, ratio, N):
         """Calculate numbers of total N in proportion to ratio"""

@@ -1,6 +1,7 @@
 import pytest
 from pytest import mark, approx
 import numpy as np
+import copy
 from contextlib import nullcontext
 from engine.core.model import EconomyModel
 from engine.types.industry_type import IndustryType
@@ -28,11 +29,20 @@ def test_validate_schema(model: EconomyModel, policies, delete_values: bool, exc
         exception: the exception expected to occur.
     """
     # TODO: add parameters for doing this with demographics as well.
-    new_policies = policies.copy()
+    new_policies = copy.deepcopy(policies)   # shallow .copy() won't protect nested dicts
+    # simulate deleting a top-level key for the invalid case
     if delete_values:
         del new_policies["corporate_income_tax"]
+
+    # allow ANY industry under price_cap to be None for the purpose of this test
+    allowed = {("policies", "price_cap", "*")}
     with exception:
-        model.validate_schema(new_policies)
+        model.validate_schema(
+            new_policies,
+            policies,
+            path="policies",
+            allowed_none=allowed,
+        )
 
 
 @pytest.mark.parametrize(

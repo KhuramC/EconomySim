@@ -163,7 +163,8 @@ class IndustryAgent(Agent):
                 last tick.  In order to maximize profit, the industry may artificially restrict how much they sell
             self.price (float): Returns the price to sell the suggested quantity
         """  
-
+        skipPriceCap = (self.price == 0) #if simulation is just starting and price is still zero, skip price cap logic
+        oldPrice = self.price
         A = float(self.demand_intercept)
         B = float(self.demand_slope)
 
@@ -200,8 +201,9 @@ class IndustryAgent(Agent):
         Price = linear_price(A,B,Suggested_Quantity)
         
 
-        price_cap = self.model.policies["price_cap"][self.industry_type]
-        if price_cap is not None:
+        price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
+        if price_cap_percentage is not None and skipPriceCap == False:
+            price_cap = oldPrice * (1 + price_cap_percentage)   #price cap is set to a percentage amount higher than the price from the previous tick
             if price_cap < Price:
                 Price = price_cap
                 if(price_cap <= V): #price cap is less than variable cost, meaning producing anything would result in a net loss

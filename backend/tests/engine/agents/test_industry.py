@@ -249,8 +249,10 @@ def test_starting_inventory_satisfies_demand(mock_economy_model):
     assert ind.hours_worked == 0
     assert ind.offered_wage == 15.0
     assert weekly_pay == 0.0
-@mark.parametrize("price_cap, expected_price, expected_quantity", [(0,0,0), (1,1,0), (25,25,122), (32,26.46,106), (99999999,26.46,106)])
-def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quantity):
+@mark.parametrize("starting_price, price_cap_percentage, expected_price, expected_quantity", 
+                  [(0,0,26.46,106), (1,None,26.46,106), (25,0.1,26.46,106), (20,0.1,22,156), (1,1,2,0),
+                   (26.46,None,26.46,106)])
+def test_price_cap(mock_economy_model, starting_price, price_cap_percentage, expected_price, expected_quantity):
     """
     Test how price cap effects the inventory produced by industry
     
@@ -258,10 +260,17 @@ def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quant
     This test checks changed quantity when price_cap is active
     
     If price cap is less than variable cost, production is halted, as there is no profitable production level
+    
+    Test 1: Skip price cap due to starting price of 0
+    Test 2: Skip price cap due to None value
+    Test 3: Rent Cap allows us to reach ideal market price
+    Test 4: Rent Cap limits price to below market price
+    Test 5: Rent Cap creates price that is lower than variable cost.  Update price but produce nothing
+    Test 6: Already at ideal price, reset price cap to None for later tests
     """
-    mock_economy_model.policies["price_cap"]['Luxury'] = price_cap
+    mock_economy_model.policies["price_cap"]['Luxury'] = price_cap_percentage
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
-                       starting_price=0.0,
+                       starting_price=starting_price,
                        starting_inventory=0,
                        starting_balance=10000.0,
                        starting_offered_wage=15.0,
