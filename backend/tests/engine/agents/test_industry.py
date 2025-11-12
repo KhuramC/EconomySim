@@ -222,7 +222,33 @@ def test_determine_price_linear_profit_max(mock_economy_model):
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 26.46, ind.inventory_available_this_step == 106
+def test_starting_inventory_satisfies_demand(mock_economy_model):
+    """
+    Test determine_price when pricing strategy is LINEAR_PROFIT_MAX, but inventory satisfies demand.
+    linear profit max suggests selling 106 units at $26.46/unit.
     
+    Same price and quantity sold, but nothing produced
+    
+    """
+    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
+                       starting_price=0.0,
+                       starting_inventory=1000,
+                       starting_balance=10000.0,
+                       starting_offered_wage=15.0,
+                       starting_fixed_cost=200.0,
+                       starting_raw_mat_cost=2.0,
+                       starting_number_of_employees=5,
+                       starting_worker_efficiency=1.0,
+                       starting_demand_intercept=36.0,
+                       starting_demand_slope=0.09)
+    ind.determine_price()
+    ind.produce_goods()
+    weekly_pay = ind.get_weekly_pay()
+    assert ind.price == 26.46
+    assert ind.inventory_available_this_step == 106
+    assert ind.hours_worked == 0
+    assert ind.offered_wage == 15.0
+    assert weekly_pay == 0.0
 @mark.parametrize("price_cap, expected_price, expected_quantity", [(0,0,0), (1,1,0), (25,25,122), (32,26.46,106), (99999999,26.46,106)])
 def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quantity):
     """
@@ -249,7 +275,6 @@ def test_price_cap(mock_economy_model, price_cap, expected_price, expected_quant
     ind.produce_goods()
     assert ind.price == expected_price
     assert ind.inventory_available_this_step == expected_quantity
-
 """
 Try negative val for this:
 (V-A)^2) - 4(B*F)

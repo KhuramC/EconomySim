@@ -8,6 +8,7 @@ from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 from ..types.indicators import Indicators
+from ..types.industry_metrics import IndustryMetrics
 from .indicators import *
 
 demographics_schema = {
@@ -114,10 +115,10 @@ class EconomyModel(Model):
             },
             agenttype_reporters={
                 IndustryAgent: {
-                    "price": "price",
-                    "inventory": "inventory",
-                    "balance": "balance",
-                    "offered_wage": "offered_wage",
+                    IndustryMetrics.PRICE: "price",
+                    IndustryMetrics.INVENTORY: "inventory",
+                    IndustryMetrics.BALANCE: "balance",
+                    IndustryMetrics.WAGE: "offered_wage",
                 }
             },
         )

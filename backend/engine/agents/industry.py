@@ -246,6 +246,12 @@ class IndustryAgent(Agent):
             self.balance -= self.fixed_cost
             pass
         
+        if quantity_to_produce <= 0: #no production this turn, already have enough inventory
+            self.hours_worked = 0
+            self.total_cost = self.fixed_cost #fixed cost is still factored into losses this tick
+            self.balance -= self.fixed_cost
+            return
+        
         variable_cost_per_unit = self.get_variable_cost()
         total_variable_cost = variable_cost_per_unit * quantity_to_produce
         
