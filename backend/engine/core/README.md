@@ -77,7 +77,7 @@ It should be noted that we have altered it to track wealth distribution (current
 
 ### GDP
 
-GDP will be tracked by summing the market value of all final goods and services produced, or more accurately, the value added at each stage of production. In other workds, it is a simple sum of what was created that week.
+GDP will be tracked by summing the market value of all final goods and services produced, or more accurately, the value added at each stage of production. In other words, it is a simple sum of what was created that week.
 
 $$\text{GDP} = \sum (\text{Value of Produced Goods by Industry})$$
 
