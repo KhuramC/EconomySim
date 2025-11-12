@@ -67,11 +67,12 @@ class EconomyModel(Model):
     random_events: bool
     """Whether random events are enabled in the simulation."""
 
+    _allowed_none: set[tuple[str, ...]]
     # Changeable by the user at any time
 
     policies: dict[str, float | dict[IndustryType | Demographic, float]]
     """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
-
+    
     week: int
     """The current week in the simulation."""
 
@@ -96,14 +97,15 @@ class EconomyModel(Model):
         # check demographics/industries/policies has all necessary keys
         self.validate_schema(demographics, demographics_schema, path="demographics")
         self.validate_schema(industries, industries_schema, path="industries")
-        allowed = {("policies","price_cap","*")}   # or {("policies","price_cap","*")}
-        self.validate_schema(starting_policies, policies_schema, path="policies", allowed_none=allowed)
+        self._allowed_none = {
+            ("policies", "price_cap", "*"),
+        }
+        self.validate_schema(starting_policies, policies_schema, path="policies", allowed_none=True)
 
         self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
         self.random_events = random_events
         self.policies = starting_policies
-
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
@@ -135,22 +137,33 @@ class EconomyModel(Model):
         if IndustryAgent not in self.agents_by_type:
             self.agents_by_type[IndustryAgent] = AgentSet([], self)
 
+
     def validate_schema(
         self,
         data: dict,
         schema: dict = policies_schema,
         path: str = "policies",
-        allowed_none: Iterable = None,
+        allowed_none: Iterable | bool | None = None,
         _path_list: list | None = None,
     ):
         """
         Recursively validate `data` against `schema`.
 
-        allowed_none: iterable of paths allowed to be None. Each item may be:
-            - a tuple/list of keys: ("policies", "price_cap", "manufacturing")
-            - a string in bracket notation: "policies[price_cap][manufacturing]"
-            - include "*" as the last element to wildcard children: ("policies","price_cap","*")
+        allowed_none may be:
+          - None: no None-values allowed except where schema explicitly permits
+          - iterable of path-specs (tuples or bracketed strings), e.g. {"policies[price_cap][*]"}
+          - bool True: use the model-level default stored in self._allowed_none (if present),
+            otherwise fall back to an empty set.
+
+        Internal `_path_list` parameter is used during recursion and should not be passed by callers.
         """
+
+        # If caller passed a boolean True, use the model's stored default if available.
+        if isinstance(allowed_none, bool):
+            if allowed_none:
+                allowed_none = getattr(self, "_allowed_none", set())
+            else:
+                allowed_none = set()
 
         # normalize allowed_none into a set of tuples for fast matching
         allowed_none = allowed_none or set()
@@ -165,6 +178,7 @@ class EconomyModel(Model):
                 return tuple(tokens)
             raise TypeError("allowed_none items must be str or tuple/list")
 
+        # build normalized set from provided iterable (if it's not already empty)
         for it in allowed_none:
             allowed_tuples.add(_parse_allowed_item(it))
 
@@ -195,19 +209,16 @@ class EconomyModel(Model):
 
             value = data[key]
 
-            # --- FIXED: check for None before forcing `dict` type when subschema is a dict ---
+            # If subschema is a dict, allow the branch to be None only if explicitly permitted.
             if isinstance(subschema, dict):
-                # allow the entire branch to be None if explicitly permitted
                 if value is None:
                     if _is_allowed_none(current_path_list):
-                        # allowed to be None, skip validation of this branch
                         continue
                     else:
                         raise ValueError(f"Value at {current_path} is None but not allowed to be None")
-                # otherwise it must be a dict to recurse
                 if not isinstance(value, dict):
                     raise ValueError(f"Expected dict at {current_path}, got {type(value).__name__}")
-                # recurse into the dict
+                # Recurse
                 self.validate_schema(
                     value,
                     subschema,
@@ -216,10 +227,11 @@ class EconomyModel(Model):
                     _path_list=current_path_list,
                 )
             else:
-                # leaf node in schema (typical pattern: subschema is None)
+                # leaf: allow None only if allowed
                 if value is None and not _is_allowed_none(current_path_list):
                     raise ValueError(f"Value at {current_path} is None but not allowed to be None")
-                # optionally: add type checks for non-None leaves here
+                # optionally validate types for non-None leaves here
+
 
 
     def num_prop(self, ratio, N):

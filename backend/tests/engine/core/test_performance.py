@@ -2,8 +2,7 @@ import pytest
 from engine.core.model import EconomyModel
 
 AGENT_COUNTS = [100, 1000, 10000, 100000, 1000000]
-
-
+#Justin: The million agent test is very very slow.  Not sure what to do about it right now.  I've been excluding it to speed up the testing Suite
 @pytest.mark.parametrize("num_agents", AGENT_COUNTS)
 def test_model_step_performance(
     benchmark, demographics, industries, policies, num_agents: int

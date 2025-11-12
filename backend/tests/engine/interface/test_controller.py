@@ -1,4 +1,5 @@
 import pytest
+import copy
 from pytest import mark
 from contextlib import nullcontext
 from engine.types.industry_type import IndustryType
@@ -121,7 +122,7 @@ def test_set_policies(controller: ModelController, demographics, industries, pol
         starting_policies=policies,
     )
 
-    new_policies = policies.copy()
+    new_policies = copy.deepcopy(policies)
     new_policies["corporate_income_tax"][IndustryType.AUTOMOBILES] = 0.25
     controller.set_policies(model_id, new_policies)
 
