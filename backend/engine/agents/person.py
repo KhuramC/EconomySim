@@ -90,7 +90,8 @@ class PersonAgent(Agent):
         demands = {}
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity: int = math.floor(
+            #NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
+            quantity: int = round(
                 (numerator / denominator) * budget
             )  # The good's share of the budget, rounded down
             demands[name] = quantity
@@ -120,8 +121,10 @@ class PersonAgent(Agent):
 
         # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
-        prices = {agent.industry_type: agent.price for agent in industry_agents}
-
+        
+        #sales tax will now be incorperated into price calculation
+        prices = {agent.industry_type: (agent.price * (1 + self.model.policies["sales_tax"][agent.industry_type])) for agent in industry_agents}
+        
         # Calculate desired purchases
         desired_quantities = self.demand_func(
             budget=self.determine_budget(), prefs=self.preferences, prices=prices
