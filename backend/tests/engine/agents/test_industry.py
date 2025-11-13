@@ -1,11 +1,35 @@
 import pytest
-from pytest import mark
+from pytest import mark, approx
 import logging
 import math
 from engine.agents.industry import IndustryAgent
-
+from engine.agents.person import PersonAgent
 from engine.types.industry_type import IndustryType
 from engine.types.pricing_type import PricingType
+from engine.types.demographic import Demographic
+
+
+@pytest.fixture
+def industry_with_employees(mock_economy_model):
+    """
+    Creates an industry with 10 employees using the mock model.
+    """
+    industry = IndustryAgent(
+        mock_economy_model, IndustryType.GROCERIES, starting_number_of_employees=0
+    )
+
+    employees = []
+    for i in range(10):
+        person = PersonAgent(
+            mock_economy_model, Demographic.LOWER_CLASS, preferences={}
+        )
+        person.employer = industry.industry_type
+        employees.append(person)
+
+    industry.num_employees = 10
+
+    return industry, employees
+
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
 def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
@@ -15,7 +39,7 @@ def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
 
     Args:
         industry_type (IndustryType): the industry be looked at.
-        mock_economy_model: a mock model. 
+        mock_economy_model: a mock model.
     """
 
     i_agent = IndustryAgent(mock_economy_model, industry_type=industry_type)
@@ -39,9 +63,141 @@ def test_change_employment():
     assert False
 
 
-@mark.xfail(reason="Function not implemented yet.")
-def determine_wages():
-    assert False
+@pytest.mark.parametrize(
+    "market_wage, min_wage, expected_wage",
+    [
+        (20.0, 15.0, 20.0),  # Market wage is higher
+        (10.0, 15.0, 15.0),  # Minimum wage is higher
+        (15.0, 15.0, 15.0),  # Both are equal
+        (12.0, 0.0, 12.0),  # Minimum wage is 0 (or not set)
+    ],
+)
+def test_determine_wages(mock_economy_model, market_wage, min_wage, expected_wage):
+    """
+    Tests that the industry correctly sets its offered_wage based on
+    the model's market_wage and the minimum_wage policy.
+    """
+    mock_economy_model.market_wage = market_wage
+    mock_economy_model.policies["minimum_wage"] = min_wage
+
+    industry = IndustryAgent(mock_economy_model, industry_type=IndustryType.LUXURY)
+    industry.determine_wages()
+
+    assert industry.offered_wage == pytest.approx(expected_wage)
+
+
+def test_fire_employees_fires_correct_number(industry_with_employees):
+    """
+    Tests that fire_employees removes the correct number of employees
+    and updates their status.
+    """
+    industry, employees = industry_with_employees
+
+    assert len(industry.get_employees()) == 10
+    assert industry.num_employees == 10
+
+    # Fire 3 employees
+    industry.fire_employees(3)
+
+    # Check new employee count
+    assert len(industry.get_employees()) == 7
+    assert industry.num_employees == 7
+
+    # Check that 3 employees were *actually* fired
+    fired_count = 0
+    for agent in employees:
+        if agent.employer is None and agent.income == 0:
+            fired_count += 1
+
+    assert fired_count == 3
+
+
+def test_fire_employees_fires_too_many(industry_with_employees):
+    """
+    Tests that firing more employees than available just fires everyone.
+    """
+    industry, employees = industry_with_employees
+
+    # Fire 15 (only 10 exist)
+    industry.fire_employees(15)
+
+    # Check new employee count
+    assert len(industry.get_employees()) == 0
+    assert industry.num_employees == 0
+
+    # Check that all 10 employees were fired
+    for agent in employees:
+        assert agent.employer is None
+        assert agent.income == 0
+
+
+def test_fire_employees_fires_zero_or_negative(industry_with_employees):
+    """
+    Tests that firing 0 or a negative number does nothing.
+    """
+    industry, employees = industry_with_employees
+
+    industry.fire_employees(0)
+    assert len(industry.get_employees()) == 10
+
+    industry.fire_employees(-2)
+    assert len(industry.get_employees()) == 10
+
+
+@pytest.mark.parametrize(
+    "quantity_last_sold, worker_efficiency, expected_desired, expected_fired",
+    [
+        (400, 1.0, 10, 0),  # 10 desired (400 / (1*40)), 10 current -> 0 fired
+        (200, 1.0, 5, 5),  # 5 desired (200 / (1*40)), 10 current -> 5 fired
+        (800, 1.0, 20, 0),  # 20 desired (800 / (1*40)), 10 current -> 0 fired
+        (300, 0.5, 15, 0),  # 15 desired (300 / (0.5*40)), 10 current -> 0 fired
+    ],
+)
+def test_change_employment_firing_logic(
+    industry_with_employees,
+    quantity_last_sold,
+    worker_efficiency,
+    expected_desired,
+    expected_fired,
+):
+    """
+    Tests:
+        1. Does it calculate employees_desired correctly?
+        2. Does it fire the correct number of employees when over-staffed?
+        3. Does it NOT fire when at or under capacity?
+        4. Does it update the internal num_employees count?
+    """
+    industry, employees = industry_with_employees
+    industry.worker_efficiency = worker_efficiency
+    industry.quantity_last_sold = quantity_last_sold
+
+    industry.change_employment()
+
+    current_employees = len(industry.get_employees())
+
+    assert industry.employees_desired == expected_desired
+    assert current_employees == (10 - expected_fired)
+    assert industry.num_employees == (10 - expected_fired)
+
+    # Also verify the wage was set (even if it's just the default)
+    assert industry.offered_wage >= 0
+
+
+def test_change_employment_zero_efficiency(industry_with_employees):
+    """
+    Tests the safety check for worker_efficiency <= 0.
+    """
+    industry, employees = industry_with_employees
+    industry.worker_efficiency = 0
+    industry.quantity_last_sold = 1000  # Set demand high
+
+    industry.change_employment()
+
+    # Should desire 0 and not crash
+    assert industry.employees_desired == 0
+    # Should not fire anyone
+    assert len(industry.get_employees()) == 10
+    assert industry.num_employees == 10
 
 
 @pytest.fixture(autouse=True)
@@ -49,25 +205,31 @@ def quiet_logging():
     logging.disable(logging.CRITICAL)
     yield
     logging.disable(logging.NOTSET)
+
+
 def test_max_production_capacity(mock_economy_model):
     """
     Test that production capacity is correctly calculated based on employees and funds.
     """
-    ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.AUTOMOBILES,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_demand_intercept=36.0,
-                       starting_demand_slope=0.09
-                       )
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.AUTOMOBILES,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_demand_intercept=36.0,
+        starting_demand_slope=0.09,
+    )
     capacity = ind.get_production_capacity()
     # With 5 employees, efficiency 1.0, hours 40, max production = 5 * 1.0 * 40 = 200
     assert capacity == 200
+
+
 def test_max_production_capacity_no_debt(mock_economy_model):
     """
     Test that production capacity is correctly calculated based on employees and funds.
@@ -75,46 +237,52 @@ def test_max_production_capacity_no_debt(mock_economy_model):
     -Note: this is dangerous, as it can cause industries to go into bankruptcy a lot quicker.
     This is because it's more likely that an industry agent near the edge will not be able to produce
     a profitable quantity.
-    
+
     For example, in this case, the company has to make at least 12 units (breakpoint at 11.11) to be profitable.
     However, due to limited funds, they can only produce 5 units
     """
-    ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.AUTOMOBILES,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=300.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_debt_allowed=False,
-                       starting_demand_intercept=36.0,
-                       starting_demand_slope=0.09
-                       )
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.AUTOMOBILES,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=300.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_debt_allowed=False,
+        starting_demand_intercept=36.0,
+        starting_demand_slope=0.09,
+    )
     capacity = ind.get_production_capacity()
     # With 5 employees, efficiency 1.0, hours 40, max production = 5 * 1.0 * 40 = 200
     # However, Available funds limits this: (Total Funds - Fixed Cost) / Variable Cost = 100 / 17 = 5.88 ~= 5
     assert capacity == 5
+
+
 def test_variable_cost_per_unit(mock_economy_model):
     """
     Test the variable cost per unit calculation.
     """
-    ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.AUTOMOBILES,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0)
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.AUTOMOBILES,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+    )
     calculated_variable_cost = ind.get_variable_cost()
     # variable cost per unit = (Wage / Efficiency) + Raw Material Cost
-    expected_variable_cost = (15.0 / 1.0) + 2 # = 17.0
+    expected_variable_cost = (15.0 / 1.0) + 2  # = 17.0
     assert calculated_variable_cost == expected_variable_cost
-    
-    
+
     """
     See Linear Profit Max Test for full explanation of testing parameters
     This test is designed to find the price at the breakpoint quantity, where revenue = cost
@@ -122,28 +290,32 @@ def test_variable_cost_per_unit(mock_economy_model):
     
     
     """
+
+
 def test_determine_price_avg_cost(mock_economy_model):
     """
     Test determine_price when pricing strategy is AVG_COST.
     avg_cost returns (Price, Quantity) and industry.determine_price sets self.price = Price.
     We'll pick parameters where the quadratic has real roots and the higher root is feasible.
     """
-    ind = IndustryAgent(mock_economy_model, industry_type=IndustryType.UTILITIES,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_demand_intercept=36.0,
-                       starting_demand_slope=0.09)
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.UTILITIES,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_demand_intercept=36.0,
+        starting_demand_slope=0.09,
+    )
     ind.determine_price()
-    ind.produce_goods() # Should produce 200 units, which is the break-even quantity
+    ind.produce_goods()  # Should produce 200 units, which is the break-even quantity
     print(ind.inventory_available_this_step)
     assert ind.price == 18.0
-
 
 
 """
@@ -202,45 +374,55 @@ Total Cost = 2002
 profit = 2805.96 - 2002 = $803.96 profit!
     
 """
+
+
 def test_determine_price_linear_profit_max(mock_economy_model):
     """
     Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
     linear profit max suggests selling 106 units at $26.46/unit.
     This test checks that the price determined matches the linear profit max calculation.
     """
-    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_demand_intercept=36.0,
-                       starting_demand_slope=0.09)
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.LUXURY,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_demand_intercept=36.0,
+        starting_demand_slope=0.09,
+    )
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 26.46, ind.inventory_available_this_step == 106
+
+
 def test_starting_inventory_satisfies_demand(mock_economy_model):
     """
     Test determine_price when pricing strategy is LINEAR_PROFIT_MAX, but inventory satisfies demand.
     linear profit max suggests selling 106 units at $26.46/unit.
-    
+
     Same price and quantity sold, but nothing produced
-    
+
     """
-    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
-                       starting_price=0.0,
-                       starting_inventory=1000,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_demand_intercept=36.0,
-                       starting_demand_slope=0.09)
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.LUXURY,
+        starting_price=0.0,
+        starting_inventory=1000,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_demand_intercept=36.0,
+        starting_demand_slope=0.09,
+    )
     ind.determine_price()
     ind.produce_goods()
     weekly_pay = ind.get_weekly_pay()
@@ -249,6 +431,8 @@ def test_starting_inventory_satisfies_demand(mock_economy_model):
     assert ind.hours_worked == 0
     assert ind.offered_wage == 15.0
     assert weekly_pay == 0.0
+
+
 """
 Try negative val for this:
 (V-A)^2) - 4(B*F)
@@ -278,30 +462,36 @@ P = A - B * Q
 19 - 0.5 * 2 = $18    
     
 """
+
+
 def test_avg_cost_linear_profit_fallback(mock_economy_model):
     """
     Test determine_price and produce_goods with Average Cost pricing strategy,
-    but triggering the linear profit max fallback.  This is done by ensuring the 
+    but triggering the linear profit max fallback.  This is done by ensuring the
     quadratic has complex conjugate roots.
     This essentially means there are no profitable quantities, so the industry will find the price and
     quantity with the least amount of loss.
     linear profit max suggests selling 2 units at $18.
     This test checks that the price and quantity determined matches the linear profit max calculation.
     """
-    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.UTILITIES,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=10.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_demand_intercept=19.0,
-                       starting_demand_slope=0.5)
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.UTILITIES,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=10.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_demand_intercept=19.0,
+        starting_demand_slope=0.5,
+    )
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 18, ind.inventory_available_this_step == 2
+
 
 def test_get_weekly_pay(mock_economy_model):
     """
@@ -309,47 +499,54 @@ def test_get_weekly_pay(mock_economy_model):
     linear profit max suggests selling 106 units at $26.46/unit.
     This test checks that the price determined matches the linear profit max calculation.
     """
-    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=10000.0,
-                       starting_offered_wage=15.0,
-                       starting_fixed_cost=200.0,
-                       starting_raw_mat_cost=2.0,
-                       starting_number_of_employees=5,
-                       starting_worker_efficiency=1.0,
-                       starting_demand_intercept=36.0,
-                       starting_demand_slope=0.09)
-    #106 units produced at an efficiency of 1, meaning 106 hours worked in total
-    #Total Hours/Num Employees = 106 / 5 = 21.2 hours
-    #Hours worked per employee * offered wage = 21.2 * 15 = 318 dollars, tax not included
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.LUXURY,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=10000.0,
+        starting_offered_wage=15.0,
+        starting_fixed_cost=200.0,
+        starting_raw_mat_cost=2.0,
+        starting_number_of_employees=5,
+        starting_worker_efficiency=1.0,
+        starting_demand_intercept=36.0,
+        starting_demand_slope=0.09,
+    )
+    # 106 units produced at an efficiency of 1, meaning 106 hours worked in total
+    # Total Hours/Num Employees = 106 / 5 = 21.2 hours
+    # Hours worked per employee * offered wage = 21.2 * 15 = 318 dollars, tax not included
     ind.determine_price()
     ind.produce_goods()
     weekly_pay = ind.get_weekly_pay()
     assert weekly_pay == 318.00
-    
+
+
 def test_determine_price_realistic(mock_economy_model):
     """
     Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
     This test uses more realistic values for a large industry
     This test checks that the price and quantity determined matches the linear profit max calculation.
     """
-    ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
-                       starting_price=0.0,
-                       starting_inventory=0,
-                       starting_balance=1000000.0,
-                       starting_offered_wage=20.0,
-                       starting_fixed_cost=4000.0,
-                       starting_raw_mat_cost=5.0,
-                       starting_number_of_employees=20,
-                       starting_worker_efficiency=50.0,
-                       starting_demand_intercept=25.0,
-                       starting_demand_slope=0.001)
+    ind = IndustryAgent(
+        mock_economy_model,
+        industry_type=IndustryType.LUXURY,
+        starting_price=0.0,
+        starting_inventory=0,
+        starting_balance=1000000.0,
+        starting_offered_wage=20.0,
+        starting_fixed_cost=4000.0,
+        starting_raw_mat_cost=5.0,
+        starting_number_of_employees=20,
+        starting_worker_efficiency=50.0,
+        starting_demand_intercept=25.0,
+        starting_demand_slope=0.001,
+    )
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 15.2, ind.inventory_available_this_step == 9800
-    
-    
+
+
 """
 ===============================================================================
 Test Suite: get_variable_cost()
@@ -394,6 +591,7 @@ Expected Behavior Summary:
 ===============================================================================
 """
 
+
 # factory function
 def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
     return IndustryAgent(
@@ -408,45 +606,55 @@ def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
         starting_number_of_employees=20,
         starting_worker_efficiency=efficiency,
         starting_demand_intercept=25.0,
-        starting_demand_slope=0.001
+        starting_demand_slope=0.001,
     )
 
+
 # ---- TESTS ----
+
 
 def test_normal_case(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, 20, 10, 5)
     assert ind.get_variable_cost() == pytest.approx(7.0)
 
+
 def test_zero_wage(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, 0, 10, 5)
     assert ind.get_variable_cost() == pytest.approx(5.0)
+
 
 def test_extremely_low_efficiency(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, 20, 1e-6, 3)
     assert math.isclose(ind.get_variable_cost(), 20000003, rel_tol=1e-6)
 
+
 def test_zero_efficiency_returns_inf(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, 20, 0, 3)
     assert math.isinf(ind.get_variable_cost())
+
 
 def test_negative_efficiency_returns_inf(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, 20, -5, 4)
     assert math.isinf(ind.get_variable_cost())
 
+
 def test_nan_input_raises(mock_economy_model):
-    ind = make_industry_agent(mock_economy_model, 20, float('nan'), 5)
+    ind = make_industry_agent(mock_economy_model, 20, float("nan"), 5)
     with pytest.raises(ValueError):
         ind.get_variable_cost()
 
+
 def test_inf_input_raises(mock_economy_model):
-    ind = make_industry_agent(mock_economy_model, 20, 10, float('inf'))
+    ind = make_industry_agent(mock_economy_model, 20, 10, float("inf"))
     with pytest.raises(ValueError):
         ind.get_variable_cost()
+
 
 def test_non_numeric_input_raises(mock_economy_model):
     ind = make_industry_agent(mock_economy_model, "abc", 10, 5)
     with pytest.raises(ValueError):
         ind.get_variable_cost()
+
 
 """
 Test Suite: get_production_capacity()
@@ -476,7 +684,7 @@ def make_industry_agent_production(
     num_employees=20,
     total_money=1000000.0,
     fixed_cost=4000.0,
-    debt_allowed=True
+    debt_allowed=True,
 ):
     ind = IndustryAgent(
         mock_economy_model,
@@ -491,7 +699,7 @@ def make_industry_agent_production(
         starting_worker_efficiency=efficiency,
         starting_demand_intercept=25.0,
         starting_demand_slope=0.001,
-        starting_debt_allowed=debt_allowed
+        starting_debt_allowed=debt_allowed,
         # If your constructor supports a starting_debt_allowed kwarg, you can pass it:
         # starting_debt_allowed=debt_allowed,
     )
@@ -500,9 +708,12 @@ def make_industry_agent_production(
 
 # --- Test Cases ---
 
+
 def test_normal_capacity(mock_economy_model):
     """Normal case: efficiency and funds sufficient -> funds not limiting."""
-    ind = make_industry_agent_production(mock_economy_model, wage=20, efficiency=10, raw_cost=5)
+    ind = make_industry_agent_production(
+        mock_economy_model, wage=20, efficiency=10, raw_cost=5
+    )
     cap = ind.get_production_capacity()
     # Worker limit = 20 employees * 10 efficiency * 40 hours = 8000 units
     assert cap == 8000
@@ -511,7 +722,12 @@ def test_normal_capacity(mock_economy_model):
 def test_debt_allowed_ignores_funds(mock_economy_model):
     """When debt is allowed, capacity equals worker limit regardless of money."""
     ind = make_industry_agent_production(
-        mock_economy_model, wage=20, efficiency=10, raw_cost=5, total_money=0, debt_allowed=True
+        mock_economy_model,
+        wage=20,
+        efficiency=10,
+        raw_cost=5,
+        total_money=0,
+        debt_allowed=True,
     )
     cap = ind.get_production_capacity()
     assert cap == 20 * 10 * 40  # worker-based only
@@ -527,28 +743,34 @@ def test_low_money_limits_capacity(mock_economy_model):
         wage=20,
         efficiency=10,
         raw_cost=5,
-        total_money=1000,   # small funds
-        fixed_cost=4000,    # fixed cost more than money -> funds_limit <= 0
-        debt_allowed=False
+        total_money=1000,  # small funds
+        fixed_cost=4000,  # fixed cost more than money -> funds_limit <= 0
+        debt_allowed=False,
     )
     assert ind.get_production_capacity() == 0
 
 
 def test_zero_employees_returns_zero(mock_economy_model):
     """Zero employees means no production capacity."""
-    ind = make_industry_agent_production(mock_economy_model, wage=20, efficiency=10, raw_cost=5, num_employees=0)
+    ind = make_industry_agent_production(
+        mock_economy_model, wage=20, efficiency=10, raw_cost=5, num_employees=0
+    )
     assert ind.get_production_capacity() == 0
 
 
 def test_zero_efficiency_returns_zero(mock_economy_model):
     """Zero worker efficiency means no production."""
-    ind = make_industry_agent_production(mock_economy_model, wage=20, efficiency=0, raw_cost=5)
+    ind = make_industry_agent_production(
+        mock_economy_model, wage=20, efficiency=0, raw_cost=5
+    )
     assert ind.get_production_capacity() == 0
 
 
 def test_negative_efficiency_returns_zero(mock_economy_model):
     """Negative efficiency should clamp capacity to 0."""
-    ind = make_industry_agent_production(mock_economy_model, wage=20, efficiency=-5, raw_cost=5)
+    ind = make_industry_agent_production(
+        mock_economy_model, wage=20, efficiency=-5, raw_cost=5
+    )
     assert ind.get_production_capacity() == 0
 
 
@@ -563,7 +785,7 @@ def test_infinite_variable_cost(mock_economy_model, monkeypatch):
         raw_cost=5,
         total_money=1000000,
         fixed_cost=4000,
-        debt_allowed=False
+        debt_allowed=False,
     )
     monkeypatch.setattr(ind, "get_variable_cost", lambda: float("inf"))
     assert ind.get_production_capacity() == 0
@@ -581,7 +803,7 @@ def test_zero_variable_cost(mock_economy_model, monkeypatch):
         raw_cost=5,
         total_money=1000000,
         fixed_cost=4000,
-        debt_allowed=False
+        debt_allowed=False,
     )
     monkeypatch.setattr(ind, "get_variable_cost", lambda: 0.0)
     assert ind.get_production_capacity() == 0
@@ -589,7 +811,9 @@ def test_zero_variable_cost(mock_economy_model, monkeypatch):
 
 def test_non_finite_funds_limit(mock_economy_model, monkeypatch):
     """If variable cost returns a finite number but leads to infinite funds limit, clamp to 0."""
-    ind = make_industry_agent_production(mock_economy_model, wage=20, efficiency=10, raw_cost=5)
+    ind = make_industry_agent_production(
+        mock_economy_model, wage=20, efficiency=10, raw_cost=5
+    )
     # simulate division by an extremely small cost to trigger overflow
     monkeypatch.setattr(ind, "get_variable_cost", lambda: 1e-300)
     cap = ind.get_production_capacity()
@@ -608,6 +832,6 @@ def test_fixed_cost_greater_than_money(mock_economy_model):
         raw_cost=5,
         total_money=1000,
         fixed_cost=2000,
-        debt_allowed=False
+        debt_allowed=False,
     )
     assert ind.get_production_capacity() == 0
