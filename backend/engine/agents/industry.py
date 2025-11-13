@@ -241,12 +241,6 @@ class IndustryAgent(Agent):
         """  
         #produce needed inventory without re-producing inventory aready in storage
         quantity_to_produce = self.inventory_available_this_step - self.inventory
-
-        if quantity_to_produce <= 0: #no production this turn, already have enough inventory
-            self.hours_worked = 0
-            self.total_cost = self.fixed_cost #fixed cost is still factored into losses this tick
-            self.balance -= self.fixed_cost
-            pass
         
         if quantity_to_produce <= 0: #no production this turn, already have enough inventory
             self.hours_worked = 0
