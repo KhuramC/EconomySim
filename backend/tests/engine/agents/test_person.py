@@ -138,6 +138,149 @@ def test_purchase_goods(mock_economy_model):
     assert person.balance == approx(200)
 
 
-@mark.xfail(reason="Function not implemented yet.")
-def test_change_employment():
-    assert False
+def test_change_employment_gets_highest_paying_job(mock_economy_model):
+    """
+    Tests that an unemployed person finds and gets the highest paying job
+    among hiring industries.
+    """
+    # Setup Industries
+    ind_low = IndustryAgent(
+        mock_economy_model, IndustryType.GROCERIES, starting_offered_wage=15
+    )
+    ind_low.employees_desired = 5
+    ind_low.num_employees = 0
+
+    ind_high = IndustryAgent(
+        mock_economy_model, IndustryType.LUXURY, starting_offered_wage=30
+    )
+    ind_high.employees_desired = 5
+    ind_high.num_employees = 0
+
+    ind_mid = IndustryAgent(
+        mock_economy_model, IndustryType.AUTOMOBILES, starting_offered_wage=20
+    )
+    ind_mid.employees_desired = 5
+    ind_mid.num_employees = 0
+
+    # Setup Person
+    person = PersonAgent(
+        mock_economy_model, Demographic.MIDDLE_CLASS, preferences={}, employer=None
+    )
+
+    assert person.employer is None
+    assert person.income == 0
+
+    # Action
+    person.change_employment()
+
+    # Assert
+    assert person.employer == ind_high
+    assert person.income == 30
+    assert ind_high.num_employees == 1
+    assert ind_mid.num_employees == 0
+
+
+def test_change_employment_already_employed(mock_economy_model):
+    """
+    Tests that an already employed person does not look for a new job.
+    """
+    ind_current = IndustryAgent(
+        mock_economy_model, IndustryType.GROCERIES, starting_offered_wage=15
+    )
+    ind_better = IndustryAgent(
+        mock_economy_model, IndustryType.LUXURY, starting_offered_wage=50
+    )
+    ind_better.employees_desired = 5
+    ind_better.num_employees = 0
+
+    # Setup Person - already employed
+    person = PersonAgent(
+        mock_economy_model,
+        Demographic.MIDDLE_CLASS,
+        preferences={},
+        employer=ind_current,
+        income=15,
+    )
+
+    assert person.employer == ind_current
+
+    # Action
+    person.change_employment()
+
+    # Assert - no change
+    assert person.employer == ind_current
+    assert person.income == 15
+    assert ind_better.num_employees == 0
+
+
+def test_change_employment_no_jobs_available(mock_economy_model):
+    """
+    Tests that an unemployed person remains unemployed if no industries are hiring.
+    """
+    # Industries are at capacity
+    ind_full = IndustryAgent(
+        mock_economy_model, IndustryType.GROCERIES, starting_offered_wage=50
+    )
+    ind_full.employees_desired = 5
+    ind_full.num_employees = 5
+
+    # Setup Person
+    person = PersonAgent(
+        mock_economy_model, Demographic.MIDDLE_CLASS, preferences={}, employer=None
+    )
+
+    # Action
+    person.change_employment()
+
+    # Assert - no change
+    assert person.employer is None
+    assert person.income == 0
+    assert ind_full.num_employees == 5
+
+
+def test_change_employment_applies_top_3_gets_second_best(mock_economy_model):
+    """
+    Tests that a person correctly applies to the top 3 hiring industries
+    and gets the best one that isn't full.
+    """
+    # Setup Industries
+    ind_best_full = IndustryAgent(
+        mock_economy_model, IndustryType.LUXURY, starting_offered_wage=100
+    )
+    ind_best_full.employees_desired = 1
+    ind_best_full.num_employees = 1  # Full
+
+    ind_second_best = IndustryAgent(
+        mock_economy_model, IndustryType.AUTOMOBILES, starting_offered_wage=90
+    )
+    ind_second_best.employees_desired = 1
+    ind_second_best.num_employees = 0  # Hiring
+
+    ind_third_best = IndustryAgent(
+        mock_economy_model, IndustryType.ENTERTAINMENT, starting_offered_wage=80
+    )
+    ind_third_best.employees_desired = 1
+    ind_third_best.num_employees = 0  # Hiring
+
+    ind_fourth_best = IndustryAgent(
+        mock_economy_model, IndustryType.GROCERIES, starting_offered_wage=70
+    )
+    ind_fourth_best.employees_desired = 1
+    ind_fourth_best.num_employees = 0  # Hiring
+
+    # Setup Person
+    person = PersonAgent(
+        mock_economy_model, Demographic.MIDDLE_CLASS, preferences={}, employer=None
+    )
+
+    # Action
+    person.change_employment()
+
+    # Assert
+    # Person should have applied to ind_best_full (failed),
+    # then ind_second_best (succeeded).
+    assert person.employer == ind_second_best
+    assert person.income == 90
+    assert ind_best_full.num_employees == 1
+    assert ind_second_best.num_employees == 1
+    assert ind_third_best.num_employees == 0

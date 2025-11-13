@@ -6,6 +6,10 @@ from .pricing import avg_cost, linear_profit_max, linear_price
 import logging
 import math
 import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .person import PersonAgent
 
 
 class IndustryAgent(Agent):
@@ -107,7 +111,7 @@ class IndustryAgent(Agent):
         """
         Gets all employees that are employed to this industry.
         """
-        return self.model.get_employees(self.industry_type)
+        return self.model.get_employees(self)
 
     def determine_price(self):
         """
@@ -313,6 +317,29 @@ class IndustryAgent(Agent):
             logging.info(f"Industry {self.unique_id} fired agent {employee.unique_id}")
 
         logging.info(f"{self.industry_type} fired {count_to_fire} employees.")
+
+    def hire_employee(self, person: "PersonAgent") -> bool:
+        """
+        Hires a person if there is a vacant position.
+        This method is called by a PersonAgent.
+
+        Args:
+            person (PersonAgent): The agent applying for the job.
+
+        Returns:
+            bool: True if hiring was successful, False otherwise.
+        """
+        if self.num_employees >= self.employees_desired:
+            return False  # No more open positions
+
+        # Hire the person
+        person.employer = self
+        person.income = self.offered_wage
+        self.num_employees += 1
+        logging.info(
+            f"{self.industry_type} hired agent {person.unique_id} for {self.offered_wage:.2f}."
+        )
+        return True
 
     def get_variable_cost(self):
         """

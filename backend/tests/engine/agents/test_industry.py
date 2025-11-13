@@ -23,7 +23,7 @@ def industry_with_employees(mock_economy_model):
         person = PersonAgent(
             mock_economy_model, Demographic.LOWER_CLASS, preferences={}
         )
-        person.employer = industry.industry_type
+        person.employer = industry
         employees.append(person)
 
     industry.num_employees = 10
@@ -199,6 +199,65 @@ def test_change_employment_zero_efficiency(industry_with_employees):
     assert len(industry.get_employees()) == 10
     assert industry.num_employees == 10
 
+def test_hire_employee_success(mock_economy_model):
+    """
+    Tests that an industry can successfully hire a person if it is under capacity.
+    """
+    industry = IndustryAgent(
+        mock_economy_model,
+        IndustryType.GROCERIES,
+        starting_number_of_employees=5,
+        starting_offered_wage=25.0,
+    )
+    # Set desired employees higher than current
+    industry.employees_desired = 10
+
+    person = PersonAgent(
+        mock_economy_model, Demographic.LOWER_CLASS, preferences={}, income=0
+    )
+
+    assert industry.num_employees == 5
+    assert person.employer is None
+    assert person.income == 0
+
+    # Action
+    was_hired = industry.hire_employee(person)
+
+    # Assert
+    assert was_hired is True
+    assert industry.num_employees == 6
+    assert person.employer == industry
+    assert person.income == 25.0
+    
+def test_hire_employee_at_capacity(mock_economy_model):
+    """
+    Tests that an industry at full capacity (num_employees == employees_desired)
+    will not hire a new person.
+    """
+    industry = IndustryAgent(
+        mock_economy_model,
+        IndustryType.GROCERIES,
+        starting_number_of_employees=10,
+        starting_offered_wage=25.0,
+    )
+    # Set desired employees equal to current
+    industry.employees_desired = 10
+
+    person = PersonAgent(
+        mock_economy_model, Demographic.LOWER_CLASS, preferences={}, income=0
+    )
+
+    assert industry.num_employees == 10
+    assert person.employer is None
+
+    # Action
+    was_hired = industry.hire_employee(person)
+
+    # Assert
+    assert was_hired is False
+    assert industry.num_employees == 10
+    assert person.employer is None
+    assert person.income == 0
 
 @pytest.fixture(autouse=True)
 def quiet_logging():
