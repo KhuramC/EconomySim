@@ -179,7 +179,7 @@ _SMALL_CONFIG = {
             IndustryType.LUXURY: 0.001835,  # Annual: 10%
         },
         "subsidies": {itype.value: 1 for itype in IndustryType},
-        "rent_cap": 0.0,  # No state or local rent control
+        "price_cap": {itype.value: None for itype in IndustryType},
         "minimum_wage": 550.00,  # $13.75/hr x 40 hrs
     },
 }
@@ -358,7 +358,7 @@ _MEDIUM_CONFIG = {
             IndustryType.LUXURY: 0.001835,  # Annual: 10%
         },
         "subsidies": {itype.value: 1 for itype in IndustryType},
-        "rent_cap": 0.0,  # No state or local rent control
+        "price_cap": {itype.value: None for itype in IndustryType},
         "minimum_wage": 290.00,  # $7.25/hr x 40 hrs
     },
 }
@@ -540,7 +540,12 @@ _LARGE_CONFIG = {
             IndustryType.LUXURY: 0.001835,  # Annual: 10%
         },
         "subsidies": {itype.value: 1 for itype in IndustryType},
-        "rent_cap": 0.000267,  # Annual: 1.4%
+        "price_cap": {
+            itype.value: (
+                0.000267 if itype.value == IndustryType.HOUSING else None
+            )  # Annual: 1.4%
+            for itype in IndustryType
+        },
         "minimum_wage": 767.20,  # $19.18/hr x 40 hrs
     },
 }

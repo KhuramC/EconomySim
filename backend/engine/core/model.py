@@ -41,7 +41,7 @@ policies_schema = {
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
-    "rent_cap": None,
+    "price_cap": {itype.value: None for itype in IndustryType},
     "minimum_wage": None,
 }
 """Schema for validating the policies dictionary."""
