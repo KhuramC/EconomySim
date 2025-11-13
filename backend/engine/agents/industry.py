@@ -288,10 +288,10 @@ class IndustryAgent(Agent):
     def determine_wages(self):
         """
         How the industry will determine what to set their hiring wages at,
-        based on the model's market_base_wage.
+        based on the model's market_wage.
         """
-        new_wage = self.model.market_base_wage
-        self.offered_wage = max(new_wage, self.policies.get("minimum_wage", 0))
+        new_wage = self.model.market_wage
+        self.offered_wage = max(new_wage, self.model.policies.get("minimum_wage", 0))
         return self.offered_wage
 
     def fire_employees(self, count: int):
@@ -309,6 +309,7 @@ class IndustryAgent(Agent):
             employee = employees[i]
             employee.employer = None
             employee.income = 0
+            self.num_employees -= 1
             logging.info(f"Industry {self.unique_id} fired agent {employee.unique_id}")
 
         logging.info(f"{self.industry_type} fired {count_to_fire} employees.")
