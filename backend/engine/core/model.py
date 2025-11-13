@@ -338,7 +338,7 @@ class EconomyModel(Model):
 
     def update_market_wage(self):
         """
-        Updates the market_base_wage based on unemployment.
+        Updates the market_wage based on unemployment.
         - High unemployment puts downward pressure on wages.
         - Low unemployment puts upward pressure on wages.
         """
