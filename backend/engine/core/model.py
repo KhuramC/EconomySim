@@ -105,8 +105,9 @@ class EconomyModel(Model):
         self.inflation_rate = inflation_rate
         self.random_events = random_events
         self.policies = starting_policies
-
         self.week = 0
+        self.market_wage = self.policies.get("minimum_wage")  # weekly
+
         self.datacollector = DataCollector(
             model_reporters={
                 "week": self.get_week,
@@ -335,6 +336,22 @@ class EconomyModel(Model):
             )
         )
 
+    def update_market_wage(self):
+        """
+        Updates the market_base_wage based on unemployment.
+        - High unemployment puts downward pressure on wages.
+        - Low unemployment puts upward pressure on wages.
+        """
+        unemployment_rate = calculate_unemployment(self)
+        target_unemployment = 0.05
+
+        # (0.05 - 0.10) * 0.1 = -0.005 (0.5% downward pressure)
+        # (0.05 - 0.02) * 0.1 = +0.003 (0.3% upward pressure)
+        wage_adjustment = (target_unemployment - unemployment_rate) * 0.1
+        self.market_wage *= 1 + wage_adjustment
+
+        self.market_wage = max(self.market_wage, self.policies.get("minimum_wage", 0))
+
     def inflation(self):
         """
         Applies the weekly inflation rate to all industry costs and
@@ -354,8 +371,8 @@ class EconomyModel(Model):
             return  # do not step past maximum simulation length
         self.week = self.week + 1  # new week
 
-        # TODO: implement inflation logic
         self.inflation()
+        self.update_market_wage()
 
         # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]
