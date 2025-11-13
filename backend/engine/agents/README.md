@@ -38,7 +38,7 @@ Currently, if a good is unavailable, the agent simply doesn't spend that portion
 
 The simulation's job market operates on a two-part system: Industries decide how many workers they need and set wages, and unemployed Persons actively seek the best-paying jobs they can find.
 
-### `IndustryAgent.change_employment(self)`
+### `IndustryAgent.update_staffing(self)`
 
 This is the industry's "manager" step. Once per cycle, the industry looks at its sales from the previous week and decides the perfect number of employees it needs to meet that same level of demand in a 40-hour work week. If it has too many employees, it fires the extra ones. It also updates the wage it will offer for any new, open positions.
 
@@ -54,6 +54,6 @@ When an industry needs to lay off a certain number of workers it shuffles its en
 
 This is the industry's side of the job interview. When a person applies, the industry checks if it has an open spot (i.e., if its current number of employees is less than its desired number). If so, it hires the person and returns True. Otherwise, returns False.
 
-### `PersonAgent.change_employment(self)`
+### `PersonAgent.seek_employment(self)`
 
 This is the unemployed person's "job hunt" step. If the person is unemployed, they get a list of all industries in the economy that have open positions. They sort this list from the highest-paying job to the lowest. They then apply to the best-paying job first. If they get it, they stop. If not (because someone else got it first), they apply to the next-best-paying job, and so on, until they are hired.

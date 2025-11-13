@@ -257,7 +257,7 @@ class IndustryAgent(Agent):
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
 
-    def change_employment(self):
+    def update_staffing(self):
         """
         Determines the desired number of employees based on last week's sales,
         fires employees if over-staffed, and sets the offered wage for new hires.

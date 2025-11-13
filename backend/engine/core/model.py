@@ -378,12 +378,12 @@ class EconomyModel(Model):
         industryAgents = self.agents_by_type[IndustryAgent]
         industryAgents.shuffle_do("determine_price")
         industryAgents.shuffle_do("produce_goods")
-        industryAgents.shuffle_do("change_employment")
+        industryAgents.shuffle_do("update_staffing")
 
         # people agents do their tasks
         peopleAgents = self.agents_by_type[PersonAgent]
         peopleAgents.shuffle_do("purchase_goods")
-        peopleAgents.shuffle_do("change_employment")
+        peopleAgents.shuffle_do("seek_employment")
 
         # collect info for this week
         self.datacollector.collect(self)

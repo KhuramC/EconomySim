@@ -58,11 +58,6 @@ def test_produce_goods():
     assert False
 
 
-@mark.xfail(reason="Function not implemented yet.")
-def test_change_employment():
-    assert False
-
-
 @pytest.mark.parametrize(
     "market_wage, min_wage, expected_wage",
     [
@@ -153,7 +148,7 @@ def test_fire_employees_fires_zero_or_negative(industry_with_employees):
         (300, 0.5, 15, 0),  # 15 desired (300 / (0.5*40)), 10 current -> 0 fired
     ],
 )
-def test_change_employment_firing_logic(
+def test_update_staffing_firing_logic(
     industry_with_employees,
     quantity_last_sold,
     worker_efficiency,
@@ -171,7 +166,7 @@ def test_change_employment_firing_logic(
     industry.worker_efficiency = worker_efficiency
     industry.quantity_last_sold = quantity_last_sold
 
-    industry.change_employment()
+    industry.update_staffing()
 
     current_employees = len(industry.get_employees())
 
@@ -183,7 +178,7 @@ def test_change_employment_firing_logic(
     assert industry.offered_wage >= 0
 
 
-def test_change_employment_zero_efficiency(industry_with_employees):
+def test_update_staffing_zero_efficiency(industry_with_employees):
     """
     Tests the safety check for worker_efficiency <= 0.
     """
@@ -191,7 +186,7 @@ def test_change_employment_zero_efficiency(industry_with_employees):
     industry.worker_efficiency = 0
     industry.quantity_last_sold = 1000  # Set demand high
 
-    industry.change_employment()
+    industry.update_staffing()
 
     # Should desire 0 and not crash
     assert industry.employees_desired == 0

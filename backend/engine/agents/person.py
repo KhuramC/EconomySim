@@ -154,7 +154,7 @@ class PersonAgent(Agent):
                     f"Agent {self.unique_id} has insufficient funds for {industry.industry_type}"
                 )
 
-    def change_employment(self):
+    def seek_employment(self):
         """
         How the person will try to change their employment status and get hired. Only occurs if
         they are not employed.

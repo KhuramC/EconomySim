@@ -138,7 +138,7 @@ def test_purchase_goods(mock_economy_model):
     assert person.balance == approx(200)
 
 
-def test_change_employment_gets_highest_paying_job(mock_economy_model):
+def test_seek_employment_gets_highest_paying_job(mock_economy_model):
     """
     Tests that an unemployed person finds and gets the highest paying job
     among hiring industries.
@@ -171,7 +171,7 @@ def test_change_employment_gets_highest_paying_job(mock_economy_model):
     assert person.income == 0
 
     # Action
-    person.change_employment()
+    person.seek_employment()
 
     # Assert
     assert person.employer == ind_high
@@ -180,7 +180,7 @@ def test_change_employment_gets_highest_paying_job(mock_economy_model):
     assert ind_mid.num_employees == 0
 
 
-def test_change_employment_already_employed(mock_economy_model):
+def test_seek_employment_already_employed(mock_economy_model):
     """
     Tests that an already employed person does not look for a new job.
     """
@@ -205,7 +205,7 @@ def test_change_employment_already_employed(mock_economy_model):
     assert person.employer == ind_current
 
     # Action
-    person.change_employment()
+    person.seek_employment()
 
     # Assert - no change
     assert person.employer == ind_current
@@ -213,7 +213,7 @@ def test_change_employment_already_employed(mock_economy_model):
     assert ind_better.num_employees == 0
 
 
-def test_change_employment_no_jobs_available(mock_economy_model):
+def test_seek_employment_no_jobs_available(mock_economy_model):
     """
     Tests that an unemployed person remains unemployed if no industries are hiring.
     """
@@ -230,7 +230,7 @@ def test_change_employment_no_jobs_available(mock_economy_model):
     )
 
     # Action
-    person.change_employment()
+    person.seek_employment()
 
     # Assert - no change
     assert person.employer is None
@@ -238,7 +238,7 @@ def test_change_employment_no_jobs_available(mock_economy_model):
     assert ind_full.num_employees == 5
 
 
-def test_change_employment_applies_top_3_gets_second_best(mock_economy_model):
+def test_seek_employment_applies_top_3_gets_second_best(mock_economy_model):
     """
     Tests that a person correctly applies to the top 3 hiring industries
     and gets the best one that isn't full.
@@ -274,7 +274,7 @@ def test_change_employment_applies_top_3_gets_second_best(mock_economy_model):
     )
 
     # Action
-    person.change_employment()
+    person.seek_employment()
 
     # Assert
     # Person should have applied to ind_best_full (failed),
