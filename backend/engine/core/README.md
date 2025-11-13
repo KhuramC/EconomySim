@@ -61,6 +61,16 @@ We can solve for $r_{weekly}$ to get the correct compounding weekly percentage.
 * Decreasing money and increasing costs would be double-dipping. The `PersonAgent`s would have their buying power reduced twice—once when you manually decrease their money, and a second time when they face the higher prices set by industries.
 
 
+### Market Wage
+
+The `update_market_wage` function models the "invisible hand" of the labor market, adjusting the economy-wide "going rate" for labor based on unemployment. Each week, the model checks the unemployment rate. It compares this to a "healthy" target unemployment rate (e.g., 5%).
+
+- **If unemployment is high** (e.g., 10%), there are more workers than jobs. This competition among workers puts downward pressure on wages, causing the **market wage to fall**.
+
+- **If unemployment is very low** (e.g., 2%), there are more jobs than workers. Businesses must compete for the few available workers, putting upward pressure on wages and causing the **market wage to rise.**
+
+This market wage will never be allowed to drop below the simulation's `minimum_wage` policy.
+
 ## Indicators
 
 ### Lorenz Curve
