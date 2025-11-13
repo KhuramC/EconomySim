@@ -156,8 +156,7 @@ class PersonAgent(Agent):
 
     def seek_employment(self):
         """
-        How the person will try to change their employment status and get hired. Only occurs if
-        they are not employed.
+        Applies for all available jobs in order of highest wage. Only occurs if they are not employed.
         """
         if self.employer is not None:
             return
