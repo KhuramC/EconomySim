@@ -21,6 +21,6 @@ def mock_economy_model(policies) -> MockEconomyModel:
         policies (dict): a valid policies.
 
     Returns:
-        mock_moedle (MockEconomyModel): the model with the desired seting.
+        mock_model (MockEconomyModel): the model with the desired seting.
     """
     return MockEconomyModel(policies)
