@@ -100,7 +100,7 @@ class EconomyModel(Model):
         self._allowed_none = {
             ("policies", "price_cap", "*"),
         }
-        self.validate_schema(starting_policies, policies_schema, path="policies", allowed_none=True)
+        self.validate_schema(starting_policies)
 
         self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
@@ -139,98 +139,26 @@ class EconomyModel(Model):
 
 
     def validate_schema(
-        self,
-        data: dict,
-        schema: dict = policies_schema,
-        path: str = "policies",
-        allowed_none: Iterable | bool | None = None,
-        _path_list: list | None = None,
-    ):
+            self, data: dict, schema: dict = policies_schema, path="policies"
+        ):
         """
-        Recursively validate `data` against `schema`.
+        Recursively validate the dictionary against the schema.
 
-        allowed_none may be:
-          - None: no None-values allowed except where schema explicitly permits
-          - iterable of path-specs (tuples or bracketed strings), e.g. {"policies[price_cap][*]"}
-          - bool True: use the model-level default stored in self._allowed_none (if present),
-            otherwise fall back to an empty set.
+        Args:
+            data (dict): The dictionary to validate.
+            path (str, optional): Name of dict variable. Defaults to "policies".
 
-        Internal `_path_list` parameter is used during recursion and should not be passed by callers.
+        Raises:
+            ValueError: If the data dictionary does not match the schema.
         """
 
-        # If caller passed a boolean True, use the model's stored default if available.
-        if isinstance(allowed_none, bool):
-            if allowed_none:
-                allowed_none = getattr(self, "_allowed_none", set())
-            else:
-                allowed_none = set()
-
-        # normalize allowed_none into a set of tuples for fast matching
-        allowed_none = allowed_none or set()
-        allowed_tuples = set()
-
-        def _parse_allowed_item(item):
-            if isinstance(item, (list, tuple)):
-                return tuple(item)
-            if isinstance(item, str):
-                parts = re.split(r"\[|\]", item)
-                tokens = [p for p in parts if p != ""]
-                return tuple(tokens)
-            raise TypeError("allowed_none items must be str or tuple/list")
-
-        # build normalized set from provided iterable (if it's not already empty)
-        for it in allowed_none:
-            allowed_tuples.add(_parse_allowed_item(it))
-
-        def _is_allowed_none(path_list: list):
-            tup = tuple(path_list)
-            if tup in allowed_tuples:
-                return True
-            for a in allowed_tuples:
-                if len(a) >= 1 and a[-1] == "*":
-                    if tup[: len(a) - 1] == a[: len(a) - 1]:
-                        return True
-            return False
-
-        if _path_list is None:
-            _path_list = [path]
-
-        # top-level: ensure required keys present in data
         missing = set(schema.keys()) - set(data.keys())
         if missing:
             raise ValueError(f"Missing keys at {path}: {missing}")
 
         for key, subschema in schema.items():
-            current_path = f"{path}[{key}]"
-            current_path_list = _path_list + [key]
-
-            if key not in data:
-                raise ValueError(f"Missing key {key} at {path}")
-
-            value = data[key]
-
-            # If subschema is a dict, allow the branch to be None only if explicitly permitted.
             if isinstance(subschema, dict):
-                if value is None:
-                    if _is_allowed_none(current_path_list):
-                        continue
-                    else:
-                        raise ValueError(f"Value at {current_path} is None but not allowed to be None")
-                if not isinstance(value, dict):
-                    raise ValueError(f"Expected dict at {current_path}, got {type(value).__name__}")
-                # Recurse
-                self.validate_schema(
-                    value,
-                    subschema,
-                    path=current_path,
-                    allowed_none=allowed_none,
-                    _path_list=current_path_list,
-                )
-            else:
-                # leaf: allow None only if allowed
-                if value is None and not _is_allowed_none(current_path_list):
-                    raise ValueError(f"Value at {current_path} is None but not allowed to be None")
-                # optionally validate types for non-None leaves here
+                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
 
 
 

@@ -150,7 +150,7 @@ class ModelController:
         """
 
         model = self.get_model(model_id)
-        model.validate_schema(policies, allowed_none=True)
+        model.validate_schema(policies)
         model.policies = policies
 
     def get_current_week(self, model_id: int) -> int:

@@ -35,13 +35,11 @@ def test_validate_schema(model: EconomyModel, policies, delete_values: bool, exc
         del new_policies["corporate_income_tax"]
 
     # allow ANY industry under price_cap to be None for the purpose of this test
-    allowed = {("policies", "price_cap", "*")}
     with exception:
         model.validate_schema(
             new_policies,
             policies,
             path="policies",
-            allowed_none=allowed,
         )
 
 
