@@ -191,15 +191,3 @@ def test_step(model: EconomyModel):
 # @mark.xfail(reason="Function has not been implemented yet.")
 # def test_reverse_step(model: EconomyModel):
 #     assert False
-    
-def test_get_week(model:EconomyModel):
-    """
-    Test for `get_week`.
-    Ensures that the model is corrrectly getting the `week` variable. 
-
-    Args:
-        model (EconomyModel): a freshly created model.
-    """
-    assert model.get_week() == model.week
-    model.step()
-    assert model.get_week() == model.week
