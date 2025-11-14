@@ -64,11 +64,21 @@ def validate_schema(data: dict, schema: dict, path: str):
             validate_schema(data[key], subschema, path=f"{path}[{key}]")
 
 
-def num_prop(ratio, N):
-    """Calculate numbers of total N in proportion to ratio"""
-    ratio = np.asarray(ratio)
-    p = np.cumsum(np.insert(ratio.ravel(), 0, 0))  # cumulative proportion
-    return np.diff(np.round(N / p[-1] * p).astype(int)).reshape(ratio.shape)
+def num_prop(ratio: list[int | float], total: int):
+    """
+    Calculates the whole number in each category based on the proportion of the total.
+
+    Args:
+        ratio (Iterable): the proportion associated with category.
+        total (int): the total number of items.
+    """
+    if total == 0:
+        return np.zeros(len(ratio))
+    np_ratio = np.asarray(ratio)
+    cum_prop = np.cumsum(np.insert(np_ratio.ravel(), 0, 0))  # cumulative proportion
+    return np.diff(np.round(total / cum_prop[-1] * cum_prop).astype(int)).reshape(
+        np_ratio.shape
+    )
 
 
 def generate_lognormal(log_mean: float, log_std: float, size: int):

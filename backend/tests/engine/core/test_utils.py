@@ -1,8 +1,13 @@
 import pytest
 from pytest import mark
 from contextlib import nullcontext
-from engine.core.utils import validate_schema, POLICIES_SCHEMA, generate_lognormal
 import numpy as np
+from engine.core.utils import (
+    validate_schema,
+    POLICIES_SCHEMA,
+    num_prop,
+    generate_lognormal,
+)
 
 
 @mark.parametrize(
@@ -23,12 +28,46 @@ def test_validate_schema(policies, delete_values: bool, exception):
         delete_values (bool): whether to delete values from policies
         exception: the exception expected to occur.
     """
-    # TODO: add parameters for doing this with demographics as well.
+    # TODO: add parameters for doing this with demographics/industries as well.
     new_policies = policies.copy()
     if delete_values:
         del new_policies["corporate_income_tax"]
     with exception:
         validate_schema(new_policies, POLICIES_SCHEMA, path="policies")
+
+
+@pytest.mark.parametrize(
+    "ratio, total, expected",
+    [
+        # Simple case, ratio sums to 1
+        ([0.5, 0.5], 100, [50, 50]),
+        # Ratio does not sum to 1, should be normalized
+        ([1, 1], 100, [50, 50]),
+        # Floating point ratios
+        ([0.25, 0.75], 100, [25, 75]),
+        # Case with rounding
+        ([0.33, 0.67], 100, [33, 67]),
+        # Another rounding case, ensuring sum is correct
+        ([1, 1, 1], 10, [3, 4, 3]),
+        # Total is 0
+        ([0.5, 0.5], 0, [0, 0]),
+        # Empty ratio
+        ([], 100, []),
+        # Single item in ratio
+        ([1], 100, [100]),
+        # Ratios with zeros
+        ([0.5, 0, 0.5], 100, [50, 0, 50]),
+    ],
+)
+def test_num_prop(ratio, total, expected):
+    """
+    Test for `num_prop`.
+    Tests whether it correctly calculates whole numbers from proportions.
+    """
+    result = num_prop(ratio, total)
+    assert np.array_equal(result, np.array(expected))
+    if total > 0 and ratio:
+        assert result.sum() == total
 
 
 @pytest.mark.parametrize(
@@ -39,7 +78,7 @@ def test_validate_schema(policies, delete_values: bool, exception):
         (800, 300),  # Medium variance
     ],
 )
-def test_generate_lognormal_statistics(mean, std):
+def test_generate_lognormal_statistics(mean: int, std: int):
     """
     Tests that the generated distribution has approximately the
     mean and standard deviation that were requested.
