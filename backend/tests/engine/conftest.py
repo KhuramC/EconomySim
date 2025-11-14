@@ -3,6 +3,8 @@ import logging
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 
+NUM_AGENTS = 10
+
 DEMOGRAPHICS = {
     demo: {
         "income": {
@@ -49,6 +51,14 @@ POLICIES = {
     "minimum_wage": 7.25,
 }
 """A sample policies variable that should pass a validate_schema call by an EconomyModel."""
+
+
+@pytest.fixture()
+def num_agents() -> int:
+    """
+    A fixture that provides the number of agents in a simulation.
+    """
+    return NUM_AGENTS
 
 
 @pytest.fixture()

@@ -2,13 +2,14 @@ import pytest
 from pytest import mark, approx
 import numpy as np
 from engine.core.model import EconomyModel
+from engine.core.utils import num_prop
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from engine.agents.industry import IndustryAgent
 from engine.agents.person import PersonAgent
 
 
-def test_setup_person_agents(model: EconomyModel):
+def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics):
     """
     Tests that the `setup_person_agents` method, called during
     EconomyModel.__init__, correctly creates agents.
@@ -21,7 +22,7 @@ def test_setup_person_agents(model: EconomyModel):
     """
     # Test correct number of agents
     people = model.agents_by_type[PersonAgent]
-    assert len(people) == 100  # Default in conftest.py model fixture
+    assert len(people) == num_agents
 
     # Test correct demographic proportions
     lower_class_agents = people.select(
@@ -34,10 +35,16 @@ def test_setup_person_agents(model: EconomyModel):
         lambda agent: agent.demographic == Demographic.UPPER_CLASS
     )
 
-    # Using default proportions from conftest.py
-    assert len(lower_class_agents) == int(0.45 * 100)
-    assert len(middle_class_agents) == int(0.40 * 100)
-    assert len(upper_class_agents) == int(0.15 * 100)
+    props = num_prop(
+        [
+            demographics[demographic]["proportion"] * 100
+            for demographic in demographics.keys()
+        ],
+        num_agents,
+    )
+    assert len(lower_class_agents) == props[0]
+    assert len(middle_class_agents) == props[1]
+    assert len(upper_class_agents) == props[2]
 
     # Test expected attributes
     expected_keys = set([industry.value for industry in IndustryType])
