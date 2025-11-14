@@ -173,7 +173,7 @@ def test_get_model_indicators(
 ):
     """
     Test for `get_model_indicators`, an API endpoint.
-    Tests that it correctly gets the indicators.
+    Tests that it correctly gets the indicators, or fails based on the arguments.
     """
 
     # step twice
