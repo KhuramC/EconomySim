@@ -34,17 +34,6 @@ def test_produce_goods():
     assert False
 
 
-@mark.xfail(reason="Function not implemented yet.")
-def test_change_employment():
-    assert False
-
-
-@mark.xfail(reason="Function not implemented yet.")
-def determine_wages():
-    assert False
-
-
-
 def test_max_production_capacity(mock_economy_model):
     """
     Test that production capacity is correctly calculated based on employees and funds.
