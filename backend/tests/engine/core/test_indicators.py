@@ -77,9 +77,25 @@ def test_calculate_gdp(model: EconomyModel, production, price, expected):
         param([20] * 10, 20.0, id="Same incomes"),
         param([0] * 10, 0.0, id="Zero (same) incomes"),
         param([0, 2, 4, 6, 8, 10, 12, 14, 16, 18], 9.0, id="Different incomes"),
+        param(
+            [5, 12, 19, 21, 32, 51, 68, 87, 92, 100],
+            48.7,
+            id="Different incomes(bigger range)",
+        ),
+        param([0] * 9 + [100], 10.0, id="Unequal incomes"),
     ],
 )
-def test_calculate_income_per_capita(model: EconomyModel, incomes, expected):
+def test_calculate_income_per_capita(
+    model: EconomyModel, incomes: list, expected: float
+):
+    """
+    Tests `calculate_income_per_capita`'s accuracy across different ranges of incomes.
+
+    Args:
+        model (EconomyModel): a freshly created model.
+        incomes (list): a list of the incomes of the PersonAgents.
+        expected (float): the expected value by the calculation.
+    """
 
     peopleAgents = model.agents_by_type[PersonAgent]
     for i, agent in enumerate(peopleAgents):
@@ -88,10 +104,35 @@ def test_calculate_income_per_capita(model: EconomyModel, incomes, expected):
     assert expected == indicators.calculate_income_per_capita(model)
 
 
-@mark.xfail(reason="Demographic's income feature not implemented yet.")
-def test_calculate_median_income(model: EconomyModel):
-    # TODO: do whenever templates/demographic's distribution has been done.
-    assert False
+@mark.parametrize(
+    "incomes,expected",
+    [
+        param([20] * 10, 20.0, id="Same incomes"),
+        param([0] * 10, 0.0, id="Zero (same) incomes"),
+        param([0, 2, 4, 6, 8, 10, 12, 14, 16, 18], 9.0, id="Different incomes"),
+        param(
+            [5, 12, 19, 21, 32, 51, 68, 87, 92, 100],
+            41.5,
+            id="Different incomes(bigger range)",
+        ),
+        param([0] * 9 + [100], 0.0, id="Unequal incomes"),
+    ],
+)
+def test_calculate_median_income(model: EconomyModel, incomes: list, expected: float):
+    """
+    Tests `calculate_median_income`'s accuracy across different ranges of incomes.
+
+    Args:
+        model (EconomyModel): a freshly created model.
+        incomes (list): a list of the incomes of the PersonAgents.
+        expected (float): the expected value by the calculation.
+    """
+
+    peopleAgents = model.agents_by_type[PersonAgent]
+    for i, agent in enumerate(peopleAgents):
+        agent.income = incomes[i]
+
+    assert expected == indicators.calculate_median_income(model)
 
 
 # @mark.xfail(reason="Function not implemented yet.")
