@@ -83,9 +83,10 @@ def test_calculate_median_income(model: EconomyModel):
     assert False
 
 
-@mark.xfail(reason="Function not implemented yet.")
-def test_calculate_hoover_index(model: EconomyModel):
-    assert False
+# @mark.xfail(reason="Function not implemented yet.")
+# def test_calculate_hoover_index(model: EconomyModel):
+#     assert False
+# TODO: implement this whenever Hoover Index is implemented.
 
 
 # -- Lorenz Curve Test Suite --
