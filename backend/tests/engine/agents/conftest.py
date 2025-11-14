@@ -23,7 +23,8 @@ class MockEconomyModel(Model):
                         demographic=Demographic.LOWER_CLASS,
                         preferences={i_type: 1.0 * i for i_type in IndustryType},
                     )
-                ]
+                ],
+                self
             )
             for i, industry_type in enumerate(IndustryType)
         }
