@@ -168,7 +168,7 @@ def test_calculate_hoover_index(model: EconomyModel, incomes: list, expected: fl
 
 
 @mark.parametrize(
-    "balances, expected, round",
+    "balances, expected, approximate",
     [
         param([], {"x": [0, 1], "y": [0, 1]}, False, id="no agents/equality"),
         param(
@@ -200,47 +200,49 @@ def test_calculate_hoover_index(model: EconomyModel, incomes: list, expected: fl
         ),
     ],
 )
-def test_lorenz_curve(
-    indicator_test_model_factory, balances: list, expected: dict, round: bool
+def test_calculate_lorenz_curve(
+    indicator_test_model_factory, balances: list, expected: dict, approximate: bool
 ):
+    """
+    Tests for `calculate_lorenz_curve`. Tests against variety of balance distributions.
+
+    Args:
+        indicator_test_model_factory (_type_): a factory to create a model with specific balances easily.
+        balances (list): the balances of the PersonAgents.
+        expected (dict): the expected Lorenz Curve calculation.
+        approximate (bool): whether to approximate or ask for exactness.
+    """
     model = indicator_test_model_factory(balances=balances)
     result = indicators.calculate_lorenz_curve(model)
-    if round:
+    if approximate:
         assert result["x"] == approx(expected["x"])
         assert result["y"] == approx(expected["y"])
     else:
         assert result == expected
 
 
-# -- Gini Coefficient Test Suite --
-def test_gini_coefficient_no_agents(indicator_test_model_factory):
-    """Test Gini coefficient with zero agents should be 0."""
-    model = indicator_test_model_factory(balances=[])
-    assert indicators.calculate_gini_coefficient(model) == approx(0.0)
+@mark.parametrize(
+    "balances, expected",
+    [
+        param([], 0.0, id="no agents"),
+        param([100, 100, 100, 100], 0.0, id="perfect equality"),
+        param([0, 0, 0, 0], 0.0, id="all zero balance"),
+        param(
+            [0, 0, 0, 100], (4 - 1) / 4, id="perfect inequality"
+        ),  # For N agents, the max Gini is (N-1)/N
+        param([10, 20, 30, 40], 0.25, id="standard unequal distribution"),
+    ],
+)
+def test_calculate_gini_coefficient(
+    indicator_test_model_factory, balances: list, expected: float
+):
+    """
+    Tests for `calculate_gini_coefficient`. Tests against variety of balance distributions.
 
-
-def test_gini_coefficient_perfect_equality(indicator_test_model_factory):
-    """Test Gini coefficient with perfect wealth equality should be 0."""
-    model = indicator_test_model_factory(balances=[100, 100, 100, 100])
-    assert indicators.calculate_gini_coefficient(model) == approx(0.0)
-
-
-def test_gini_coefficient_all_zero_balance(indicator_test_model_factory):
-    """Test Gini coefficient where all agents have zero balance (a form of equality)."""
-    model = indicator_test_model_factory(balances=[0, 0, 0, 0])
-    assert indicators.calculate_gini_coefficient(model) == approx(0.0)
-
-
-def test_gini_coefficient_perfect_inequality(indicator_test_model_factory):
-    """Test Gini coefficient with perfect wealth inequality."""
-    # For N agents, the max Gini is (N-1)/N
-    model = indicator_test_model_factory(balances=[0, 0, 0, 100])
-    expected_gini = (4 - 1) / 4  # 0.75
-    assert indicators.calculate_gini_coefficient(model) == approx(expected_gini)
-
-
-def test_gini_coefficient_typical_case(indicator_test_model_factory):
-    """Test Gini coefficient with a standard, unequal distribution of wealth."""
-    model = indicator_test_model_factory(balances=[10, 20, 30, 40])
-    # The known Gini coefficient for this distribution is 0.25
-    assert indicators.calculate_gini_coefficient(model) == approx(0.25)
+    Args:
+        indicator_test_model_factory (_type_): a factory to create a model with specific balances easily.
+        balances (list): the balances of the PersonAgents.
+        expected (float): the expected Gini Coefficient calculation.
+    """
+    model = indicator_test_model_factory(balances=balances)
+    assert indicators.calculate_gini_coefficient(model) == approx(expected)
