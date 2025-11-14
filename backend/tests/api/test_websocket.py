@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 import copy
-import pytest
 from engine.types.industry_type import IndustryType
 from engine.types.industry_metrics import IndustryMetrics
 from engine.types.indicators import Indicators
@@ -29,7 +28,6 @@ def test_websocket_unknown_action(api_client: TestClient, created_model: int):
         }
 
 
-#@pytest.mark.xfail(reason="reverse_step is not implemented yet")
 def test_websocket_step_and_get_week(api_client: TestClient, created_model: int):
     """
     Tests the 'step', 'reverse_step', and 'get_current_week' actions.
@@ -99,7 +97,7 @@ def test_websocket_get_industry_data(
         # Step once to generate data for week 1
         websocket.send_json({"action": "step"})
         websocket.receive_json()  # Consume the 'step' response
-        
+
         websocket.send_json({"action": "step"})
         websocket.receive_json()  # Consume the 'step' response
 
@@ -201,9 +199,11 @@ def test_websocket_get_and_set_policies(
         assert updated_policies["personal_income_tax"] == {
             demo: i * 3 for i, demo in enumerate(Demographic)
         }
-        
+
         # 4. Try to set blank policies, and get error
         websocket.send_json({"action": "set_policies", "data": None})
         response_set = websocket.receive_json()
-        assert response_set == {"status": "error", "message": "Policies cannot be None."}
-        
+        assert response_set == {
+            "status": "error",
+            "message": "Policies cannot be None.",
+        }
