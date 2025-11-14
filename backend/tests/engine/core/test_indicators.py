@@ -1,4 +1,4 @@
-from pytest import mark, approx
+from pytest import mark, approx, param
 from engine.core.model import EconomyModel
 from engine.agents.person import PersonAgent
 from engine.agents.industry import IndustryAgent
@@ -71,10 +71,21 @@ def test_calculate_gdp(model: EconomyModel, production, price, expected):
     assert calculated_gdp == approx(expected)
 
 
-@mark.xfail(reason="Demographic's income feature not implemented yet.")
-def test_calculate_income_per_capita(model: EconomyModel):
-    # TODO: do whenever templates/demographic's distribution has been done.
-    assert False
+@mark.parametrize(
+    "incomes,expected",
+    [
+        param([20] * 10, 20.0, id="Same incomes"),
+        param([0] * 10, 0.0, id="Zero (same) incomes"),
+        param([0, 2, 4, 6, 8, 10, 12, 14, 16, 18], 9.0, id="Different incomes"),
+    ],
+)
+def test_calculate_income_per_capita(model: EconomyModel, incomes, expected):
+
+    peopleAgents = model.agents_by_type[PersonAgent]
+    for i, agent in enumerate(peopleAgents):
+        agent.income = incomes[i]
+
+    assert expected == indicators.calculate_income_per_capita(model)
 
 
 @mark.xfail(reason="Demographic's income feature not implemented yet.")
