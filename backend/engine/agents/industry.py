@@ -478,7 +478,7 @@ class IndustryAgent(Agent):
     def new_tick(self):
         """
             Run this to reset values that are specific to this tick and aren't adjusted anywhere else
-            IDEA: incorperate all functions that need to be run every tick into this?
+            IDEA: incorporate all functions that need to be run every tick into this?
         """
         #self.total_cost = 0    Actually reset by produce_goods
         self.total_revenue = 0

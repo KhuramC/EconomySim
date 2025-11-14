@@ -268,7 +268,7 @@ def test_price_cap(mock_economy_model, starting_price, price_cap_percentage, exp
     Test 5: Rent Cap creates price that is lower than variable cost.  Update price but produce nothing
     Test 6: Already at ideal price, reset price cap to None for later tests
     """
-    mock_economy_model.policies["price_cap"]['Luxury'] = price_cap_percentage
+    mock_economy_model.policies["price_cap"][IndustryType.LUXURY] = price_cap_percentage
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
                        starting_price=starting_price,
                        starting_inventory=0,
@@ -406,7 +406,7 @@ def test_get_profit_corpo_tax_realistic(mock_economy_model,corporate_income_tax,
     Profit (before tax) = 148,960 - 56,920 = 92,040
     balance at end of turn (before tax) = 92,040 + 1,000,000 = $1,092,040.00 
     """
-    mock_economy_model.policies["corporate_income_tax"]['Luxury'] = corporate_income_tax
+    mock_economy_model.policies["corporate_income_tax"][IndustryType.LUXURY] = corporate_income_tax
     ind = IndustryAgent(mock_economy_model,industry_type=IndustryType.LUXURY,
                        starting_price=0.0,
                        starting_inventory=0,
@@ -489,7 +489,7 @@ Expected Behavior Summary:
 
 # factory function
 def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
-    mock_economy_model.policies["tariffs"]['Luxury'] = 0.0
+    mock_economy_model.policies["tariffs"][IndustryType.LUXURY] = 0.0
     mock_economy_model.policies["subsidies"]['Luxury'] = 0.0
     return IndustryAgent(
         mock_economy_model,
@@ -538,7 +538,7 @@ def test_subsidies(mock_economy_model, subsidy, expected_variable_cost):
         expected_variable_cost (_type_): the variable cost that the function should return
     """
     ind = make_industry_agent(mock_economy_model, 20, 10, 5)   #under normal circumstances, produces a variable cost of 7.0
-    mock_economy_model.policies["subsidies"]['Luxury'] = subsidy
+    mock_economy_model.policies["subsidies"][IndustryType.LUXURY] = subsidy
     assert ind.get_variable_cost() == expected_variable_cost
 
 def test_normal_case(mock_economy_model):
