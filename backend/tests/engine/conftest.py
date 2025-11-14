@@ -1,4 +1,5 @@
 import pytest
+import logging
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 
@@ -74,3 +75,10 @@ def policies() -> dict[str, float | dict[IndustryType, float]]:
     A fixture that provides a valid set of policies for starting a simulation.
     """
     return POLICIES
+
+
+@pytest.fixture(autouse=True)
+def quiet_logging():
+    logging.disable(logging.CRITICAL)
+    yield
+    logging.disable(logging.NOTSET)

@@ -1,6 +1,6 @@
 import pytest
 from pytest import mark
-import logging
+
 import math
 from engine.agents.industry import IndustryAgent
 
@@ -44,11 +44,7 @@ def determine_wages():
     assert False
 
 
-@pytest.fixture(autouse=True)
-def quiet_logging():
-    logging.disable(logging.CRITICAL)
-    yield
-    logging.disable(logging.NOTSET)
+
 def test_max_production_capacity(mock_economy_model):
     """
     Test that production capacity is correctly calculated based on employees and funds.
