@@ -40,12 +40,7 @@ export function buildPoliciesPayload(policyParams) {
         policyParams.subsidies / 100.0, // Assuming %
       ])
     ),
-    price_cap: Object.fromEntries(
-      Object.values(IndustryType).map((value) => [
-        value,
-        policyParams.price_cap / 100.0, // Assuming %
-      ])
-    ),
+    rent_cap: policyParams.rentCap,
     minimum_wage: policyParams.minimumWage,
   };
   return policies;
