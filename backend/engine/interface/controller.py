@@ -1,6 +1,7 @@
 from typing import Iterable
 import pandas as pd
 from ..core.model import EconomyModel
+from ..core.utils import validate_schema, POLICIES_SCHEMA
 from ..agents.industry import IndustryAgent
 
 from ..types.industry_type import IndustryType
@@ -149,8 +150,8 @@ class ModelController:
             or if the policies are not in the correct format.
         """
 
+        validate_schema(policies, POLICIES_SCHEMA, path="policies")
         model = self.get_model(model_id)
-        model.validate_schema(policies)
         model.policies = policies
 
     def get_current_week(self, model_id: int) -> int:
