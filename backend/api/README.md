@@ -85,9 +85,11 @@ Small (Columbia, MO): Median Income: ~$57,000/yr
 * `UPPER_CLASS`: $\mu = \ln( (\$57,000 \times 2.5) / 52 ) = \ln(2740) \approx$ **7.92**
 
 
-**Savings** (`balance`)
+**Starting Account Balance** (`balance`)
 
-This parameter also uses a log-normal distribution, as savings are similarly right-skewed. The `mean` values (`6.0`, `8.5`, `11.0`, etc.) are *relative representations* of low, medium, and high savings balances, not tied to a specific dollar median. The `sd` values control the spread of savings within each class.
+This parameter adjusts the cash balances each `PersonAgent` begins the simulation with. It also uses a lognormal distribution, as a population's savings are similarly right-skewed. The input values (`6.0`, `8.5`, `11.0`, etc.) are for the `mean` of the lognormal distribution function, and are *relative representations* of low, medium, and high savings balances, not tied to a specific dollar median. The `sd` values control the spread of savings within each class.
+
+*Note: This values may seem low, but they scale drastically under lognormal distribution.*
 
 
 ### Modeling Spending Behavior
