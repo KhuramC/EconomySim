@@ -1,5 +1,6 @@
 import numpy as np
 from ..agents.person import PersonAgent
+from ..agents.industry import IndustryAgent
 from mesa import Model
 import random
 import statistics
@@ -28,10 +29,12 @@ def calculate_gdp(model: Model) -> float:
         gdp(float): The value of goods and services produced by the industries in the simulation.
     """
 
-    # TODO: Implement calculation of the GDP
-    # see https://www.investopedia.com/terms/b/bea.asp for notes
-    # It's from the project documentation back in the spring
-    return 5 + model.get_week() + random.random()
+    industryAgents = model.agents_by_type[IndustryAgent]
+    gdp = 0.0
+    for industry in industryAgents:
+        gdp += industry.goods_produced * industry.price
+
+    return gdp
 
 
 def calculate_income_per_capita(model: Model):

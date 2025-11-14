@@ -74,3 +74,25 @@ It should be noted that we have altered it to track wealth distribution (current
 This tracks wealth inequality as a float value in the simulation. It is currently implemented as described in https://www.datacamp.com/blog/gini-coefficient.
 
 It should be noted that we have altered it to track wealth distribution (current balance of personAgents), and not income distribution. 
+
+### GDP
+
+GDP will be tracked by summing the market value of all final goods and services produced, or more accurately, the value added at each stage of production. In other words, it is a simple sum of what was created that week.
+
+$$\text{GDP} = \sum (\text{Value of Produced Goods by Industry})$$
+
+**Another approach: (Expenditure Approach)**
+
+This method is based on the idea that the value of all goods and services produced in an economy can be calculated by summing up what is spent on them. It is represented by the formula:
+
+$$\text{GDP} = \text{C} + \text{I} + \text{G} + (\text{X} - \text{M})$$
+
+C (consumption): Total spending by households on final goods and services.
+
+I (investment): Spending by businesses on capital goods, inventory, and residential construction.
+
+G (government spending): Spending by the government on final goods and services (e.g., infrastructure, defense).
+
+(X - M) (Net Exports): Total exports minus total imports.
+
+The Bureau of Economic Analysis (BEA) is the U.S. government division responsible for analyzing and reporting GDP data. It uses this as standard method. The reason we went with the production is approach is because this approach is more computationally feasible since the model is designed around discrete IndustryAgents (representative monopolies) who track their own production and prices, making this easy to aggregate.

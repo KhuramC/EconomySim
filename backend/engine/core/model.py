@@ -26,7 +26,12 @@ demographics_schema = {
 """Schema for validating the demographics dictionary."""
 
 industries_schema = {
-    itype.value: {"price": None, "inventory": None, "balance": None, "offered_wage": None}
+    itype.value: {
+        "price": None,
+        "inventory": None,
+        "balance": None,
+        "offered_wage": None,
+    }
     for itype in IndustryType
 }
 """Schema for validating the industries dictionary."""
