@@ -1,13 +1,10 @@
-from mesa import Agent
-from typing import TYPE_CHECKING
+from mesa import Agent, Model
 from .industry import IndustryAgent
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
 import math
 
-if TYPE_CHECKING:
-    from ..core.model import EconomyModel
 
 class PersonAgent(Agent):
     """
@@ -34,7 +31,7 @@ class PersonAgent(Agent):
 
     def __init__(
         self,
-        model: EconomyModel,
+        model: Model,
         demographic: Demographic,
         preferences: dict[IndustryType, float],
         savings_rate: float = 0.10,

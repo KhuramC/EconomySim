@@ -1,15 +1,12 @@
 import numpy as np
-from typing import TYPE_CHECKING
-import statistics
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
+from mesa import Model
+import random
+import statistics
 
 
-if TYPE_CHECKING:
-    from .model import EconomyModel
-
-
-def calculate_unemployment(model: EconomyModel) -> float:
+def calculate_unemployment(model: Model) -> float:
     """
     Calculates the unemployment rate at the current step.
 
@@ -23,7 +20,7 @@ def calculate_unemployment(model: EconomyModel) -> float:
     return unemployed / total
 
 
-def calculate_gdp(model: EconomyModel) -> float:
+def calculate_gdp(model: Model) -> float:
     """
     Calculates the GDP,
     or the value of all goods produced by industries at the current step.
@@ -40,7 +37,7 @@ def calculate_gdp(model: EconomyModel) -> float:
     return gdp
 
 
-def calculate_income_per_capita(model: EconomyModel):
+def calculate_income_per_capita(model: Model):
     """
     Calculates the income per capita,
     or the average per step(weekly) income per person in the simulation.
@@ -55,7 +52,7 @@ def calculate_income_per_capita(model: EconomyModel):
     )
 
 
-def calculate_median_income(model: EconomyModel):
+def calculate_median_income(model: Model):
     """
     Calculates the median income of people within the simulation.
 
@@ -66,7 +63,7 @@ def calculate_median_income(model: EconomyModel):
     return peopleAgents.agg("income", lambda incomes: statistics.median(incomes))
 
 
-def calculate_hoover_index(model: EconomyModel):
+def calculate_hoover_index(model: Model):
     """
     Calculates the Hoover Index,
     a measure of income inequality(ranges from 0-1),
@@ -83,7 +80,7 @@ def calculate_hoover_index(model: EconomyModel):
     return 0
 
 
-def calculate_lorenz_curve(model: EconomyModel) -> dict[str, list[float]]:
+def calculate_lorenz_curve(model: Model) -> dict[str, list[float]]:
     """
     Calculates the Lorenz Cruve at the current timestep.
 
@@ -120,7 +117,7 @@ def calculate_lorenz_curve(model: EconomyModel) -> dict[str, list[float]]:
     }
 
 
-def calculate_gini_coefficient(model: EconomyModel) -> float:
+def calculate_gini_coefficient(model: Model) -> float:
     """
     Calculates the Gini coefficient for a list of balances.
 

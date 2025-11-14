@@ -1,13 +1,10 @@
 from mesa import Agent
-from typing import TYPE_CHECKING
+from mesa import Model
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.pricing_type import PricingType
 from .pricing import avg_cost, linear_profit_max, linear_price
 import logging
 import math
-
-if TYPE_CHECKING:
-    from ..core.model import EconomyModel
 
 
 class IndustryAgent(Agent):
@@ -56,7 +53,7 @@ class IndustryAgent(Agent):
     def __init__(
         # TODO: associate most or all starting variables with industry_type so they don't need to be passed in via the constructor
         self,
-        model: EconomyModel,
+        model: Model,
         industry_type: IndustryType,
         starting_price: float = 0.0,  # This should only be passed in when testing.  Determine_price & determine_price_production_cap will entirely handle updates to this value
         starting_inventory: int = 200,
