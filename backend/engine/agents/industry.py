@@ -1,5 +1,5 @@
-from mesa import Agent
-from mesa import Model
+from mesa import Agent, Model
+from mesa.agent import AgentSet
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.pricing_type import PricingType
 from .pricing import avg_cost, linear_profit_max, linear_price
@@ -98,7 +98,7 @@ class IndustryAgent(Agent):
         tariffs = self.model.policies.get("tariffs", {})
         return tariffs.get(self.industry_type, 0.0)
 
-    def get_employees(self):
+    def get_employees(self) -> AgentSet:
         """
         Gets all employees that are employed to this industry.
         """

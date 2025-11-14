@@ -259,7 +259,7 @@ class EconomyModel(Model):
             )
         )
 
-    def inflation(self):
+    def inflation(self) -> None:
         """
         Applies the weekly inflation rate to all industry costs and
         the minimum wage policy. This is a "cost-push" inflation model.
