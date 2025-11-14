@@ -278,7 +278,6 @@ class EconomyModel(Model):
             return  # do not step past maximum simulation length
         self.week = self.week + 1  # new week
 
-        # TODO: implement inflation logic
         self.inflation()
 
         # industry agents do their tasks

@@ -118,9 +118,28 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
         assert np.all(diff <= tolerance)
 
 
-@mark.xfail(reason="Function has not been implemented yet.")
-def test_setup_industry_agents(model: EconomyModel):
-    assert False
+def test_setup_industry_agents(model: EconomyModel, industries):
+    """
+    Tests `setup_industry_agents`. Ensures that only one agent is created per industry
+    and that they are setup with the correct starting parameters.
+
+    Args:
+        model (EconomyModel): a freshly created model.
+        industries (dict): a valid industries.
+    """
+
+    industry_agents = model.agents_by_type[IndustryAgent]
+    assert len(industry_agents) == len(industries)
+
+    for industry_type, industry_info in industries.items():
+        industry_agent = industry_agents.select(
+            lambda agent: agent.industry_type == industry_type
+        )[0]
+        assert industry_agent.industry_type == industry_type
+        assert industry_agent.price == industry_info["price"]
+        assert industry_agent.inventory == industry_info["inventory"]
+        assert industry_agent.balance == industry_info["balance"]
+        assert industry_agent.offered_wage == industry_info["offered_wage"]
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
@@ -183,11 +202,20 @@ def test_inflation(model: EconomyModel, inflation_rate: float, num_steps: int):
         )  # No side effects
 
 
-@mark.xfail(reason="Testing for the step function has not been considered quite yet.")
 def test_step(model: EconomyModel):
-    assert False
+    """
+    Test for `step`. Ensures that the step function is working properly.
+
+    Args:
+        model (EconomyModel): _description_
+    """
+    model.step()
+    
+    assert model.get_week() == 1
+    for _ in range(100):
+        model.step()
+    assert model.get_week() == 52 # max for this model
 
 
-# @mark.xfail(reason="Function has not been implemented yet.")
-# def test_reverse_step(model: EconomyModel):
-#     assert False
+def test_reverse_step(model: EconomyModel):
+    pass
