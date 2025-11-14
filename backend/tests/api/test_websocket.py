@@ -53,6 +53,7 @@ def test_websocket_step_and_get_week(api_client: TestClient, created_model: int)
         # Step backward
         websocket.send_json({"action": "reverse_step"})
         response = websocket.receive_json()
+        # TODO: uncomment these whenever reverse_step is implemented
         # assert response == {"status": "success", "action": "reverse_step"}
 
         # Check week is back to 0
