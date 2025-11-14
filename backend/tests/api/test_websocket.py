@@ -201,3 +201,9 @@ def test_websocket_get_and_set_policies(
         assert updated_policies["personal_income_tax"] == {
             demo: i * 3 for i, demo in enumerate(Demographic)
         }
+        
+        # 4. Try to set blank policies, and get error
+        websocket.send_json({"action": "set_policies", "data": None})
+        response_set = websocket.receive_json()
+        assert response_set == {"status": "error", "message": "Policies cannot be None."}
+        
