@@ -1,9 +1,6 @@
 import pytest
-from pytest import mark
-
 import math
 from engine.agents.industry import IndustryAgent
-
 from engine.types.industry_type import IndustryType
 
 
@@ -24,9 +21,20 @@ def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
     )
 
 
-@mark.xfail(reason="TODO.")
-def test_get_employees():
-    assert False
+@pytest.mark.parametrize("industry_type", list(IndustryType))
+def test_get_employees(mock_economy_model, industry_type: IndustryType):
+    """
+    Test for `get_employees`.
+    Ensures that it correctly calls the model version of `get_employees`.
+
+    Args:
+        mock_economy_model (Model): a mock Economy model instance.
+        industry_type (IndustryType): the industry being tested.
+    """
+    assert (
+        mock_economy_model.get_employees(industry_type)
+        == mock_economy_model.MOCK_EMPLOYEES[industry_type]
+    )
 
 
 def test_max_production_capacity(mock_economy_model):
