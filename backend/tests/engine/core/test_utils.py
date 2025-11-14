@@ -1,39 +1,157 @@
 import pytest
 from pytest import mark
 from contextlib import nullcontext
+from copy import deepcopy
+from typing import Any
 import numpy as np
 from engine.core.utils import (
     validate_schema,
     POLICIES_SCHEMA,
+    DEMOGRAPHICS_SCHEMA,
+    INDUSTRIES_SCHEMA,
     num_prop,
     generate_lognormal,
 )
+from engine.types.industry_type import IndustryType
+from engine.types.demographic import Demographic
+
+
+@pytest.fixture()
+def data(request, policies, demographics, industries) -> dict[str, Any]:
+    """
+    Based on the request, returns one of the following dicts.
+
+    Args:
+        request (_type_): which dict to return.
+        policies (dict): a valid policies dict.
+        demographics (dict): a valid demographics dict.
+        industries (dict): a valid industries dict.
+
+    Returns:
+        dict: the dict requested.
+    """
+    wanted_data = request.param
+    if wanted_data == "policies":
+        return policies
+    elif wanted_data == "demographics":
+        return demographics
+    elif wanted_data == "industries":
+        return industries
+    else:
+        return {}
+
+
+@pytest.fixture()
+def invalid_data(request, policies, demographics, industries) -> dict[str, Any]:
+    """
+    Deletes a specified key somewhere in the requested dictionary to make it invalid.
+
+    Args:
+        request (_type_): which dict to return, and what key to delete.
+        policies (dict): a valid policies dict.
+        demographics (dict): a valid demographics dict.
+        industries (dict): a valid industries dict.
+
+    Returns:
+        invalid_data (dict[str, Any]): The data after having a key removed.
+    """
+    wanted_data, key_path = request.param
+    print(f"wanted_data: {wanted_data}, key_path: {key_path}")
+    invalid_data = {}
+    if wanted_data == "policies":
+        invalid_data = deepcopy(policies)
+    elif wanted_data == "demographics":
+        invalid_data = deepcopy(demographics)
+    elif wanted_data == "industries":
+        invalid_data = deepcopy(industries)
+
+    temp_dict = invalid_data
+    for key in key_path[:-1]:  # get to second last key
+        temp_dict = temp_dict[key]
+    del temp_dict[key_path[-1]]  # delete last key
+
+    return invalid_data
 
 
 @mark.parametrize(
-    "delete_values,exception",
+    "data, schema, path",
     [
-        pytest.param(False, nullcontext(), id="valid_policies"),
-        pytest.param(True, pytest.raises(ValueError), id="invalid_policies"),
+        pytest.param(
+            "policies",
+            POLICIES_SCHEMA,
+            "policies",
+            id="valid_policies",
+        ),
+        pytest.param(
+            "demographics",
+            DEMOGRAPHICS_SCHEMA,
+            "demographics",
+            id="valid_demographics",
+        ),
+        pytest.param(
+            "industries",
+            INDUSTRIES_SCHEMA,
+            "industries",
+            id="valid_industries",
+        ),
     ],
+    indirect=["data"],
 )
-def test_validate_schema(policies, delete_values: bool, exception):
+def test_validate_schema_success(
+    data,
+    schema: dict,
+    path: str,
+):
     """
     Test for `validate_schema`.
-    Tests whether a it can validate a correct schema and invalidate an invalid schema.
+    Tests whether it can validate a correct schema.
 
     Args:
-       controller (ModelController): the controller being used.
-        policies (dict): a valid policies.
-        delete_values (bool): whether to delete values from policies
-        exception: the exception expected to occur.
+        data (dict): an valid data dict.
+        schema (dict): the schema to validate against.
+        path (str): the path of the schema.
     """
-    # TODO: add parameters for doing this with demographics/industries as well.
-    new_policies = policies.copy()
-    if delete_values:
-        del new_policies["corporate_income_tax"]
-    with exception:
-        validate_schema(new_policies, POLICIES_SCHEMA, path="policies")
+    with nullcontext():
+        validate_schema(data, schema, path)
+
+
+@mark.parametrize(
+    "invalid_data, schema, path",
+    [
+        pytest.param(
+            ("policies", ("corporate_income_tax",)),
+            POLICIES_SCHEMA,
+            "policies",
+            id="invalid_policies",
+        ),
+        pytest.param(
+            ("demographics", (Demographic.LOWER_CLASS, "proportion")),
+            DEMOGRAPHICS_SCHEMA,
+            "demographics",
+            id="invalid_demographics",
+        ),
+        pytest.param(
+            ("industries", (IndustryType.HOUSEHOLD_GOODS, "price")),
+            INDUSTRIES_SCHEMA,
+            "industries",
+            id="invalid_industries",
+        ),
+    ],
+    indirect=["invalid_data"],
+)
+def test_validate_schema_failure(invalid_data, schema: dict, path: str):
+    """
+    Test for `validate_schema`.
+    Tests whether it can invalidate an invalid schema.
+
+    Args:
+        invalid_data (dict): an invalid data dict.
+        schema (dict): the schema to validate against.
+        path (str): the path of the schema.
+    """
+
+    with pytest.raises(ValueError):
+        validate_schema(invalid_data, schema, path)
 
 
 @pytest.mark.parametrize(
