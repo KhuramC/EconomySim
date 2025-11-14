@@ -1,61 +1,64 @@
-import ParameterInput from "./ParameterInput";
-import { deepmerge } from "@mui/utils";
-import { InputAdornment, Tooltip } from "@mui/material";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+// frontend/src/components/SimSetup/ParameterNumInput.jsx
+import ParameterInput from "./ParameterInput.jsx";
 
 /**
- * Number input wrapper:
- * - Uses TextField `type="number"`.
- * - Shows a "?" tooltip as an end adornment (inside the input) so hover always works.
- * - Supports `readOnly` via slotProps (without disabling the visual).
+ * ParameterNumInput
+ * Numeric input that allows BOTH spinner and free typing.
+ *
+ * UX goals:
+ * - Keep a controlled string while typing so partial inputs are valid (e.g., "", "-", "1.", ".5").
+ * - Use <input type="number"> so native spinners and numeric keypad are available.
+ * - Allow decimals via step="any" and inputMode="decimal".
+ * - Defer parsing/validation to the caller (e.g., SetupPage validators).
+ *
+ * Props:
+ * - label: string (TextField label)
+ * - value: string|number (kept as-is; empty string is allowed while typing)
+ * - onChange: (event) => void (should store raw event.target.value)
+ * - xs: grid width (default 6)
+ * - fullWidth: boolean (default true)
+ * - error: boolean (red error style)
+ * - helpText: string (helper text under the field)
+ * - readOnly: boolean (prevents editing but still shows value)
+ * - min/max: optional numeric constraints for native validation UI
+ * - ...rest: forwarded to underlying TextField via ParameterInput
  */
-const ParameterNumInput = ({
+export default function ParameterNumInput({
   label,
   value,
   onChange,
-  xs = 6,　// Can still override grid size
+  xs = 6,
+  fullWidth = true,
   error = false,
+  helpText,
   readOnly = false,
-  helpText,            // tooltip content
-  slotProps,
-  inputProps,
-  InputProps,          // allow callers to pass their own adornments if needed
-  ...otherProps
-}) => {
-  const internalSlotProps = readOnly ? { input: { readOnly: true } } : {};
-
-  // Build an end adornment tooltip icon when helpText is provided
-  const endAdornment = helpText ? (
-    <InputAdornment position="end">
-      <Tooltip title={helpText} arrow enterDelay={300}>
-        <HelpOutlineIcon sx={{ cursor: "help", opacity: 0.7 }} />
-      </Tooltip>
-    </InputAdornment>
-  ) : undefined;
-
-  // Merge caller-provided InputProps (if any) with our adornment
-  const mergedInputPropsForBase = {
-    ...(InputProps || {}),
-    endAdornment: (InputProps && InputProps.endAdornment) || endAdornment,
-  };
-
+  min,           // optional numeric constraint (native)
+  max,           // optional numeric constraint (native)
+  ...rest        // any extra TextField props (e.g., disabled, sx, required)
+}) {
   return (
     <ParameterInput
       label={label}
-      value={value}
+      // Keep controlled input friendly to typing; empty string is allowed
+      value={value ?? ""}
       onChange={onChange}
-      type="number"
       xs={xs}
+      fullWidth={fullWidth}
       error={error}
-      // IMPORTANT: Do NOT pass helpText down, to avoid a duplicate label icon.
-      // The tooltip is shown via endAdornment instead.
-      helpText={undefined}
-      slotProps={deepmerge(internalSlotProps, slotProps)}
-      inputProps={{ step: "any", ...(inputProps || {}) }}
-      InputProps={mergedInputPropsForBase}
-      {...otherProps}
+      helpText={helpText}
+      // Forward readOnly to the native input element
+      InputProps={{ readOnly }}
+      // Use native number input for spinners & mobile numeric keypad
+      type="number"
+      inputProps={{
+        inputMode: "decimal", // mobile decimal keypad
+        step: "any",          // allow fractional steps (e.g., 0.1, 0.01)
+        ...(min !== undefined ? { min } : {}),
+        ...(max !== undefined ? { max } : {}),
+      }}
+      // Avoid accidental wheel-changes when the input has focus
+      onWheel={(e) => e.currentTarget.blur()}
+      {...rest}
     />
   );
-};
-
-export default ParameterNumInput;
+}

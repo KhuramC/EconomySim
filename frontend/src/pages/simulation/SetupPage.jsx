@@ -1,3 +1,4 @@
+// src/pages/SimSetup/SetupPage.jsx
 import { useState, useEffect } from "react";
 import { Typography, Alert, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -11,27 +12,42 @@ import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 import { SimulationAPI } from "../../api/SimulationAPI.js";
 
-// Function to generate default parameters for one demographic
-const getDefaultDemographicParams = () => ({
-  meanIncome: 50000,
-  sdIncome: 15000,
-  proportion: 33,
-  meanSavings: 10000,
-  sdSavings: 5000,
-  // NOTE: UI label is (%) so we validate against 0–100.
-  // Current default 0.05 means 0.05% (change to 5 if you intend 5%).
-  unemploymentRate: 0.05,
-  // Flat per-industry spending shares (keys match IndustryType enum)
-  GROCERIES: 25,
-  UTILITIES: 18,
-  AUTOMOBILES: 2,
-  HOUSING: 41,
-  HOUSEHOLD_GOODS: 8,
-  ENTERTAINMENT: 4,
-  LUXURY: 2,
-});
+/**
+ * SetupPage
+ * - Holds all setup params and validation.
+ * - Keeps inputs typing-friendly (store raw strings; coerce only in validation/request).
+ * - Supports policy overrides (by industry & by demographic).
+ */
 
-// Function to generate default parameters for one industry
+// --- Demographic defaults (now tiered meanIncome to satisfy monotonic check) ---
+const getDefaultDemographicParams = (demoLabel) => {
+  // Robust detection: works whether Demographic value is "lower class" or a different label.
+  const label = String(demoLabel).toLowerCase();
+  const meanIncome =
+    label.includes("lower") ? 35000 :
+    label.includes("middle") ? 55000 :
+    90000; // upper (or anything else) fallback
+
+  return {
+    meanIncome,
+    sdIncome: 15000,
+    proportion: 33,
+    meanSavings: 10000,
+    sdSavings: 5000,
+    // UI uses percent; keep as 0–100 number (not decimal fraction).
+    unemploymentRate: 5,
+    // Flat per-industry spending shares (IndustryType keys)
+    GROCERIES: 25,
+    UTILITIES: 18,
+    AUTOMOBILES: 2,
+    HOUSING: 41,
+    HOUSEHOLD_GOODS: 8,
+    ENTERTAINMENT: 4,
+    LUXURY: 2,
+  };
+};
+
+// --- Industry defaults ---
 const getDefaultIndustryParams = () => ({
   startingInventory: 1000,
   startingPrice: 10,
@@ -39,33 +55,47 @@ const getDefaultIndustryParams = () => ({
   offeredWage: 15,
 });
 
+// --- Small helpers for validation ---
+const isBlank = (v) => v === "" || v === null || v === undefined;
+const inPctRange = (v) => Number(v) >= 0 && Number(v) <= 100;
+const gtZero = (v) => Number(v) > 0;
+
 export default function SetupPage() {
   const navigate = useNavigate();
 
   const [backendError, setBackendError] = useState(null);
 
-  // Error messages for the bottom Alert (flat, human-readable)
+  // Flat, human-readable message list (rendered in the bottom Alert)
   const [formErrors, setFormErrors] = useState({});
-  // Field-level error flags used to paint inputs red (nested by section)
+  // Field-level flags for red highlights in inputs
   const [inputErrors, setInputErrors] = useState({
     env: {},
     demo: {},
     industry: {},
-    policy: {},
+    policy: {}, // includes nested: policy.byIndustry, policy.byDemographic
   });
 
+  // Prepare empty override objects for all industries/demographics
+  const emptyIndustryOverrides = Object.fromEntries(
+    Object.keys(IndustryType).map((k) => [k, {}])
+  );
+  const emptyDemoOverrides = Object.fromEntries(
+    Object.values(Demographic).map((k) => [k, {}])
+  );
+
+  // --- Central params state ---
   const [params, setParams] = useState({
     envParams: {
       numPeople: 1000,
       maxSimulationLength: 100,
-      inflationRate: 1.0,
+      inflationRate: 1.0, // annual %
       randomEvents: false,
     },
 
     demoParams: Object.fromEntries(
       Object.values(Demographic).map((value) => [
         value,
-        getDefaultDemographicParams(),
+        getDefaultDemographicParams(value), // pass label to tier meanIncome
       ])
     ),
 
@@ -77,26 +107,26 @@ export default function SetupPage() {
     ),
 
     policyParams: {
-      // TODO: update to be industry and demographic specific
+      // Regular/shared values
       salesTax: 7,
       corporateTax: 21,
       personalIncomeTax: 15,
       propertyTax: 10,
       tariffs: 5,
       subsidies: 20,
-      rentCap: 20,       // $ > 0
+      rentCap: 20,       // % (changed from $ to %)
       minimumWage: 7.25, // $/hr > 0
+
+      // Advanced overrides
+      byIndustry: { ...emptyIndustryOverrides },
+      byDemographic: { ...emptyDemoOverrides },
     },
   });
 
-  // ---------- Validation ----------
+  // --- Validation effect (runs when params change) ---
   useEffect(() => {
-    // Collect human-readable messages
     const msgs = {};
-    // Collect field-level boolean flags
     const flags = { env: {}, demo: {}, industry: {}, policy: {} };
-
-    const isBlank = (v) => v === "" || v === null || v === undefined;
 
     const markDemo = (dk, key) => {
       if (!flags.demo[dk]) flags.demo[dk] = {};
@@ -106,8 +136,19 @@ export default function SetupPage() {
       if (!flags.industry[ik]) flags.industry[ik] = {};
       flags.industry[ik][key] = true;
     };
+    const markPolicy = (key) => (flags.policy[key] = true);
+    const markPolicyIndustry = (ik, key) => {
+      if (!flags.policy.byIndustry) flags.policy.byIndustry = {};
+      if (!flags.policy.byIndustry[ik]) flags.policy.byIndustry[ik] = {};
+      flags.policy.byIndustry[ik][key] = true;
+    };
+    const markPolicyDemo = (dk, key) => {
+      if (!flags.policy.byDemographic) flags.policy.byDemographic = {};
+      if (!flags.policy.byDemographic[dk]) flags.policy.byDemographic[dk] = {};
+      flags.policy.byDemographic[dk][key] = true;
+    };
 
-    // ----- Environmental -----
+    // -- Environmental checks --
     const env = params.envParams;
     if (isBlank(env.maxSimulationLength) || Number(env.maxSimulationLength) <= 10) {
       msgs.env_maxSimulationLength =
@@ -119,11 +160,11 @@ export default function SetupPage() {
       flags.env.numPeople = true;
     }
 
-    // ----- Demographics -----
+    // -- Demographics checks --
     const demoOrder = Object.values(Demographic);
     const industryKeys = Object.keys(IndustryType);
 
-    // Proportions must total 100
+    // Proportions must sum to 100 (± rounding)
     const proportionSum = Object.values(params.demoParams).reduce(
       (sum, d) => sum + Number(d.proportion || 0),
       0
@@ -135,28 +176,23 @@ export default function SetupPage() {
       demoOrder.forEach((dk) => markDemo(dk, "proportion"));
     }
 
-    // Per-demographic checks
+    // Per-demo field validations
     demoOrder.forEach((dk) => {
       const d = params.demoParams[dk];
 
-      // Unemployment 0–100
-      if (isBlank(d?.unemploymentRate) || Number(d?.unemploymentRate) < 0 || Number(d?.unemploymentRate) > 100) {
+      if (isBlank(d?.unemploymentRate) || !inPctRange(d?.unemploymentRate)) {
         msgs[`demo_unemp_${dk}`] = `Demographics (${dk}): Unemployment rate must be between 0 and 100.`;
         markDemo(dk, "unemploymentRate");
       }
-
-      // Std dev > 0
-      if (isBlank(d?.sdIncome) || Number(d?.sdIncome) <= 0) {
+      if (isBlank(d?.sdIncome) || !gtZero(d?.sdIncome)) {
         msgs[`demo_sdIncome_${dk}`] = `Demographics (${dk}): Income standard deviation must be greater than 0.`;
         markDemo(dk, "sdIncome");
       }
-      if (isBlank(d?.sdSavings) || Number(d?.sdSavings) <= 0) {
+      if (isBlank(d?.sdSavings) || !gtZero(d?.sdSavings)) {
         msgs[`demo_sdSavings_${dk}`] = `Demographics (${dk}): Savings standard deviation must be greater than 0.`;
         markDemo(dk, "sdSavings");
       }
-
-      // Optional sanity checks
-      if (isBlank(d?.meanIncome) || Number(d?.meanIncome) <= 0) {
+      if (isBlank(d?.meanIncome) || !gtZero(d?.meanIncome)) {
         msgs[`demo_meanIncome_${dk}`] = `Demographics (${dk}): Mean income must be greater than 0.`;
         markDemo(dk, "meanIncome");
       }
@@ -165,7 +201,7 @@ export default function SetupPage() {
         markDemo(dk, "meanSavings");
       }
 
-      // Flat per-industry spending behavior must sum to ~100
+      // Spending shares must sum to ~100%
       const spendingSum = industryKeys.reduce(
         (sum, key) => sum + (Number(d?.[key]) || 0),
         0
@@ -174,12 +210,11 @@ export default function SetupPage() {
         msgs[`demo_spending_${dk}`] = `Demographics (${dk}): Spending behavior percentages must add up to 100%. Current sum: ${spendingSum.toFixed(
           1
         )}% (${(100 - spendingSum).toFixed(1)}% remaining).`;
-        // Mark every cell in that row so all become red
         industryKeys.forEach((k) => markDemo(dk, k));
       }
     });
 
-    // Mean income monotonic by enum order (strictly increasing)
+    // Monotonic increasing mean income: demo[i] > demo[i-1]
     for (let i = 1; i < demoOrder.length; i++) {
       const prevKey = demoOrder[i - 1];
       const currKey = demoOrder[i];
@@ -192,32 +227,32 @@ export default function SetupPage() {
       }
     }
 
-    // ----- Industry -----
+    // -- Industry checks --
     Object.values(IndustryType).forEach((ik) => {
       const ind = params.industryParams[ik];
-      if (isBlank(ind?.startingInventory) || Number(ind?.startingInventory) <= 0) {
+      if (isBlank(ind?.startingInventory) || !gtZero(ind?.startingInventory)) {
         msgs[`industry_inventory_${ik}`] =
           `Industry (${ik}): Starting inventory must be greater than 0.`;
         markIndustry(ik, "startingInventory");
       }
-      if (isBlank(ind?.startingPrice) || Number(ind?.startingPrice) <= 0) {
+      if (isBlank(ind?.startingPrice) || !gtZero(ind?.startingPrice)) {
         msgs[`industry_price_${ik}`] =
           `Industry (${ik}): Starting price must be greater than 0.`;
         markIndustry(ik, "startingPrice");
       }
-      if (isBlank(ind?.industrySavings) || Number(ind?.industrySavings) <= 0) {
+      if (isBlank(ind?.industrySavings) || !gtZero(ind?.industrySavings)) {
         msgs[`industry_savings_${ik}`] =
           `Industry (${ik}): Industry savings must be greater than 0.`;
         markIndustry(ik, "industrySavings");
       }
-      if (isBlank(ind?.offeredWage) || Number(ind?.offeredWage) <= 0) {
+      if (isBlank(ind?.offeredWage) || !gtZero(ind?.offeredWage)) {
         msgs[`industry_wage_${ik}`] =
           `Industry (${ik}): Offered wage must be greater than 0.`;
         markIndustry(ik, "offeredWage");
       }
     });
 
-    // ----- Policies -----
+    // -- Policies (regular) --
     const p = params.policyParams;
     const pctKeys = [
       ["salesTax", "Sales tax"],
@@ -226,29 +261,50 @@ export default function SetupPage() {
       ["propertyTax", "Property tax"],
       ["tariffs", "Tariffs"],
       ["subsidies", "Subsidies"],
+      ["rentCap", "Rent cap"],
     ];
     pctKeys.forEach(([k, label]) => {
-      if (isBlank(p?.[k]) || Number(p?.[k]) < 0 || Number(p?.[k]) > 100) {
+      if (isBlank(p?.[k]) || !inPctRange(p?.[k])) {
         msgs[`policy_${k}`] = `Policies: ${label} must be between 0 and 100%.`;
-        flags.policy[k] = true;
+        markPolicy(k);
       }
     });
-    if (isBlank(p?.rentCap) || Number(p?.rentCap) <= 0) {
-      msgs.policy_rentCap = "Policies: Rent cap must be greater than 0.";
-      flags.policy.rentCap = true;
-    }
-    if (isBlank(p?.minimumWage) || Number(p?.minimumWage) <= 0) {
+    if (isBlank(p?.minimumWage) || !gtZero(p?.minimumWage)) {
       msgs.policy_minimumWage = "Policies: Minimum wage must be greater than 0.";
-      flags.policy.minimumWage = true;
+      markPolicy("minimumWage");
     }
+
+    // -- Policies (overrides) : By Industry (percent fields) --
+    Object.keys(IndustryType).forEach((ik) => {
+      const o = p.byIndustry?.[ik] || {};
+      const keys = ["salesTax", "corporateTax", "tariffs", "subsidies", "rentCap"];
+      keys.forEach((k) => {
+        if (o[k] === "" || o[k] === undefined || o[k] === null) return; // blank means “inherit”
+        if (!inPctRange(o[k])) {
+          msgs[`policy_byIndustry_${ik}_${k}`] =
+            `Policies (by industry ${ik}): ${k} must be between 0 and 100%.`;
+          markPolicyIndustry(ik, k);
+        }
+      });
+    });
+
+    // -- Policies (overrides) : By Demographic (personalIncomeTax only) --
+    Object.values(Demographic).forEach((dk) => {
+      const o = p.byDemographic?.[dk] || {};
+      const v = o.personalIncomeTax;
+      if (v === "" || v === undefined || v === null) return;
+      if (!inPctRange(v)) {
+        msgs[`policy_byDemographic_${dk}_personalIncomeTax`] =
+          `Policies (by demographic ${dk}): personalIncomeTax must be between 0 and 100%.`;
+        markPolicyDemo(dk, "personalIncomeTax");
+      }
+    });
 
     setFormErrors(msgs);
     setInputErrors(flags);
   }, [params]);
 
-  // ---------- Handlers (typing-friendly) ----------
-  // NOTE: Do NOT coerce to number on every keystroke.
-  // We keep raw strings so users can type freely (e.g., "-", "1.", "", etc.).
+  // --- Handlers (keep raw strings for typing comfort) ---
   const handleEnvChange = (key) => (event) => {
     const value =
       event.target.type === "checkbox" ? event.target.checked : event.target.value;
@@ -294,20 +350,53 @@ export default function SetupPage() {
     }));
   };
 
-  // Send parameters to backend and navigate to simulation view
+  // Per-industry override
+  const handlePolicyIndustryOverrideChange =
+    (industryKey, field) => (event) => {
+      const { value } = event.target; // keep raw typing
+      setParams((prev) => ({
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          byIndustry: {
+            ...prev.policyParams.byIndustry,
+            [industryKey]: {
+              ...prev.policyParams.byIndustry[industryKey],
+              [field]: value,
+            },
+          },
+        },
+      }));
+    };
+
+  // Per-demographic override
+  const handlePolicyDemographicOverrideChange =
+    (demoKey, field) => (event) => {
+      const { value } = event.target;
+      setParams((prev) => ({
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          byDemographic: {
+            ...prev.policyParams.byDemographic,
+            [demoKey]: {
+              ...prev.policyParams.byDemographic[demoKey],
+              [field]: value,
+            },
+          },
+        },
+      }));
+    };
+
+  // Create model and navigate to simulation view
   const handleBegin = async () => {
     setBackendError(null);
     try {
-      // If backend requires numbers, coerce here before POST.
-      console.log("Simulation parameters:", params);
       const modelId = await SimulationAPI.createModel(params);
-      console.log("Model created with ID:", modelId);
-      // Navigate to simulation view with the new model ID
       navigate(`/BaseSimView`, {
         state: { modelId: modelId, industryParams: params.industryParams },
       });
     } catch (error) {
-      console.error("Error creating model:", error.message);
       setBackendError(error.message);
     }
   };
@@ -346,6 +435,8 @@ export default function SetupPage() {
       <PolicyAccordion
         policyParams={params.policyParams}
         handlePolicyChange={handlePolicyChange}
+        handlePolicyIndustryOverrideChange={handlePolicyIndustryOverrideChange}
+        handlePolicyDemographicOverrideChange={handlePolicyDemographicOverrideChange}
         formErrors={inputErrors.policy}
       />
 

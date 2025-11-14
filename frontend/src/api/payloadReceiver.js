@@ -1,138 +1,218 @@
+// frontend/src/api/payloadReceiver.js
 import { IndustryType } from "../types/IndustryType.js";
 import { Demographic } from "../types/Demographic.js";
 
-/**
- * Transforms the policies received from the backend to a format used by the frontend.
- * This function reverses the logic of `buildPoliciesPayload`.
- *
- * @param {object} backendPolicies - The policies object received from the backend.
- * @returns {object} The policies object formatted for the frontend's policyParams state.
- */
-export function receivePoliciesPayload(backendPolicies) {
-  const frontendPolicies = {};
+/* ========================================================================
+ * Helpers
+ * ===================================================================== */
 
-  // Helper to safely get the first value from an industry-specific policy dictionary.
-  // This assumes that for policies like corporate tax, sales tax, etc., the frontend
-  // currently uses a single input that is applied uniformly across all industries.
-  // TODO: make this just give every value. Currently, the frontend is not setup to
-  // get the taxes on a industry-specific basis.
-  const getUniformIndustryPolicyValue = (policyDict) => {
-    if (typeof policyDict === "object" && policyDict !== null) {
-      const industryKeys = Object.values(IndustryType);
-      if (
-        industryKeys.length > 0 &&
-        policyDict[industryKeys[0]] !== undefined
-      ) {
-        return policyDict[industryKeys[0]];
-      }
-    }
-    // Fallback if the structure is unexpected or empty
-    return 0;
-  };
+/** Map backend industry label ("Groceries") -> enum key ("GROCERIES"). */
+function labelToEnumKey(label) {
+  for (const [k, v] of Object.entries(IndustryType)) {
+    if (v === label) return k;
+  }
+  return undefined; // unknown label (shouldn't happen with valid backend data)
+}
 
-  // Helper to safely get the first value from a demographic-specific policy dictionary.
-  // This assumes that for policies like personal income tax, the frontend
-  // currently uses a single input that is applied uniformly across all demographics.
-  // TODO: make this just give every value. Currently, the frontend is not setup to
-  // get the taxes on a demographic-specific basis.
-  const getUniformDemographicPolicyValue = (policyDict) => {
-    if (typeof policyDict === "object" && policyDict !== null) {
-      const demographicKeys = Object.values(Demographic);
-      if (
-        demographicKeys.length > 0 &&
-        policyDict[demographicKeys[0]] !== undefined
-      ) {
-        return policyDict[demographicKeys[0]];
-      }
-    }
-    // Fallback if the structure is unexpected or empty
-    return 0;
-  };
-
-  // Policies that are percentages and are uniform across industries in the frontend
-  frontendPolicies.corporateTax =
-    getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax) * 100;
-  frontendPolicies.salesTax =
-    getUniformIndustryPolicyValue(backendPolicies.sales_tax) * 100;
-  frontendPolicies.tariffs =
-    getUniformIndustryPolicyValue(backendPolicies.tariffs) * 100;
-  frontendPolicies.subsidies =
-    getUniformIndustryPolicyValue(backendPolicies.subsidies) * 100;
-
-  // Policies that are percentages and are single values in the frontend
-  frontendPolicies.personalIncomeTax =
-    getUniformDemographicPolicyValue(backendPolicies.personal_income_tax) * 100;
-  frontendPolicies.propertyTax = backendPolicies.property_tax * 100;
-
-  // Policies that are direct values (not percentages)
-  frontendPolicies.rentCap = backendPolicies.rent_cap;
-  frontendPolicies.minimumWage = backendPolicies.minimum_wage;
-
-  return frontendPolicies;
+/** Return true if two numbers are approximately equal (for float noise). */
+function almostEqual(a, b, tol = 1e-12) {
+  return Math.abs((a ?? 0) - (b ?? 0)) <= tol;
 }
 
 /**
- * Transforms the environmental parameters from the backend into the format
- * expected by the frontend's envParams state.
+ * From an industry policy dict (labels -> decimals), derive:
+ *  - global percent value (take the first defined entry as the "global")
+ *  - per-industry overrides (percent) for entries that differ from the global
  *
- * @param {object} backendConfig - The full configuration object from the backend.
- * @returns {object} The envParams object for the frontend.
+ * Returned structure:
+ *  {
+ *    globalPct: number,                 // percent
+ *    overrides: { GROCERIES: {field: %}, ... }  // enum keys, percent
+ *  }
+ */
+function unpackIndustryDictToGlobalAndOverrides(dict, fieldName) {
+  const labels = Object.values(IndustryType);
+
+  // Choose the first defined label as the "global" value fallback.
+  const firstLabel = labels.find((l) => dict && dict[l] !== undefined);
+  const globalDec = firstLabel !== undefined ? dict[firstLabel] : 0;
+
+  const overrides = {};
+  for (const label of labels) {
+    const dec = dict ? dict[label] : undefined;
+    if (dec === undefined) continue;
+    if (!almostEqual(dec, globalDec)) {
+      const enumKey = labelToEnumKey(label);
+      if (!enumKey) continue; // skip unknown label
+      if (!overrides[enumKey]) overrides[enumKey] = {};
+      overrides[enumKey][fieldName] = dec * 100; // store as PERCENT for UI
+    }
+  }
+  return { globalPct: (globalDec ?? 0) * 100, overrides };
+}
+
+/**
+ * From a demographic policy dict (demographic -> decimals), derive:
+ *  - global percent (first defined)
+ *  - per-demographic overrides (percent) for values that differ
+ */
+function unpackDemoDictToGlobalAndOverrides(dict, fieldName) {
+  const demos = Object.values(Demographic);
+
+  const firstDemo = demos.find((d) => dict && dict[d] !== undefined);
+  const globalDec = firstDemo !== undefined ? dict[firstDemo] : 0;
+
+  const overrides = {};
+  for (const d of demos) {
+    const dec = dict ? dict[d] : undefined;
+    if (dec === undefined) continue;
+    if (!almostEqual(dec, globalDec)) {
+      if (!overrides[d]) overrides[d] = {};
+      overrides[d][fieldName] = dec * 100; // store as PERCENT for UI
+    }
+  }
+  return { globalPct: (globalDec ?? 0) * 100, overrides };
+}
+
+/* ========================================================================
+ * Policies receiver (backend -> frontend policyParams)
+ * ===================================================================== */
+/**
+ * Convert backend policies (decimals & label keys) into the UI shape:
+ *
+ * {
+ *   // globals (percents; wage is raw number):
+ *   salesTax, corporateTax, personalIncomeTax, propertyTax, tariffs, subsidies, rentCap, minimumWage,
+ *
+ *   // overrides (enum-keyed, percent values):
+ *   byIndustry: {
+ *     GROCERIES: { salesTax?, corporateTax?, tariffs?, subsidies?, rentCap? }, ...
+ *   },
+ *   byDemographic: {
+ *     "lower class": { personalIncomeTax? }, ...
+ *   }
+ * }
+ */
+export function receivePoliciesPayload(backendPolicies) {
+  const p = backendPolicies || {};
+
+  // Per-industry policies (decimals in backend)
+  const sales = unpackIndustryDictToGlobalAndOverrides(p.sales_tax || {}, "salesTax");
+  const corp = unpackIndustryDictToGlobalAndOverrides(
+    p.corporate_income_tax || {},
+    "corporateTax"
+  );
+  const tariffs = unpackIndustryDictToGlobalAndOverrides(p.tariffs || {}, "tariffs");
+  const subsidies = unpackIndustryDictToGlobalAndOverrides(
+    p.subsidies || {},
+    "subsidies"
+  );
+
+  // Merge all industry overrides into one object (enum-keyed)
+  const byIndustry = {};
+  const mergeInd = (src) => {
+    for (const [k, v] of Object.entries(src)) {
+      if (!byIndustry[k]) byIndustry[k] = {};
+      Object.assign(byIndustry[k], v);
+    }
+  };
+  mergeInd(sales.overrides);
+  mergeInd(corp.overrides);
+  mergeInd(tariffs.overrides);
+  mergeInd(subsidies.overrides);
+
+  // Per-demographic policy (personal income tax only; decimals in backend)
+  const personal = unpackDemoDictToGlobalAndOverrides(
+    p.personal_income_tax || {},
+    "personalIncomeTax"
+  );
+  const byDemographic = personal.overrides;
+
+  // Rent cap is a single decimal in backend (now percent semantics globally)
+  const rentCapPct = (p.rent_cap ?? 0) * 100;
+
+  return {
+    // Global fields (UI uses percents; wage is unit value)
+    salesTax: sales.globalPct,
+    corporateTax: corp.globalPct,
+    personalIncomeTax: personal.globalPct,
+    propertyTax: (p.property_tax ?? 0) * 100,
+    tariffs: tariffs.globalPct,
+    subsidies: subsidies.globalPct,
+    rentCap: rentCapPct,
+    minimumWage: p.minimum_wage ?? 0,
+
+    // Overrides (enum-keyed for industries; demographic names for demos)
+    byIndustry,
+    byDemographic,
+  };
+}
+
+/* ========================================================================
+ * Environment receiver (backend -> UI envParams)
+ * ===================================================================== */
+/**
+ * Backend provides weekly decimal; UI expects annual percent.
+ * Conversion: annual = ((1 + weekly) ** 52 - 1) * 100
  */
 export function receiveEnvironmentPayload(backendConfig) {
   return {
     numPeople: backendConfig.num_people,
-    inflationRate: ((1 + backendConfig.inflation_rate) ** 52 - 1) * 100, // convert to annual, then make percentage
-    // Note: maxSimulationLength and randomEvents are not part of the template,
-    // so they will retain their default values in SetupPage.
+    inflationRate: ((1 + backendConfig.inflation_rate) ** 52 - 1) * 100,
   };
 }
 
+/* ========================================================================
+ * Demographics receiver (backend -> UI demoParams)
+ * ===================================================================== */
 /**
- * Transforms the demographic parameters from the backend into the format
- * expected by the frontend's demoParams state.
- *
- * @param {object} backendDemographics - The demographics object from the backend config.
- * @returns {object} The demoParams object for the frontend.
+ * Backend spending_behavior keys are industry LABELS ("Groceries").
+ * UI stores by enum keys ("GROCERIES"). Convert labels->enum keys and
+ * decimals->percents for the sliders/inputs.
  */
 export function receiveDemographicsPayload(backendDemographics) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
       const backendDemo = backendDemographics[demoValue];
-      if (!backendDemo) return [demoValue, {}]; // Should not happen with valid templates
+      if (!backendDemo) return [demoValue, {}]; // defensive (invalid template)
+
+      // Map label-keyed decimals -> enum-keyed percents
+      const spendingPercentByEnum = Object.entries(IndustryType).reduce(
+        (acc, [enumKey, label]) => {
+          const dec = backendDemo.spending_behavior?.[label] ?? 0;
+          acc[enumKey] = dec * 100;
+          return acc;
+        },
+        {}
+      );
 
       const frontendDemo = {
         meanIncome: backendDemo.income.mean,
         sdIncome: backendDemo.income.sd,
-        proportion: backendDemo.proportion * 100, // 0.33 -> 33
+        proportion: (backendDemo.proportion ?? 0) * 100,
         meanSavings: backendDemo.balance.mean,
         sdSavings: backendDemo.balance.sd,
-        unemploymentRate: backendDemo.unemployment_rate * 100, // 0.05 -> 5
-        // Convert spending behavior from backend decimal to frontend percentage
-        // and spread them as individual properties (e.g., GROCERIES: 25)
-        ...Object.fromEntries(
-          Object.entries(backendDemo.spending_behavior).map(
-            ([industryKey, value]) => [industryKey, value * 100]
-          )
-        ),
+        unemploymentRate: (backendDemo.unemployment_rate ?? 0) * 100,
+        ...spendingPercentByEnum,
       };
+
       return [demoValue, frontendDemo];
     })
   );
 }
 
+/* ========================================================================
+ * Industries receiver (backend -> UI industryParams)
+ * ===================================================================== */
 /**
- * Transforms the industry parameters from the backend into the format
- * expected by the frontend's industryParams state.
- *
- * @param {object} backendIndustries - The industries object from the backend config.
- * @param {boolean} isSetup - whether this is for setting up, or for something else.
- * @returns {object} The industryParams object for the frontend.
+ * If `isSetup` is false, accept capitalized keys (e.g., from indicators).
  */
 export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
   return Object.fromEntries(
     Object.values(IndustryType).map((industryValue) => {
       const backendIndustry = backendIndustries[industryValue];
       if (!backendIndustry) return [industryValue, {}];
+
       let frontendIndustry = {};
       if (isSetup) {
         frontendIndustry = {
@@ -142,6 +222,7 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
           offeredWage: backendIndustry.offered_wage,
         };
       } else {
+        // Fallback mapping when coming from model indicators (capitalized keys)
         frontendIndustry = {
           startingInventory: backendIndustry.Inventory,
           startingPrice: backendIndustry.Price,
@@ -155,13 +236,9 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
   );
 }
 
-/**
- * Transforms a full template configuration from the backend into the format
- * expected by the frontend's SetupPage `params` state.
- *
- * @param {object} backendConfig - The configuration object from the backend.
- * @returns {object} The configuration formatted for the frontend state.
- */
+/* ========================================================================
+ * Template receiver (backend -> UI aggregate config)
+ * ===================================================================== */
 export function receiveTemplatePayload(backendConfig) {
   return {
     envParams: receiveEnvironmentPayload(backendConfig),
