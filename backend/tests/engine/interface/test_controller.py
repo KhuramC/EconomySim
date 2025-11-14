@@ -35,12 +35,36 @@ def test_delete_model(
         assert model_id not in controller.models
 
 
-@mark.xfail(reason="Testing the step function has not been determined yet.")
-def test_step_model(controller_model: dict, demographics, policies):
-    assert False
+@pytest.mark.parametrize(
+    "time",
+    [
+        pytest.param(0),
+        pytest.param(1),
+        pytest.param(10),
+        pytest.param(-1),
+        pytest.param(-10),
+    ],
+)
+def test_step_model(controller_model: dict, time: int):
+    """
+    Test for `step_model`.
+    Tests that stepping positively does step that amount,
+    and stepping negatively does nothing since the time is still at 0.
 
+    Args:
+        controller_model (dict): the controller with the created model.
+        time (int): the amount of time to step the model for.
+    """
 
-# TODO: add tests for reverse stepping as well.
+    controller: ModelController = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
+    controller.step_model(model_id, time)
+    current_week = controller.get_current_week(model_id)
+    if time > 0:
+        assert current_week == time
+    else:
+        assert current_week == 0
 
 
 def test_get_policies(controller_model: dict, policies):
