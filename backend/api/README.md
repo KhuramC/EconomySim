@@ -245,7 +245,7 @@ This policy represents a **percentage markup on the variable cost** of imported 
 
 ### Subsidies
 
-This policy functions as a boolean toggle (`1` for "on", `0` for "off") for each industry. An active subsidy (1) flags the simulation to apply a cost-reduction rule (e.g., lower corporate tax, reduced variable costs). The toggles are set based on the primary target industries of each state's major incentive programs.
+This policy functions as the inverse effect of tariffs on an Industry. Instead of adding a percentage increase to a raw material cost, a subsidy will subtract a percentage of the cost from a material good. This will act as the government incentivizing the growth and production of an industry.
 
 **Some City Specific Research (2025):**
 
