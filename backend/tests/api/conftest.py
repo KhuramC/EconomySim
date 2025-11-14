@@ -28,10 +28,17 @@ VALID_CONFIG = {
     },
     "industries": {
         itype: {
-            "price": 10.0 + i * 5.0,
-            "inventory": 1000 + i * 500,
-            "balance": 50000 + i * 10000,
-            "offered_wage": 15.0 + i * 2.5,
+            "starting_price": 10.0 + i * 5.0,
+            "starting_inventory": 1000 + i * 500,
+            "starting_balance": 50000 + i * 10000,
+            "starting_offered_wage": 15.0 + i * 2.5,
+            "starting_fixed_cost": 7692.00,
+            "starting_raw_mat_cost": 42.48,
+            "starting_number_of_employees": 1903,
+            "starting_worker_efficiency": 1.655,
+            "starting_debt_allowed": True,
+            "starting_demand_intercept": 166.59,
+            "starting_demand_slope": 0.000826,
         }
         for i, itype in enumerate(IndustryType)
     },
