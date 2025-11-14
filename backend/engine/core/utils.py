@@ -74,6 +74,8 @@ def num_prop(ratio: list[int | float], total: int):
     """
     if total == 0:
         return np.zeros(len(ratio))
+    if ratio == []:
+        return []
     np_ratio = np.asarray(ratio)
     cum_prop = np.cumsum(np.insert(np_ratio.ravel(), 0, 0))  # cumulative proportion
     return np.diff(np.round(total / cum_prop[-1] * cum_prop).astype(int)).reshape(
