@@ -31,8 +31,9 @@ def test_get_employees(mock_economy_model, industry_type: IndustryType):
         mock_economy_model (Model): a mock Economy model instance.
         industry_type (IndustryType): the industry being tested.
     """
+    i_agent = IndustryAgent(mock_economy_model, industry_type=industry_type)
     assert (
-        mock_economy_model.get_employees(industry_type)
+        i_agent.get_employees()
         == mock_economy_model.MOCK_EMPLOYEES[industry_type]
     )
 
