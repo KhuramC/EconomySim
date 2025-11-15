@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.encoders import jsonable_encoder
 import pytest
 from pytest import mark
 from typing import Any
@@ -13,7 +14,7 @@ template_test_params = [
     pytest.param(
         template.value,
         status.HTTP_200_OK,
-        template.config,
+        jsonable_encoder(template.config),
         id=f"{template.value} template",
     )
     for template in list(CityTemplate)
