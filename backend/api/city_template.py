@@ -213,7 +213,7 @@ _MEDIUM_CONFIG = {
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
-                IndustryType.AUTOMOBILES: 0.15,
+                IndustryType.AUTOMOBILES: 0.13,
                 IndustryType.HOUSING: 0.26,
                 IndustryType.HOUSEHOLD_GOODS: 0.04,
                 IndustryType.ENTERTAINMENT: 0.12,
