@@ -312,3 +312,63 @@ class EconomyModel(Model):
             week(int): The current week.
         """
         return self.week
+
+    from typing import Dict, Tuple, Optional
+
+    def aggregate_person_demand_tangents(
+        self,
+    ) -> Dict[str, Tuple[float, Optional[float]]]:
+        """
+        Query every PersonAgent for their demand_tangent_tuple and aggregate results.
+
+        Returns:
+            dict where keys are industry names (strings) and values are tuples:
+                (average_slope: float, average_price_at_zero: float | None)
+        """
+
+        people_agents = self.agents_by_type.get(PersonAgent, None)
+        industry_agents = list(self.agents_by_type.get(IndustryAgent, []))
+
+        # If no people or no industries, return empty dict
+        if not people_agents or not industry_agents:
+            return {}
+
+        # Build prices dict keyed by IndustryType (as PersonAgent expects)
+        prices: dict[IndustryType, float] = {
+            ia.industry_type: ia.price for ia in industry_agents
+        }
+
+        # accumulators keyed by industry name (PersonAgent returns keys as strings)
+        slope_acc: Dict[str, list[float]] = {}
+        pzero_acc: Dict[str, list[float]] = {}
+
+        for person in people_agents:
+            # budget is determined by the person's own method
+            budget = person.determine_budget()
+            prefs = person.preferences
+
+            # call person method with expected signature
+            tangents = person.demand_tangent_tuple(budget=budget, prefs=prefs, prices=prices)
+
+            # tangents: { "INDUSTRY_NAME": (slope, p_zero_or_None), ... }
+            for industry_key, (slope, p_zero) in tangents.items():
+                slope_acc.setdefault(industry_key, []).append(slope)
+                if p_zero is not None:
+                    pzero_acc.setdefault(industry_key, []).append(p_zero)
+
+        # compute averages
+        aggregated: Dict[str, Tuple[float, Optional[float]]] = {}
+        for industry_key, slopes in slope_acc.items():
+            avg_slope = sum(slopes) / len(slopes) if slopes else 0.0
+            pzeros = pzero_acc.get(industry_key, [])
+            avg_pzero = sum(pzeros) / len(pzeros) if pzeros else None
+            aggregated[industry_key] = (avg_slope, avg_pzero)
+
+        # include industries that had p_zero values but no slopes (unlikely)
+        for industry_key, pzeros in pzero_acc.items():
+            if industry_key in aggregated:
+                continue
+            avg_pzero = sum(pzeros) / len(pzeros) if pzeros else None
+            aggregated[industry_key] = (0.0, avg_pzero)
+
+        return aggregated
