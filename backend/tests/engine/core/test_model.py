@@ -136,10 +136,10 @@ def test_setup_industry_agents(model: EconomyModel, industries):
             lambda agent: agent.industry_type == industry_type
         )[0]
         assert industry_agent.industry_type == industry_type
-        assert industry_agent.price == industry_info["price"]
-        assert industry_agent.inventory == industry_info["inventory"]
-        assert industry_agent.balance == industry_info["balance"]
-        assert industry_agent.offered_wage == industry_info["offered_wage"]
+        assert industry_agent.price == industry_info["starting_price"]
+        assert industry_agent.inventory == industry_info["starting_inventory"]
+        assert industry_agent.balance == industry_info["starting_balance"]
+        assert industry_agent.offered_wage == industry_info["starting_offered_wage"]
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))

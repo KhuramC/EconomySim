@@ -227,10 +227,10 @@ class EconomyModel(Model):
                 raise ValueError(
                     f"Industry info must be a dictionary at industries[{industry_type}]."
                 )
-            starting_price = industry_info.get("price", 0.0)
-            starting_inventory = industry_info.get("inventory", 0)
-            starting_balance = industry_info.get("balance", 0.0)
-            starting_offered_wage = industry_info.get("offered_wage", 0.0)
+            starting_price = industry_info.get("starting_price", 0.0)
+            starting_inventory = industry_info.get("starting_inventory", 0)
+            starting_balance = industry_info.get("starting_balance", 0.0)
+            starting_offered_wage = industry_info.get("starting_offered_wage", 0.0)
 
             IndustryAgent.create_agents(
                 model=self,

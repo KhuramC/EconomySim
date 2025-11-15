@@ -131,7 +131,7 @@ def test_validate_schema_success(
             id="invalid_demographics",
         ),
         pytest.param(
-            ("industries", (IndustryType.HOUSEHOLD_GOODS, "price")),
+            ("industries", (IndustryType.HOUSEHOLD_GOODS, "starting_price")),
             INDUSTRIES_SCHEMA,
             "industries",
             id="invalid_industries",
