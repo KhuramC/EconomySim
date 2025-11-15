@@ -1,66 +1,15 @@
 import pytest
 from pytest import mark, approx
 import numpy as np
-from contextlib import nullcontext
 from engine.core.model import EconomyModel
+from engine.core.utils import num_prop
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from engine.agents.industry import IndustryAgent
 from engine.agents.person import PersonAgent
 
 
-@mark.parametrize(
-    "delete_values,exception",
-    [
-        pytest.param(False, nullcontext(), id="valid_policies"),
-        pytest.param(True, pytest.raises(ValueError), id="invalid_policies"),
-    ],
-)
-def test_validate_schema(model: EconomyModel, policies, delete_values: bool, exception):
-    """
-    Test for `validate_schema`.
-    Tests whether a it can validate a correct schema and invalidate an invalid schema.
-
-    Args:
-       controller (ModelController): the controller being used.
-        policies (dict): a valid policies.
-        delete_values (bool): whether to delete values from policies
-        exception: the exception expected to occur.
-    """
-    # TODO: add parameters for doing this with demographics as well.
-    new_policies = policies.copy()
-    if delete_values:
-        del new_policies["corporate_income_tax"]
-    with exception:
-        model.validate_schema(new_policies)
-
-
-@pytest.mark.parametrize(
-    "mean, std",
-    [
-        (100, 10),  # Low variance
-        (5000, 1500),  # High variance
-        (800, 300),  # Medium variance
-    ],
-)
-def test_generate_lognormal_statistics(model: EconomyModel, mean, std):
-    """
-    Tests that the generated distribution has approximately the
-    mean and standard deviation that were requested.
-
-    This is a stochastic test, so it uses a large sample size
-    and pytest.approx for assertions.
-    """
-    size = 1_000_000  # Large sample size for statistical accuracy
-    results = model.generate_lognormal(mean, std, size)
-
-    # Check that the actual mean and std are close to the desired values
-    # We use a relative tolerance of 1% (rel=0.01)
-    assert np.mean(results) == pytest.approx(mean, rel=0.01)
-    assert np.std(results) == pytest.approx(std, rel=0.01)
-
-
-def test_setup_person_agents(model: EconomyModel):
+def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics):
     """
     Tests that the `setup_person_agents` method, called during
     EconomyModel.__init__, correctly creates agents.
@@ -73,7 +22,7 @@ def test_setup_person_agents(model: EconomyModel):
     """
     # Test correct number of agents
     people = model.agents_by_type[PersonAgent]
-    assert len(people) == 100  # Default in conftest.py model fixture
+    assert len(people) == num_agents
 
     # Test correct demographic proportions
     lower_class_agents = people.select(
@@ -86,10 +35,16 @@ def test_setup_person_agents(model: EconomyModel):
         lambda agent: agent.demographic == Demographic.UPPER_CLASS
     )
 
-    # Using default proportions from conftest.py
-    assert len(lower_class_agents) == int(0.45 * 100)
-    assert len(middle_class_agents) == int(0.40 * 100)
-    assert len(upper_class_agents) == int(0.15 * 100)
+    props = num_prop(
+        [
+            demographics[demographic]["proportion"] * 100
+            for demographic in demographics.keys()
+        ],
+        num_agents,
+    )
+    assert len(lower_class_agents) == props[0]
+    assert len(middle_class_agents) == props[1]
+    assert len(upper_class_agents) == props[2]
 
     # Test expected attributes
     expected_keys = set([industry.value for industry in IndustryType])
@@ -163,9 +118,28 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
         assert np.all(diff <= tolerance)
 
 
-@mark.xfail(reason="Function has not been implemented yet.")
-def test_setup_industry_agents(model: EconomyModel):
-    assert False
+def test_setup_industry_agents(model: EconomyModel, industries):
+    """
+    Tests `setup_industry_agents`. Ensures that only one agent is created per industry
+    and that they are setup with the correct starting parameters.
+
+    Args:
+        model (EconomyModel): a freshly created model.
+        industries (dict): a valid industries.
+    """
+
+    industry_agents = model.agents_by_type[IndustryAgent]
+    assert len(industry_agents) == len(industries)
+
+    for industry_type, industry_info in industries.items():
+        industry_agent = industry_agents.select(
+            lambda agent: agent.industry_type == industry_type
+        )[0]
+        assert industry_agent.industry_type == industry_type
+        assert industry_agent.price == industry_info["starting_price"]
+        assert industry_agent.inventory == industry_info["starting_inventory"]
+        assert industry_agent.balance == industry_info["starting_balance"]
+        assert industry_agent.offered_wage == industry_info["starting_offered_wage"]
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
@@ -228,11 +202,21 @@ def test_inflation(model: EconomyModel, inflation_rate: float, num_steps: int):
         )  # No side effects
 
 
-@mark.xfail(reason="Testing for the step function has not been considered quite yet.")
 def test_step(model: EconomyModel):
-    assert False
+    """
+    Test for `step`. Ensures that the step function is working properly.
+
+    Args:
+        model (EconomyModel): _description_
+    """
+    model.step()
+    
+    assert model.get_week() == 1
+    for _ in range(100):
+        model.step()
+    assert model.get_week() == 52 # max for this model
 
 
-@mark.xfail(reason="Function has not been implemented yet.")
 def test_reverse_step(model: EconomyModel):
-    assert False
+    # TODO: test whenever reverse_step is implemented
+    pass

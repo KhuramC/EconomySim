@@ -136,8 +136,3 @@ def test_purchase_goods(mock_economy_model):
     assert food_industry.inventory == 100 - 32
     assert entertainment_industry.inventory == 100 - 24
     assert person.balance == approx(200)
-
-
-@mark.xfail(reason="Function not implemented yet.")
-def test_change_employment():
-    assert False

@@ -1,7 +1,10 @@
 import pytest
+import logging
 from typing import Any
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
+
+NUM_AGENTS = 10
 
 DEMOGRAPHICS = {
     demo: {
@@ -59,6 +62,14 @@ POLICIES = {
 
 
 @pytest.fixture()
+def num_agents() -> int:
+    """
+    A fixture that provides the number of agents in a simulation.
+    """
+    return NUM_AGENTS
+
+
+@pytest.fixture()
 def demographics() -> (
     dict[Demographic, dict[str, float | dict[str | IndustryType, float]]]
 ):
@@ -82,3 +93,10 @@ def policies() -> dict[str, float | dict[IndustryType, float]]:
     A fixture that provides a valid set of policies for starting a simulation.
     """
     return POLICIES
+
+
+@pytest.fixture(autouse=True)
+def quiet_logging():
+    logging.disable(logging.CRITICAL)
+    yield
+    logging.disable(logging.NOTSET)

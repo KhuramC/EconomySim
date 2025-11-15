@@ -1,13 +1,11 @@
 import pytest
 from engine.core.model import EconomyModel
 from engine.agents.person import PersonAgent
-from engine.agents.industry import IndustryAgent
 from engine.types.demographic import Demographic
-from engine.types.industry_type import IndustryType
 
 
-@pytest.fixture
-def model(demographics, industries, policies) -> EconomyModel:
+@pytest.fixture()
+def model(num_agents, demographics, industries, policies) -> EconomyModel:
     """
     A fixture that provides a valid model.
 
@@ -21,17 +19,16 @@ def model(demographics, industries, policies) -> EconomyModel:
     """
     model = EconomyModel(
         max_simulation_length=52,
-        num_people=100,
+        num_people=num_agents,
         demographics=demographics,
         industries=industries,
         starting_policies=policies,
     )
-    # TODO: test demographics properly being created
 
     return model
 
 
-@pytest.fixture
+@pytest.fixture()
 def indicator_test_model_factory(demographics, industries, policies):
     """
     A factory fixture to create a minimal EconomyModel with a specific list

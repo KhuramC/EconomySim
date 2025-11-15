@@ -79,7 +79,7 @@ def test_create_model_fail(
     api_client: TestClient, invalid_config: dict[str, Any], status_code: int
 ):
     """
-    Parametrized test for `test_create_model` failing, an API endpoint.
+    Parametrized test for `create_model` failing, an API endpoint.
     Tests against the ModelCreateRequest to ensure it works or against
     the validation of policies/demographics, which result in slightly different status codes.
 
@@ -97,8 +97,11 @@ def test_get_and_set_policies(
     api_client: TestClient, created_model: int, valid_config: dict[str, Any]
 ):
     """
-    Test for `get_model_policies` and `set_model_policies`, an API endpoint.
-    Tests that it gets the correct initial parameters, and then correctly sets/changes them.
+    Test for `get_model_policies` and `set_model_policies`, API endpoints.
+    Tests that it gets the correct initial policies,
+    correctly sets/changes the policies,
+    and then correctly ensures that the policies are not correctly
+
 
     Args:
         api_client (TestClient): the test client to connect to the FastAPI server.
@@ -136,16 +139,43 @@ def test_get_and_set_policies(
     }
     assert updated_policies["property_tax"] == 0.1
 
+    # Try to set policies to an incorrect structure.
+    newer_policies = copy.deepcopy(updated_policies)
+    newer_policies["corporate_income_tax"] = {}  # no keys per demographic; should error
+    response_set_fail = api_client.post(
+        f"/models/{created_model}/policies", json=newer_policies
+    )
+    assert response_set_fail.status_code == status.HTTP_404_NOT_FOUND
 
-def test_get_model_indicators(api_client: TestClient, created_model: int):
+
+@mark.parametrize(
+    "args,status_code",
+    [
+        pytest.param(
+            {
+                "start_time": 0,
+                "end_time": 0,
+            },
+            status.HTTP_200_OK,
+            id="correct args",
+        ),
+        pytest.param(
+            {
+                "start_time": -1,
+                "end_time": 0,
+            },
+            status.HTTP_404_NOT_FOUND,
+            id="incorrect args",
+        ),
+    ],
+)
+def test_get_model_indicators(
+    api_client: TestClient, created_model: int, args: dict[str, int], status_code: int
+):
     """
     Test for `get_model_indicators`, an API endpoint.
-    Tests that it correctly gets the indicators.
+    Tests that it correctly gets the indicators, or fails based on the arguments.
     """
-    args = {
-        "start_time": 0,
-        "end_time": 0,
-    }
 
     # step twice
     response = api_client.post(f"/models/{created_model}/step")
@@ -155,15 +185,16 @@ def test_get_model_indicators(api_client: TestClient, created_model: int):
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     response = api_client.get(f"/models/{created_model}/indicators", params=args)
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status_code
 
-    received_indicators = response.json()
-    assert isinstance(received_indicators, dict)
-    for indicator_name, indicator_data in received_indicators.items():
-        # although week is in the data, it's not an indicator
-        if indicator_name != "week":
-            assert indicator_name in Indicators.values()
-        assert len(indicator_data) == 2
+    if status_code == status.HTTP_200_OK:
+        received_indicators = response.json()
+        assert isinstance(received_indicators, dict)
+        for indicator_name, indicator_data in received_indicators.items():
+            # although week is in the data, it's not an indicator
+            if indicator_name != "week":
+                assert indicator_name in Indicators.values()
+            assert len(indicator_data) == 2
 
 
 def test_step_model(api_client: TestClient, created_model: int):

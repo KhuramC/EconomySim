@@ -29,7 +29,7 @@ jobs:
       - name: Run Backend Pytests
         run: |
           cd backend
-          poetry run pytest -vvv --cov=api --cov=engine --cov-report=html --cov-report=term-missing --cov-branch
+          poetry run pytest -vvv --cov=api --cov=engine --cov-report=html --cov-report=term-missing --cov-branch -m ""
       
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
