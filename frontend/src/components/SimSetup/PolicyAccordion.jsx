@@ -1,12 +1,11 @@
-// src/components/SimSetup/PolicyAccordion.jsx
-// Purpose: Render the "Government Policies" section with:
-//   1) Regular/global policy inputs (always visible)
-//   2) Advanced tabbed overrides per Industry and per Demographic
+// Purpose: "Government Policies" section with
+//   (1) Global policy inputs (always shown)
+//   (2) Advanced tabbed overrides (per-Industry / per-Demographic)
 // Notes:
-//   - Global values act as defaults; overrides replace the global within their scope.
-//   - Override handlers are optional so other pages can reuse this component safely.
-//   - Backend expects Rent Cap as a percentage (not dollars).
-//   - Tabs and their content are stacked vertically; panels always render UNDER the tab strip.
+//   - Globals act as defaults; overrides replace the global for that scope.
+//   - Handlers for overrides are optional so other pages can reuse this component.
+//   - Rent Cap is a percentage (not dollars) per latest backend spec.
+//   - Tabs and content are stacked vertically; content always renders under the tabs.
 
 import { useState, useMemo } from "react";
 import { MenuItem, Grid, Typography, Tabs, Tab, Box } from "@mui/material";
@@ -18,138 +17,140 @@ import { Demographic } from "../../types/Demographic.js";
 
 /**
  * Props:
- * - policyParams: globals + { byIndustry?, byDemographic? }
- * - handlePolicyChange: (key) => (e) => void   // updates globals
- * - handlePolicyIndustryOverrideChange?: (industryKey, field) => (e) => void
- * - handlePolicyDemographicOverrideChange?: (demoKey, field) => (e) => void
+ * - policyParams: globals + optional { byIndustry, byDemographic }
+ * - handlePolicyChange: (key) => (eOrNull) => void (globals; onBlur calls with null to flush)
+ * - handlePolicyIndustryOverrideChange?: (industryKey, field) => (eOrNull) => void
+ * - handlePolicyDemographicOverrideChange?: (demoKey, field) => (eOrNull) => void
  * - formErrors?: nested error bag (globals + overrides)
- * - starting?: boolean (changes accordion title wording)
+ * - starting?: boolean (changes accordion title)
  */
 export default function PolicyAccordion({
   policyParams,
-  handlePolicyChange,                        // required global handler
-  handlePolicyIndustryOverrideChange,        // optional override handler
-  handlePolicyDemographicOverrideChange,     // optional override handler
+  handlePolicyChange,
+  handlePolicyIndustryOverrideChange,
+  handlePolicyDemographicOverrideChange,
   formErrors = {},
   starting = true,
 }) {
-  // Fallback no-ops so callers can omit override handlers without crashes
+  // Provide safe no-ops so the component is reusable without override handlers
   const noopFactory = () => () => {};
   const onIndChange =
     handlePolicyIndustryOverrideChange ?? ((_industryKey, _field) => noopFactory());
   const onDemoChange =
     handlePolicyDemographicOverrideChange ?? ((_demoKey, _field) => noopFactory());
 
-  // Which tab is active (0 = By Industry, 1 = By Demographic)
+  // Local tab state
   const [tab, setTab] = useState(0);
   const handleTab = (_e, v) => setTab(v);
 
-  // Stable lists derived from enum-like objects
+  // Enum helpers
   const industryKeys = useMemo(() => Object.keys(IndustryType), []);
   const demoKeys = useMemo(() => Object.values(Demographic), []);
 
-  // Current selections inside the two override editors
+  // Current selectors
   const [selectedIndustry, setSelectedIndustry] = useState(industryKeys[0]);
   const [selectedDemo, setSelectedDemo] = useState(demoKeys[0]);
 
-  // Safe deref for nested policy bags + error maps
+  // Safe access to nested bags
   const byIndustry = policyParams?.byIndustry ?? {};
-  const byDemo     = policyParams?.byDemographic ?? {};
-  const iErrors    = formErrors?.byIndustry ?? {};
-  const dErrors    = formErrors?.byDemographic ?? {};
+  const byDemo = policyParams?.byDemographic ?? {};
+  const iErrors = formErrors?.byIndustry ?? {};
+  const dErrors = formErrors?.byDemographic ?? {};
 
-  // Read the currently selected override value as a STRING (allows free typing)
+  // Read override values (keep as strings so users can type freely)
   const getInd = (field) =>
     (byIndustry[selectedIndustry] && byIndustry[selectedIndustry][field]) ?? "";
   const getDemo = (field) =>
     (byDemo[selectedDemo] && byDemo[selectedDemo][field]) ?? "";
 
-  // Tiny helper to only render the active panel
+  // Simple TabPanel that hides inactive content
   const TabPanel = ({ value, index, children }) => (
     <div role="tabpanel" hidden={value !== index} aria-labelledby={`policy-tab-${index}`}>
       {value === index && <Box sx={{ pt: 2, width: "100%" }}>{children}</Box>}
     </div>
   );
 
-  // ---------- Global policy inputs (act as defaults everywhere) ----------
+  // ---------- Global policy inputs ----------
   const regularFields = (
     <>
       <ParameterNumInput
         label="Sales Tax (%)"
         value={policyParams.salesTax}
         onChange={handlePolicyChange("salesTax")}
+        onBlur={() => handlePolicyChange("salesTax")(null)}  // flush on blur
         error={!!formErrors.salesTax}
         helpText="Tax on consumer purchases. Higher values raise effective prices and may lower demand."
       />
-
       <ParameterNumInput
         label="Corporate Income Tax (%)"
         value={policyParams.corporateTax}
         onChange={handlePolicyChange("corporateTax")}
+        onBlur={() => handlePolicyChange("corporateTax")(null)} // flush on blur
         error={!!formErrors.corporateTax}
         helpText="Tax on industry profits. Reduces retained earnings and may affect investment."
       />
-
       <ParameterNumInput
         label="Personal Income Tax (%)"
         value={policyParams.personalIncomeTax}
         onChange={handlePolicyChange("personalIncomeTax")}
+        onBlur={() => handlePolicyChange("personalIncomeTax")(null)} // flush on blur
         error={!!formErrors.personalIncomeTax}
         helpText="Tax on individual income. Lowers disposable income and consumption."
       />
-
       <ParameterNumInput
         label="Property Tax (%)"
         value={policyParams.propertyTax}
         onChange={handlePolicyChange("propertyTax")}
+        onBlur={() => handlePolicyChange("propertyTax")(null)} // flush on blur
         error={!!formErrors.propertyTax}
         helpText="Recurring tax on property values. Can influence housing costs and investment."
       />
-
       <ParameterNumInput
         label="Minimum Wage ($/hr)"
         value={policyParams.minimumWage}
         onChange={handlePolicyChange("minimumWage")}
+        onBlur={() => handlePolicyChange("minimumWage")(null)} // flush on blur
         error={!!formErrors.minimumWage}
         helpText="Legal wage floor. Firms cannot offer wages below this value."
       />
-
       <ParameterNumInput
         label="Tariffs (%)"
         value={policyParams.tariffs}
         onChange={handlePolicyChange("tariffs")}
+        onBlur={() => handlePolicyChange("tariffs")(null)} // flush on blur
         error={!!formErrors.tariffs}
         helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
       />
-
       <ParameterNumInput
         label="Subsidies (%)"
         value={policyParams.subsidies}
         onChange={handlePolicyChange("subsidies")}
+        onBlur={() => handlePolicyChange("subsidies")(null)} // flush on blur
         error={!!formErrors.subsidies}
         helpText="Government support to industries. Lowers effective costs or boosts income."
       />
-
-      {/* Rent Cap is now a percent value per backend spec */}
+      {/* Rent Cap now percent */}
       <ParameterNumInput
         label="Rent Cap (%)"
         value={policyParams.rentCap}
         onChange={handlePolicyChange("rentCap")}
+        onBlur={() => handlePolicyChange("rentCap")(null)} // flush on blur
         error={!!formErrors.rentCap}
         helpText="Upper bound (percent) on weekly housing rent. If binding, it limits rent growth."
       />
     </>
   );
 
-  // ---------- Advanced overrides (tabs stacked over panels) ----------
+  // ---------- Advanced overrides (tabs stacked over content) ----------
   const advancedOverrides = (
     <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
       <Tabs
         value={tab}
         onChange={handleTab}
         aria-label="policy override tabs"
-        sx={{ mb: 1, alignSelf: "flex-start" }}              // keep tab strip on its own row
-        slotProps={{ indicator: { sx: { height: 3, bgcolor: "success.main" } } }} // MUI v5 API
+        sx={{ mb: 1, alignSelf: "flex-start" }}
+        // MUI v5: use slotProps.indicator instead of deprecated TabIndicatorProps
+        slotProps={{ indicator: { sx: { height: 3, bgcolor: "success.main" } } }}
       >
         <Tab id="policy-tab-0" label="By Industry" />
         <Tab id="policy-tab-1" label="By Demographic" />
@@ -157,7 +158,6 @@ export default function PolicyAccordion({
 
       {/* ----------------------- By Industry ----------------------- */}
       <TabPanel value={tab} index={0}>
-        {/* Section header centered */}
         <Box sx={{ width: "100%" }}>
           <Typography variant="subtitle1" align="center" sx={{ mb: 2 }}>
             Overrides by Industry
@@ -165,7 +165,7 @@ export default function PolicyAccordion({
         </Box>
 
         <Grid container spacing={2}>
-          {/* Industry selector spans full row for clarity */}
+          {/* selector (full row) */}
           <ParameterMenuInput
             label="Industry"
             value={selectedIndustry}
@@ -174,17 +174,17 @@ export default function PolicyAccordion({
           >
             {industryKeys.map((key) => (
               <MenuItem key={key} value={key}>
-                {/* Show human-friendly label from the enum map */}
                 <span style={{ textTransform: "capitalize" }}>{IndustryType[key]}</span>
               </MenuItem>
             ))}
           </ParameterMenuInput>
 
-          {/* Percent overrides; blank means "inherit global" */}
+          {/* % overrides; blank = inherit */}
           <ParameterNumInput
             label="Sales Tax Override (%)"
             value={getInd("salesTax")}
             onChange={onIndChange(selectedIndustry, "salesTax")}
+            onBlur={() => onIndChange(selectedIndustry, "salesTax")(null)} // flush
             error={!!(iErrors[selectedIndustry]?.salesTax)}
             helpText="Leave blank to inherit the global Sales Tax."
           />
@@ -192,6 +192,7 @@ export default function PolicyAccordion({
             label="Corporate Income Tax Override (%)"
             value={getInd("corporateTax")}
             onChange={onIndChange(selectedIndustry, "corporateTax")}
+            onBlur={() => onIndChange(selectedIndustry, "corporateTax")(null)} // flush
             error={!!(iErrors[selectedIndustry]?.corporateTax)}
             helpText="Leave blank to inherit the global Corporate Income Tax."
           />
@@ -199,6 +200,7 @@ export default function PolicyAccordion({
             label="Tariffs Override (%)"
             value={getInd("tariffs")}
             onChange={onIndChange(selectedIndustry, "tariffs")}
+            onBlur={() => onIndChange(selectedIndustry, "tariffs")(null)} // flush
             error={!!(iErrors[selectedIndustry]?.tariffs)}
             helpText="Leave blank to inherit the global Tariffs."
           />
@@ -206,26 +208,26 @@ export default function PolicyAccordion({
             label="Subsidies Override (%)"
             value={getInd("subsidies")}
             onChange={onIndChange(selectedIndustry, "subsidies")}
+            onBlur={() => onIndChange(selectedIndustry, "subsidies")(null)} // flush
             error={!!(iErrors[selectedIndustry]?.subsidies)}
             helpText="Leave blank to inherit the global Subsidies."
           />
-
-          {/* Rent Cap only applies to the Housing industry (disabled otherwise) */}
+          {/* Full row; tooltip still visible even when disabled */}
           <ParameterNumInput
             label="Rent Cap Override (%)"
             value={getInd("rentCap")}
             onChange={onIndChange(selectedIndustry, "rentCap")}
+            onBlur={() => onIndChange(selectedIndustry, "rentCap")(null)} // flush
             error={!!(iErrors[selectedIndustry]?.rentCap)}
             helpText="Housing industry only; ignored for other industries."
             disabled={selectedIndustry !== "HOUSING"}
-            xs={12} // make long label/layout breathe
+            xs={12}
           />
         </Grid>
       </TabPanel>
 
       {/* --------------------- By Demographic ---------------------- */}
       <TabPanel value={tab} index={1}>
-        {/* Section header centered */}
         <Box sx={{ width: "100%" }}>
           <Typography variant="subtitle1" align="center" sx={{ mb: 2 }}>
             Overrides by Demographic
@@ -233,7 +235,6 @@ export default function PolicyAccordion({
         </Box>
 
         <Grid container spacing={2}>
-          {/* Demographic selector spans full row */}
           <ParameterMenuInput
             label="Demographic"
             value={selectedDemo}
@@ -247,21 +248,21 @@ export default function PolicyAccordion({
             ))}
           </ParameterMenuInput>
 
-          {/* Only override supported per demographic today */}
+          {/* Full row so long label never truncates */}
           <ParameterNumInput
             label="Personal Income Tax Override (%)"
             value={getDemo("personalIncomeTax")}
             onChange={onDemoChange(selectedDemo, "personalIncomeTax")}
+            onBlur={() => onDemoChange(selectedDemo, "personalIncomeTax")(null)} // flush (critical)
             error={!!(dErrors[selectedDemo]?.personalIncomeTax)}
             helpText="Blank = inherit the global Personal Income Tax."
-            xs={12} // prevents long label from truncating on narrow layouts
+            xs={12}
           />
         </Grid>
       </TabPanel>
     </Box>
   );
 
-  // Wrap everything in the generic accordion container used across Setup
   return (
     <ParameterAccordion
       title={starting === true ? "Starting Government Policies" : "Government Policies"}
