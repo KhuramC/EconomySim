@@ -262,7 +262,7 @@ def test_starting_inventory_satisfies_demand(mock_economy_model):
     assert ind.hours_worked == 0
     assert ind.offered_wage == 15.0
     assert weekly_pay == 0.0
-@mark.parametrize("starting_price, price_cap_percentage, expected_price, expected_quantity", 
+@pytest.mark.parametrize("starting_price, price_cap_percentage, expected_price, expected_quantity", 
                   [(0,0,26.46,106), (1,None,26.46,106), (25,0.1,26.46,106), (20,0.1,22,156), (1,1,2,0),
                    (26.46,None,26.46,106)])
 def test_price_cap(mock_economy_model, starting_price, price_cap_percentage, expected_price, expected_quantity):
@@ -415,7 +415,7 @@ def test_determine_price_realistic(mock_economy_model):
 """
 Testing get_profit and deduct_corporate_tax based on "realistic" prices
 """
-@mark.parametrize("corporate_income_tax,expected_profit", [(1,0), (2,-92040), (0.02,90199.20), (0.1,82836), (1/3,61360), (0,92040)])
+@pytest.mark.parametrize("corporate_income_tax,expected_profit", [(1,0), (2,-92040), (0.02,90199.20), (0.1,82836), (1/3,61360), (0,92040)])
 def test_get_profit_corpo_tax_realistic(mock_economy_model,corporate_income_tax,expected_profit):
     """
     Test determine_price when pricing strategy is LINEAR_PROFIT_MAX.
@@ -452,7 +452,7 @@ def test_get_profit_corpo_tax_realistic(mock_economy_model,corporate_income_tax,
     assert ind.get_profit() == 92040
     assert (ind.balance - 1000000) == pytest.approx(expected_profit)
     
-@mark.parametrize("property_tax,expected_fixed_cost", [(1,5850), (0.00096,854.8), (0.02,950), (0.1,1350), (1/3,2516.66666667), (0,850)])
+@pytest.mark.parametrize("property_tax,expected_fixed_cost", [(1,5850), (0.00096,854.8), (0.02,950), (0.1,1350), (1/3,2516.66666667), (0,850)])
 def test_fixed_cost_property_tax(mock_economy_model,property_tax,expected_fixed_cost):
     """
     Tests the fixed cost function and the property tax policy
@@ -517,7 +517,7 @@ Expected Behavior Summary:
 # factory function
 def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
     mock_economy_model.policies["tariffs"][IndustryType.LUXURY] = 0.0
-    mock_economy_model.policies["subsidies"]['Luxury'] = 0.0
+    mock_economy_model.policies["subsidies"][IndustryType.LUXURY] = 0.0
     return IndustryAgent(
         mock_economy_model,
         industry_type=IndustryType.LUXURY,
@@ -535,7 +535,7 @@ def make_industry_agent(mock_economy_model, wage, efficiency, raw_cost):
 
 
 # ---- TESTS ----
-@mark.parametrize("tariff,expected_variable_cost", [(0,7.0), (0.02,7.1), (0.1,7.5), (1,12)])
+@pytest.mark.parametrize("tariff,expected_variable_cost", [(0,7.0), (0.02,7.1), (0.1,7.5), (1,12)])
 def test_tariffs(mock_economy_model, tariff, expected_variable_cost):
     """
         Tarriff Testing: affects raw material cost directly
@@ -549,9 +549,9 @@ def test_tariffs(mock_economy_model, tariff, expected_variable_cost):
     """
     
     ind = make_industry_agent(mock_economy_model, 20, 10, 5)   #under normal circumstances, produces a variable cost of 7.0
-    mock_economy_model.policies["tariffs"]['Luxury'] = tariff
+    mock_economy_model.policies["tariffs"][IndustryType.LUXURY] = tariff
     assert ind.get_variable_cost() == expected_variable_cost
-@mark.parametrize("subsidy,expected_variable_cost", [(0,7.0), (0.02,6.9), (0.1,6.5), (1,2), (2,-3.0)])
+@pytest.mark.parametrize("subsidy,expected_variable_cost", [(0,7.0), (0.02,6.9), (0.1,6.5), (1,2), (2,-3.0)])
 def test_subsidies(mock_economy_model, subsidy, expected_variable_cost):
     """
         Subsidy Testing: affects raw material cost directly

@@ -1,5 +1,3 @@
-import re
-from typing import Iterable
 import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
@@ -12,41 +10,14 @@ from ..types.demographic import Demographic
 from ..types.indicators import Indicators
 from ..types.industry_metrics import IndustryMetrics
 from .indicators import *
-
-demographics_schema = {
-    demo.value: {
-        "income": {"mean": None, "sd": None},
-        "proportion": None,
-        "unemployment_rate": None,
-        "spending_behavior": {itype.value: None for itype in IndustryType},
-        "balance": {"mean": None, "sd": None},
-    }
-    for demo in Demographic
-}
-"""Schema for validating the demographics dictionary."""
-
-industries_schema = {
-    itype.value: {
-        "price": None,
-        "inventory": None,
-        "balance": None,
-        "offered_wage": None,
-    }
-    for itype in IndustryType
-}
-"""Schema for validating the industries dictionary."""
-
-policies_schema = {
-    "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": {demo.value: None for demo in Demographic},
-    "sales_tax": {itype.value: None for itype in IndustryType},
-    "property_tax": None,
-    "tariffs": {itype.value: None for itype in IndustryType},
-    "subsidies": {itype.value: None for itype in IndustryType},
-    "rent_cap": None,
-    "minimum_wage": None,
-}
-"""Schema for validating the policies dictionary."""
+from .utils import (
+    validate_schema,
+    DEMOGRAPHICS_SCHEMA,
+    INDUSTRIES_SCHEMA,
+    POLICIES_SCHEMA,
+    num_prop,
+    generate_lognormal,
+)
 
 
 class EconomyModel(Model):
@@ -72,7 +43,6 @@ class EconomyModel(Model):
     random_events: bool
     """Whether random events are enabled in the simulation."""
 
-    _allowed_none: set[tuple[str, ...]]
     # Changeable by the user at any time
 
     policies: dict[str, float | dict[IndustryType | Demographic, float]]
@@ -108,6 +78,8 @@ class EconomyModel(Model):
         self.inflation_rate = inflation_rate
         self.random_events = random_events
         self.policies = starting_policies
+        
+        
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
