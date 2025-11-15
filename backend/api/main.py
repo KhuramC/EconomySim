@@ -49,7 +49,7 @@ class ModelCreateRequest(BaseModel):
     industries: dict[IndustryType, dict[str, float | int]] = Field(
         ..., description="Information about every industry."
     )
-    policies: dict[str, float | dict[IndustryType | Demographic, float]] = Field(
+    policies: dict[str, Any] = Field(
         ..., description="Policies for the simulation."
     )
 
@@ -119,7 +119,7 @@ async def create_model(
 @app.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
 async def get_model_policies(
     model_id: int,
-) -> dict[str, float | dict[IndustryType | Demographic, float]]:
+) -> dict[str, Any]:
     """
     Returns all of the current policies associated with a model.
     The default status code is 200 upon success.
@@ -146,7 +146,7 @@ async def get_model_policies(
 @app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
     model_id: int,
-    policies: dict[str, float | dict[IndustryType | Demographic, float]],
+    policies: dict[str, Any],
 ):
     """
     Sets all of the current policies in a model.
