@@ -43,7 +43,7 @@ policies_schema = {
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
-    "price_cap": {itype.value: None for itype in IndustryType},
+    "rent_cap": None,
     "minimum_wage": None,
 }
 """Schema for validating the policies dictionary."""
@@ -100,12 +100,9 @@ class EconomyModel(Model):
         if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
-        self.validate_schema(demographics, demographics_schema, path="demographics")
-        self.validate_schema(industries, industries_schema, path="industries")
-        self._allowed_none = {
-            ("policies", "price_cap", "*"),
-        }
-        self.validate_schema(starting_policies)
+        validate_schema(demographics, DEMOGRAPHICS_SCHEMA, path="demographics")
+        validate_schema(industries, INDUSTRIES_SCHEMA, path="industries")
+        validate_schema(starting_policies, POLICIES_SCHEMA, path="policies")
 
         self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
@@ -142,58 +139,6 @@ class EconomyModel(Model):
         if IndustryAgent not in self.agents_by_type:
             self.agents_by_type[IndustryAgent] = AgentSet([], self)
 
-
-    def validate_schema(
-            self, data: dict, schema: dict = policies_schema, path="policies"
-        ):
-        """
-        Recursively validate the dictionary against the schema.
-
-        Args:
-            data (dict): The dictionary to validate.
-            path (str, optional): Name of dict variable. Defaults to "policies".
-
-        Raises:
-            ValueError: If the data dictionary does not match the schema.
-        """
-
-        missing = set(schema.keys()) - set(data.keys())
-        if missing:
-            raise ValueError(f"Missing keys at {path}: {missing}")
-
-        for key, subschema in schema.items():
-            if isinstance(subschema, dict):
-                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
-
-
-
-    def num_prop(self, ratio, N):
-        """Calculate numbers of total N in proportion to ratio"""
-        ratio = np.asarray(ratio)
-        p = np.cumsum(np.insert(ratio.ravel(), 0, 0))  # cumulative proportion
-        return np.diff(np.round(N / p[-1] * p).astype(int)).reshape(ratio.shape)
-
-    def generate_lognormal(self, log_mean: float, log_std: float, size: int):
-        """
-        Generates n observations from a lognormal distribution.
-
-        Args:
-            log_mean (float): The desired mean of the lognormal distribution.
-            log_std (float): The desired standard deviation of the lognormal distribution.
-            size (int): The number of observations to generate (n).
-
-        Returns:
-            np.ndarray: An array of random samples.
-        """
-        # Convert to the parameters of the underlying normal distribution
-        mu_underlying = np.log(log_mean**2 / np.sqrt(log_std**2 + log_mean**2))
-        sigma_underlying = np.sqrt(np.log(1 + (log_std**2 / log_mean**2)))
-
-        # Generate the samples
-        return np.random.lognormal(
-            mean=mu_underlying, sigma=sigma_underlying, size=size
-        )
-
     def setup_person_agents(
         self,
         total_people: int,
@@ -217,7 +162,7 @@ class EconomyModel(Model):
         """
 
         # get number of people per demographic
-        demo_people = self.num_prop(
+        demo_people = num_prop(
             [
                 demographics[demographic]["proportion"] * 100
                 for demographic in demographics.keys()
@@ -250,13 +195,13 @@ class EconomyModel(Model):
 
             # Generate distributed parameters for N agents
             # Incomes from lognormal distribution
-            incomes = self.generate_lognormal(
+            incomes = generate_lognormal(
                 log_mean=income_info.get("mean", 0),
                 log_std=income_info.get("sd", 0),
                 size=num_demo_people,
             )
             # Account balances from lognormal distribution
-            starting_balances = self.generate_lognormal(
+            starting_balances = generate_lognormal(
                 log_mean=starting_balance_info.get("mean", 0),
                 log_std=starting_balance_info.get("sd", 0),
                 size=num_demo_people,
@@ -311,10 +256,10 @@ class EconomyModel(Model):
                 raise ValueError(
                     f"Industry info must be a dictionary at industries[{industry_type}]."
                 )
-            starting_price = industry_info.get("price", 0.0)
-            starting_inventory = industry_info.get("inventory", 0)
-            starting_balance = industry_info.get("balance", 0.0)
-            starting_offered_wage = industry_info.get("offered_wage", 0.0)
+            starting_price = industry_info.get("starting_price", 0.0)
+            starting_inventory = industry_info.get("starting_inventory", 0)
+            starting_balance = industry_info.get("starting_balance", 0.0)
+            starting_offered_wage = industry_info.get("starting_offered_wage", 0.0)
 
             IndustryAgent.create_agents(
                 model=self,
@@ -343,7 +288,7 @@ class EconomyModel(Model):
             )
         )
 
-    def inflation(self):
+    def inflation(self) -> None:
         """
         Applies the weekly inflation rate to all industry costs and
         the minimum wage policy. This is a "cost-push" inflation model.
@@ -362,7 +307,6 @@ class EconomyModel(Model):
             return  # do not step past maximum simulation length
         self.week = self.week + 1  # new week
 
-        # TODO: implement inflation logic
         self.inflation()
 
         # industry agents do their tasks
