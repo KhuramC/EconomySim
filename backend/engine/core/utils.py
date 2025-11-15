@@ -17,10 +17,17 @@ DEMOGRAPHICS_SCHEMA = {
 
 INDUSTRIES_SCHEMA = {
     itype.value: {
-        "price": None,
-        "inventory": None,
-        "balance": None,
-        "offered_wage": None,
+        "starting_price": None,
+        "starting_inventory": None,
+        "starting_balance": None,
+        "starting_offered_wage": None,
+        "starting_fixed_cost": None,
+        "starting_raw_mat_cost": None,
+        "starting_number_of_employees": None,
+        "starting_worker_efficiency": None,
+        "starting_debt_allowed": None,
+        "starting_demand_intercept": None,
+        "starting_demand_slope": None,
     }
     for itype in IndustryType
 }
@@ -33,7 +40,7 @@ POLICIES_SCHEMA = {
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
-    "rent_cap": None,
+    "price_cap": {itype.value: None for itype in IndustryType},
     "minimum_wage": None,
 }
 """Schema for validating the policies dictionary."""
