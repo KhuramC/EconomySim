@@ -32,7 +32,7 @@ def test_payday(mock_economy_model, income: int):
         mock_economy_model: a mock model
         income (int): the income of the agent.
     """
-    mock_economy_model.policies["personal_income_tax"]['middle class'] = 0
+    mock_economy_model.policies["personal_income_tax"][Demographic.MIDDLE_CLASS] = 0
     starting_money = 0
     person = PersonAgent(
         mock_economy_model,
@@ -53,7 +53,7 @@ def test_income_tax(mock_economy_model, personal_income_tax, expected_balance):
         mock_economy_model: a mock model
         income (int): the income of the agent.
     """
-    mock_economy_model.policies["personal_income_tax"]['middle class'] = personal_income_tax
+    mock_economy_model.policies["personal_income_tax"][Demographic.MIDDLE_CLASS] = personal_income_tax
     starting_money = 0
     person = PersonAgent(
         mock_economy_model,
