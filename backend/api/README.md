@@ -332,6 +332,36 @@ Represents the total employment for that industry's NAICS sector within the city
     * AUTOMOBILES (NAICS 441): 15%
     * HOUSEHOLD_GOODS (NAICS 442): 10%
     * LUXURY (high-end retail): 1%
+
+### `starting_worker_efficiency`
+
+This is a balancing parameter, not directly researched. It is derived to ensure the agent's labor force (`starting_number_of_employees`) can meet the city's weekly demand (Q_demand) when working a 40-hour week.
+
+**Formula**: `worker_efficiency` = $\frac{Q_{\text{demand}}}{(\text{starting\_number\_of\_employees} \times 40 \text{ hours})}$
+
+**Post-Research Calibration: Balancing Population and Employment**
+
+The initial data for `starting_number_of_employees` was sourced from real-world, county-level NAICS statistics. This created a logical discrepancy with the abstract num_people (e.g., 1000, 10000) chosen for the simulation.
+
+To ensure the simulation starts in a balanced state with a 1:1 ratio of `PersonAgent` to available job (as agents do not currently support holding multiple jobs), a calibration pass was performed. Two different methods were used:
+
+1. Small & Medium Cities (Employee Scaling)
+
+For the Small (num_people: 1000) and Medium (num_people: 10000) templates, the priority was to maintain the abstract population counts.
+
+- `starting_number_of_employees`: The total sourced employment data was scaled down proportionally to match the target num_people
+
+- `starting_worker_efficiency`: Because the workforce was made smaller, the `starting_worker_efficiency` had to be recalculated (increased) to ensure this smaller workforce could still produce the original, research-based weekly `Q_demand`. The formula `worker_efficiency` = `Q_demand / (scaled_employees * 40)` was used.
+
+2. Large City (Population Scaling)
+
+For the Large template, the priority was to maintain the integrity of the original, research-based economic parameters (Q_demand, starting_worker_efficiency, etc.).
+
+- `num_people`: The `num_people` parameter was adjusted down from its conceptual 100,000 to **75,220**.
+
+- `starting_number_of_employees`: This new population (75,220) now perfectly matches the total original sourced employment data.
+
+- `starting_worker_efficiency`: Because the original employee and `Q_demand` figures were kept, the original `starting_worker_efficiency` value remains unchanged and valid.
     
 ### `starting_raw_mat_cost`
 
@@ -384,12 +414,6 @@ These parameters define the agent's linear demand curve ($Price = A - BQ$). They
     * `starting_demand_slope` ($B$) = $\frac{-P}{(Q \times PED)}$
     
     * `starting_demand_intercept` ($A$) = $P + (B \times Q)$
-    
-### `starting_worker_efficiency`
-
-This is a balancing parameter, not directly researched. It is derived to ensure the agent's labor force (`starting_number_of_employees`) can meet the city's weekly demand (Q_demand) when working a 40-hour week.
-
-**Formula**: `worker_efficiency` = $\frac{Q_{\text{demand}}}{(\text{starting\_number\_of\_employees} \times 40 \text{ hours})}$
 
 ### `starting_inventory`
 
