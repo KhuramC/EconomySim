@@ -1,77 +1,122 @@
-import { Grid, TextField, Tooltip, Box } from "@mui/material";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { deepmerge } from "@mui/utils";
+// src/components/SimSetup/ParameterInput.jsx
+// Generic field used across Setup forms.
+// - For MUI v6: use `slotProps` instead of deprecated InputProps/inputProps.
+// - When used as a Select, render the help "?" OUTSIDE so it won't overlap the dropdown arrow.
 
-/**
- * Base input wrapper:
- * - Wraps MUI TextField inside a Grid item with a configurable column span.
- * - Pass `select` to turn it into a dropdown.
- * - Accepts any TextField props via rest spread, including `helperText`.
- * - Supports per-field tooltip via `helpText`.
- */
-const ParameterInput = ({
+import {
+  Grid,
+  TextField,
+  Tooltip,
+  InputAdornment,
+  IconButton,
+  Box,
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+
+export default function ParameterInput({
   label,
   value,
   onChange,
   xs = 6,
   fullWidth = true,
   error = false,
-  helpText,        // tooltip content shown beside the label (for select/text)
-  children,
-  slotProps,       
-  ...TextFieldProps
-}) => {
-  // Compose a label node that includes a tooltip icon when `helpText` is provided
-  const labelNode = helpText ? (
-    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-      <span>{label}</span>
-      <Tooltip title={helpText} arrow enterDelay={300}>
-        <HelpOutlineIcon
-          fontSize="inherit"
-          sx={{ opacity: 0.7, cursor: "help" }}
-          aria-label={typeof label === "string" ? `${label} help` : "Field help"}
-          onMouseDown={(e) => e.preventDefault()}
-        />
-      </Tooltip>
-    </Box>
-  ) : (
-    label
-  );
+  helpText,
+  type = "text",
+  disabled = false,
+  readOnly = false,
+  nativeInputProps,   // backward-friendly: merged into slotProps.input (v6)
+  sx,
+  onWheel,
+  // Allow callers (e.g., ParameterNumInput) to pass their own slotProps
+  slotProps: callerSlotProps,
+  ...rest            // may contain `select`, `SelectProps`, etc.
+}) {
+  const isSelect = !!rest.select;
 
-  // Ensure the InputLabel can receive pointer events so the tooltip works.
-  // NOTE: pointer events on InputLabel are enabled when shrink=true,
-  // so we force shrink to true for consistent behavior.
-  const baseSlotProps = {
+  // Use endAdornment only for NON-selects to avoid overlap with the dropdown chevron
+  const endAdornment =
+    !isSelect && helpText ? (
+      <InputAdornment position="end" sx={{ pointerEvents: "auto" }}>
+        <Tooltip title={helpText} arrow>
+          <IconButton size="small" tabIndex={-1} aria-label="Help">
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </InputAdornment>
+    ) : null;
+
+  // --- Build default slotProps (label wrapping + readOnly + optional adornment) ---
+  const defaultSlotProps = {
+    // Prevent long labels from truncating; always keep them visible and shrunk
     inputLabel: {
       shrink: true,
       sx: {
-        pointerEvents: "auto",
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
-        "& .MuiSvgIcon-root": { verticalAlign: "middle" },
+        maxWidth: "calc(100% - 56px)",
+        whiteSpace: "normal",
+        overflow: "visible",
+        textOverflow: "unset",
+        lineHeight: 1.1,
       },
+    },
+    // Props for the underlying input element (MUI v6)
+    input: {
+      readOnly,
+      ...(endAdornment ? { endAdornment } : {}),
     },
   };
 
-  // Merge any caller-provided slotProps (keeps other slots like `input` intact)
-  const mergedSlotProps = deepmerge(baseSlotProps, slotProps || {});
+  // Merge strategy:
+  // - Start from defaults
+  // - Spread in caller slotProps (so caller can override)
+  // - Merge nested input/inputLabel shallowly
+  const mergedSlotProps = {
+    ...defaultSlotProps,
+    ...(callerSlotProps || {}),
+    inputLabel: {
+      ...(defaultSlotProps.inputLabel || {}),
+      ...(callerSlotProps?.inputLabel || {}),
+    },
+    input: {
+      ...(defaultSlotProps.input || {}),
+      ...(callerSlotProps?.input || {}),
+      // Merge any legacy-style native input props (min, max, inputMode, step, etc.)
+      ...(nativeInputProps || {}),
+    },
+  };
 
-  return (
-    <Grid item xs={xs}>
-      <TextField
-        label={labelNode}
-        value={value}
-        onChange={onChange}
-        fullWidth={fullWidth}
-        error={error}
-        slotProps={mergedSlotProps}      
-        {...TextFieldProps}
-      >
-        {children}
-      </TextField>
-    </Grid>
+  const field = (
+    <TextField
+      variant="outlined"
+      fullWidth={fullWidth}
+      label={label}
+      value={value}
+      onChange={onChange}
+      error={error}
+      type={type}
+      disabled={disabled}
+      slotProps={mergedSlotProps}
+      onWheel={onWheel}
+      sx={sx}
+      {...rest}
+    />
   );
-};
 
-export default ParameterInput;
+  // For selects with help text, place the "?" button outside to the right
+  if (isSelect && helpText) {
+    return (
+      <Grid item xs={xs}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {field}
+          <Tooltip title={helpText} arrow>
+            <IconButton size="small" aria-label="Help">
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Grid>
+    );
+  }
+
+  // Default: render the field in a grid cell
+  return <Grid item xs={xs}>{field}</Grid>;
+}
