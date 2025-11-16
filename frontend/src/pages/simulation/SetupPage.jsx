@@ -18,10 +18,10 @@ const getDefaultDemographicParams = () => ({
   proportion: 33,
   meanSavings: 10000,
   sdSavings: 5000,
-  // NOTE: UI label is (%) so we validate against 0–100.
+  // UI label is (%) so we validate against 0–100.
   // Current default 0.05 means 0.05% (change to 5 if you intend 5%).
   unemploymentRate: 0.05,
-  // Flat per-industry spending shares (keys match IndustryType enum)
+  // Flat per-industry spending shares (keys match IndustryType enum keys)
   GROCERIES: 25,
   UTILITIES: 18,
   AUTOMOBILES: 2,
@@ -44,9 +44,9 @@ export default function SetupPage() {
 
   const [backendError, setBackendError] = useState(null);
 
-  // Error messages for the bottom Alert (flat, human-readable)
+  // Flat error messages for the bottom Alert
   const [formErrors, setFormErrors] = useState({});
-  // Field-level error flags used to paint inputs red (nested by section)
+  // Field-level flags to paint inputs red
   const [inputErrors, setInputErrors] = useState({
     env: {},
     demo: {},
@@ -54,6 +54,7 @@ export default function SetupPage() {
     policy: {},
   });
 
+  // ----- Initial state with Price Cap + toggles + override containers -----
   const [params, setParams] = useState({
     envParams: {
       numPeople: 1000,
@@ -77,23 +78,41 @@ export default function SetupPage() {
     ),
 
     policyParams: {
-      // TODO: update to be industry and demographic specific
+      // Regular values
       salesTax: 7,
       corporateTax: 21,
       personalIncomeTax: 15,
       propertyTax: 10,
       tariffs: 5,
       subsidies: 20,
-      rentCap: 20,       // $ > 0
-      minimumWage: 7.25, // $/hr > 0
+      minimumWage: 7.25, // $/hr
+      priceCap: "",      // $ (blank means "inherit or not set")
+
+      // Global toggles
+      enabled: {
+        salesTax: true,
+        corporateTax: true,
+        personalIncomeTax: true,
+        propertyTax: true,
+        tariffs: true,
+        subsidies: true,
+        minimumWage: true,
+        priceCap: false, // default off
+      },
+
+      // Override containers (inherit when blank)
+      byIndustry: Object.fromEntries(
+        Object.keys(IndustryType).map((k) => [k, {}])
+      ),
+      byDemographic: Object.fromEntries(
+        Object.values(Demographic).map((d) => [d, {}])
+      ),
     },
   });
 
   // ---------- Validation ----------
   useEffect(() => {
-    // Collect human-readable messages
     const msgs = {};
-    // Collect field-level boolean flags
     const flags = { env: {}, demo: {}, industry: {}, policy: {} };
 
     const isBlank = (v) => v === "" || v === null || v === undefined;
@@ -174,7 +193,6 @@ export default function SetupPage() {
         msgs[`demo_spending_${dk}`] = `Demographics (${dk}): Spending behavior percentages must add up to 100%. Current sum: ${spendingSum.toFixed(
           1
         )}% (${(100 - spendingSum).toFixed(1)}% remaining).`;
-        // Mark every cell in that row so all become red
         industryKeys.forEach((k) => markDemo(dk, k));
       }
     });
@@ -217,8 +235,10 @@ export default function SetupPage() {
       }
     });
 
-    // ----- Policies -----
+    // ----- Policies (respect toggles) -----
     const p = params.policyParams;
+    const en = p.enabled || {};
+
     const pctKeys = [
       ["salesTax", "Sales tax"],
       ["corporateTax", "Corporate income tax"],
@@ -227,28 +247,52 @@ export default function SetupPage() {
       ["tariffs", "Tariffs"],
       ["subsidies", "Subsidies"],
     ];
+
     pctKeys.forEach(([k, label]) => {
-      if (isBlank(p?.[k]) || Number(p?.[k]) < 0 || Number(p?.[k]) > 100) {
+      if (!en[k]) return; // skip validation if disabled
+      const v = Number(p?.[k]);
+      if (isNaN(v) || v < 0 || v > 100) {
         msgs[`policy_${k}`] = `Policies: ${label} must be between 0 and 100%.`;
         flags.policy[k] = true;
       }
     });
-    if (isBlank(p?.rentCap) || Number(p?.rentCap) <= 0) {
-      msgs.policy_rentCap = "Policies: Rent cap must be greater than 0.";
-      flags.policy.rentCap = true;
+
+    if (en.minimumWage) {
+      if (isBlank(p?.minimumWage) || Number(p?.minimumWage) <= 0) {
+        msgs.policy_minimumWage = "Policies: Minimum wage must be greater than 0.";
+        flags.policy.minimumWage = true;
+      }
     }
-    if (isBlank(p?.minimumWage) || Number(p?.minimumWage) <= 0) {
-      msgs.policy_minimumWage = "Policies: Minimum wage must be greater than 0.";
-      flags.policy.minimumWage = true;
+
+    // Price Cap global ($): required only when enabled
+    if (en.priceCap) {
+      const v = Number(p?.priceCap);
+      if (isNaN(v) || v <= 0) {
+        msgs.priceCap = "Policies: Price Cap ($) must be greater than 0 when enabled.";
+        flags.policy.priceCap = true;
+      }
     }
+
+    // Per-industry Price Cap overrides ($): if provided, must be > 0
+    Object.keys(p.byIndustry || {}).forEach((k) => {
+      const r = p.byIndustry[k];
+      const val = r?.priceCap;
+      if (val !== "" && val !== undefined && val !== null) {
+        const n = Number(val);
+        if (isNaN(n) || n <= 0) {
+          if (!flags.byIndustry) flags.byIndustry = {};
+          if (!flags.byIndustry[k]) flags.byIndustry[k] = {};
+          flags.byIndustry[k].priceCap = true;
+          msgs[`policy_priceCap_${k}`] = `Policies: Price Cap Override ($) for ${k} must be greater than 0.`;
+        }
+      }
+    });
 
     setFormErrors(msgs);
     setInputErrors(flags);
   }, [params]);
 
   // ---------- Handlers (typing-friendly) ----------
-  // NOTE: Do NOT coerce to number on every keystroke.
-  // We keep raw strings so users can type freely (e.g., "-", "1.", "", etc.).
   const handleEnvChange = (key) => (event) => {
     const value =
       event.target.type === "checkbox" ? event.target.checked : event.target.value;
@@ -294,20 +338,66 @@ export default function SetupPage() {
     }));
   };
 
+  const handlePolicyToggle = (key) => (_event, checked) => {
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        enabled: {
+          ...(prev.policyParams.enabled || {}),
+          [key]: !!checked,
+        },
+      },
+    }));
+  };
+
+  const handlePolicyIndustryOverrideChange =
+    (industryKey, field) =>
+    (event) => {
+      const { value } = event.target;
+      setParams((prev) => ({
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          byIndustry: {
+            ...(prev.policyParams.byIndustry || {}),
+            [industryKey]: {
+              ...(prev.policyParams.byIndustry?.[industryKey] || {}),
+              [field]: value,
+            },
+          },
+        },
+      }));
+    };
+
+  const handlePolicyDemographicOverrideChange =
+    (demoKey, field) =>
+    (event) => {
+      const { value } = event.target;
+      setParams((prev) => ({
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          byDemographic: {
+            ...(prev.policyParams.byDemographic || {}),
+            [demoKey]: {
+              ...(prev.policyParams.byDemographic?.[demoKey] || {}),
+              [field]: value,
+            },
+          },
+        },
+      }));
+    };
+
   // Send parameters to backend and navigate to simulation view
   const handleBegin = async () => {
     setBackendError(null);
     try {
-      // If backend requires numbers, coerce here before POST.
-      console.log("Simulation parameters:", params);
       const modelId = await SimulationAPI.createModel(params);
-      console.log("Model created with ID:", modelId);
-      // Navigate to simulation view with the new model ID
       navigate(`/BaseSimView`, {
         state: { modelId: modelId, industryParams: params.industryParams },
       });
     } catch (error) {
-      console.error("Error creating model:", error.message);
       setBackendError(error.message);
     }
   };
@@ -346,6 +436,9 @@ export default function SetupPage() {
       <PolicyAccordion
         policyParams={params.policyParams}
         handlePolicyChange={handlePolicyChange}
+        handlePolicyToggle={handlePolicyToggle}
+        handlePolicyIndustryOverrideChange={handlePolicyIndustryOverrideChange}
+        handlePolicyDemographicOverrideChange={handlePolicyDemographicOverrideChange}
         formErrors={inputErrors.policy}
       />
 

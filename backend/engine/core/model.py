@@ -28,7 +28,7 @@ class EconomyModel(Model):
         max_simulation_length (int): The maximum length of the simulation in weeks.
         inflation_rate (float): The weekly inflation rate in the simulation.
         random_events (bool): Whether random events are enabled in the simulation.
-        policies (dict): A dictionary of various tax rates in the simulation.
+        policies (dict): A dictionary of various policies (taxes, price caps, etc.).
         week (int): The current week in the simulation.
     """
 
@@ -45,8 +45,9 @@ class EconomyModel(Model):
 
     # Changeable by the user at any time
 
-    policies: dict[str, float | dict[IndustryType | Demographic, float]]
-    """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
+    # NOTE: allow None inside nested dict for price_cap values.
+    policies: dict[str, float | dict[IndustryType | Demographic, float | None]]
+    """A dictionary of policies (must conform to POLICIES_SCHEMA)."""
 
     week: int
     """The current week in the simulation."""
@@ -59,7 +60,7 @@ class EconomyModel(Model):
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         industries: dict[IndustryType, dict[str, float | int]],
-        starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
+        starting_policies: dict[str, float | dict[IndustryType | Demographic, float | None]],
         inflation_rate: float = 0.001,
         random_events: bool = False,
     ):
@@ -69,7 +70,8 @@ class EconomyModel(Model):
             raise ValueError("Maximum simulation length must be positive.")
         if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
-        # check demographics/industries/policies has all necessary keys
+
+        # Validate that demographics/industries/policies contain required keys/shape
         validate_schema(demographics, DEMOGRAPHICS_SCHEMA, path="demographics")
         validate_schema(industries, INDUSTRIES_SCHEMA, path="industries")
         validate_schema(starting_policies, POLICIES_SCHEMA, path="policies")
@@ -127,9 +129,6 @@ class EconomyModel(Model):
             preference_concentration (float): A parameter to control preference variance.
                 Higher values mean agents will have preferences closer to the demographic's
                 average (low variance). Lower values create more diverse preferences.
-
-        Raises:
-            ValueError: if the demographics dictionary is invalid.
         """
 
         # get number of people per demographic
@@ -157,21 +156,17 @@ class EconomyModel(Model):
             spending_behavior_info = demo_info.get("spending_behavior")
 
             # TODO: set unemployment based on starting_unemployment_rate per demographic
-            # actually do something with unemployment rate
             unemployment_rate = demo_info.get("unemployment_rate", 0)
 
             # TODO: set savings_rate per demographic
-            # Does this also get randomized?
             savings_rate = demo_info.get("savings_rate", 0.10)
 
             # Generate distributed parameters for N agents
-            # Incomes from lognormal distribution
             incomes = generate_lognormal(
                 log_mean=income_info.get("mean", 0),
                 log_std=income_info.get("sd", 0),
                 size=num_demo_people,
             )
-            # Account balances from lognormal distribution
             starting_balances = generate_lognormal(
                 log_mean=starting_balance_info.get("mean", 0),
                 log_std=starting_balance_info.get("sd", 0),
@@ -181,18 +176,12 @@ class EconomyModel(Model):
             # Generate unique preferences from dirichlet distribution
             industries = list(spending_behavior_info.keys())
             alphas = list(spending_behavior_info.values())
-            concentrated_alpha = [
-                val * preference_concentration for val in alphas
-            ]  # Scale alphas to control variance
-            generated_preferences = np.random.dirichlet(
-                concentrated_alpha, size=num_demo_people
-            )
+            concentrated_alpha = [val * preference_concentration for val in alphas]
+            generated_preferences = np.random.dirichlet(concentrated_alpha, size=num_demo_people)
 
-            pref_list = []  # holds preference dict for all N agents in demographic
+            pref_list = []
             for pref_vector in generated_preferences:
-                pref_dict = {
-                    industries[i]: pref_vector[i] for i in range(len(industries))
-                }
+                pref_dict = {industries[i]: pref_vector[i] for i in range(len(industries))}
                 pref_list.append(pref_dict)
 
             # TODO: Distribute starting employment based on unemployment_rate
@@ -204,9 +193,7 @@ class EconomyModel(Model):
                 income=incomes,
                 starting_balance=starting_balances,
                 preferences=pref_list,
-                # TODO:
-                # savings_rate=savings_rate,
-                # employer=None,
+                # TODO: savings_rate=savings_rate, employer=None,
             )
 
     def setup_industry_agents(
@@ -215,12 +202,6 @@ class EconomyModel(Model):
     ) -> None:
         """
         Creates the IndustryAgents based on the industries dictionary.
-
-        Args:
-            industries (dict): the information about each industry to create.
-
-        Raises:
-            ValueError: if the industries dictionary is invalid.
         """
         for industry_type, industry_info in industries.items():
             if not isinstance(industry_info, dict):
@@ -243,15 +224,7 @@ class EconomyModel(Model):
             )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
-        """
-        Gets all employees that are employed to the specified industry.
-
-        Args:
-            industry (IndustryType): The industry type to filter employees by.
-
-        Returns:
-            AgentSet: An AgentSet of PersonAgents employed in the specified industry.
-        """
+        """Gets all employees that are employed to the specified industry."""
         peopleAgents = self.agents_by_type[PersonAgent]
         return peopleAgents.select(
             lambda agent: (
@@ -261,21 +234,18 @@ class EconomyModel(Model):
 
     def inflation(self) -> None:
         """
-        Applies the weekly inflation rate to all industry costs and
-        the minimum wage policy. This is a "cost-push" inflation model.
+        Applies the weekly inflation rate to all industry costs and the minimum wage policy.
+        This is a "cost-push" inflation model.
         """
-
         industryAgents = self.agents_by_type[IndustryAgent]
         for agent in industryAgents:
             agent.raw_mat_cost *= 1 + self.inflation_rate
             agent.fixed_cost *= 1 + self.inflation_rate
 
     def step(self) -> None:
-        """
-        Advance the simulation by one week, causing inflation, IndustryAgents and then PersonAgents to act.
-        """
+        """Advance the simulation by one week."""
         if self.week >= self.max_simulation_length:
-            return  # do not step past maximum simulation length
+            return
         self.week = self.week + 1  # new week
 
         self.inflation()
@@ -295,20 +265,11 @@ class EconomyModel(Model):
         self.datacollector.collect(self)
 
     def reverse_step(self) -> None:
-        """
-        Reverse the simulation by one week.
-        """
-        # TODO: Implement reversing simulation
-        # might want to add choice of how much to reverse.
+        """Reverse the simulation by one week (TODO)."""
         pass
 
     # Economic indicators
 
     def get_week(self) -> int:
-        """
-        Get the current week of the simulation.
-
-        Returns:
-            week(int): The current week.
-        """
+        """Get the current week of the simulation."""
         return self.week

@@ -40,6 +40,7 @@ POLICIES_SCHEMA = {
     "property_tax": None,
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
+    # NEW: per-industry price cap in dollars; nullable -> None means "no cap"
     "price_cap": {itype.value: None for itype in IndustryType},
     "minimum_wage": None,
 }
