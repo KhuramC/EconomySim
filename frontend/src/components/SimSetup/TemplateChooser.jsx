@@ -18,7 +18,7 @@ export default function TemplateChooser({ onTemplateSelect }) {
 
   const handleTemplateChange = (event, newTemplate) => {
     if (newTemplate !== null) {
-      setSelectedTemplate(newTemplate);
+      setSelectedTemplate(null);
       // Call the function passed from the parent component
       onTemplateSelect(newTemplate);
     }
@@ -29,7 +29,7 @@ export default function TemplateChooser({ onTemplateSelect }) {
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12}>
           <Typography variant="h6" gutterBottom>
-            Choose a City Template
+            City Templates
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Select a template to pre-fill all simulation parameters.
