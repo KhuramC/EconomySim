@@ -4,16 +4,28 @@
 import { IndustryType } from "../types/IndustryType.js";
 import { Demographic } from "../types/Demographic.js";
 
-/* ---------------------------- Small helpers ---------------------------- */
+/* -------------------------------------------------------------------------- */
+/* Small helpers (non-exported)                                               */
+/* -------------------------------------------------------------------------- */
 
-const pct = (v) => (Number(v) || 0) / 100.0; // percent -> decimal
-const usd = (v) => Number(v) || 0;           // currency -> number
+function emptyToUndef(v) {
+  return v === "" || v === null || v === undefined ? undefined : v;
+}
+function toNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+function pctToDec(v) {
+  const n = toNum(v);
+  return n === undefined ? undefined : n / 100.0;
+}
 
-// Map <ENUM_KEY, Label> (as in types). Build inverse map for lookups if needed.
-const INDUSTRY_ENTRIES = Object.entries(IndustryType); // [[ENUM, "Groceries"], ...]
-const DEMOS = Object.values(Demographic);
+// Enum conveniences
+const INDUSTRY_ENTRIES = Object.entries(IndustryType); // [[ENUM_KEY, "Groceries"], ...]
+const INDUSTRY_LABELS  = Object.values(IndustryType);  // ["Groceries", ...]
+const DEMO_LABELS      = Object.values(Demographic);
 
-// Default industry constants (mirror backend IndustryAgent defaults)
+// Backend-required defaults for industries (used if UI fields are absent)
 const DEFAULTS = {
   starting_price: 0.0,
   starting_inventory: 200,
@@ -28,181 +40,210 @@ const DEFAULTS = {
   starting_demand_slope: 1.0,
 };
 
-/* ----------------------------- Policies (UI -> backend) ----------------------------- */
+/* -------------------------------------------------------------------------- */
 /**
- * Build backend policies from UI `policyParams`.
- * Behavior:
- * - If a toggle is OFF, send 0 (disabled) for that policy.
- * - For industry/demographic maps, apply global value and overlay any overrides present in UI.
- * - UI uses `priceCap` ($). Backend expects **price_cap** as a per-industry map (label keys).
+ * Transforms the frontend 'policyParams' to a JSON valid for backend.
+ *
+ * Notes (added):
+ *  - Backend now requires a per-industry `price_cap` map (replaces old `rent_cap`).
+ *  - If a toggle is OFF (when policyParams.enabled exists), we send neutral values:
+ *      • percentages → 0
+ *      • price_cap   → null (meaning "no cap")
+ *  - Supports future “Advanced overrides”:
+ *      byIndustry[ENUM_KEY].<field> and byDemographic[DEMO_LABEL].personalIncomeTax
+ *    If not present, falls back to the global value.
+ *
+ * @param {object} policyParams
+ * @returns {object}
  */
-export function buildPoliciesPayload(policyParams) {
-  const {
-    enabled = {},
-    byIndustry = {},
-    byDemographic = {},
-  } = policyParams || {};
+export function buildPoliciesPayload(policyParams = {}) {
+  const { enabled = {}, byIndustry = {}, byDemographic = {} } = policyParams;
 
-  // Read global values (UI percentages are numbers like 7 → 0.07)
-  const corporatePct = pct(policyParams.corporateTax);
-  const salesPct = pct(policyParams.salesTax);
-  const tariffsPct = pct(policyParams.tariffs);
-  const subsidiesPct = pct(policyParams.subsidies);
-  const personalPct = pct(policyParams.personalIncomeTax);
-  const propertyPct = pct(policyParams.propertyTax);
-  const globalPriceCapUSD = usd(policyParams.priceCap);
+  // Helper to check if a policy is enabled; default true for backward compatibility.
+  const isOn = (k) => (policyParams.enabled ? !!enabled[k] : true);
 
-  // Helper to build an industry map with overrides layered on top (keys must be labels).
-  const buildIndustryPctMap = (isEnabled, globalPct, field) =>
+  // ---- global values (UI stores % as numbers; backend expects decimals) ----
+  const corporatePct = pctToDec(policyParams.corporateTax) ?? 0;
+  const salesPct     = pctToDec(policyParams.salesTax) ?? 0;
+  const tariffsPct   = pctToDec(policyParams.tariffs) ?? 0;
+  const subsidiesPct = pctToDec(policyParams.subsidies) ?? 0;
+  const personalPct  = pctToDec(policyParams.personalIncomeTax) ?? 0;
+  const propertyPct  = pctToDec(policyParams.propertyTax) ?? 0;
+  const globalCapUSD = toNum(policyParams.priceCap); // may be undefined
+
+  // Build industry maps with optional overrides (keys must be industry labels)
+  const buildIndustryPctMap = (globalPct, field, enabledFlag) =>
     Object.fromEntries(
       INDUSTRY_ENTRIES.map(([enumKey, label]) => {
-        const raw = byIndustry?.[enumKey]?.[field];
-        const vPct =
-          raw !== undefined && raw !== "" ? pct(raw) : globalPct;
-        return [label, isEnabled ? vPct : 0];
+        // accept overrides keyed by enum key or label (robust to UI shapes)
+        const raw =
+          byIndustry?.[enumKey]?.[field] ??
+          byIndustry?.[label]?.[field];
+
+        const val = raw !== undefined && raw !== "" ? pctToDec(raw) ?? 0 : globalPct;
+        return [label, isOn(enabledFlag) ? val : 0];
       })
     );
 
-  // Personal Income Tax is per-demographic map (keys are demographic labels)
+  // Personal income tax is per-demographic map
   const personalIncomeTaxMap = Object.fromEntries(
-    DEMOS.map((demoLabel) => {
+    DEMO_LABELS.map((demoLabel) => {
       const raw = byDemographic?.[demoLabel]?.personalIncomeTax;
-      const vPct =
-        raw !== undefined && raw !== "" ? pct(raw) : personalPct;
-      return [demoLabel, enabled.personalIncomeTax ? vPct : 0];
+      const val = raw !== undefined && raw !== "" ? pctToDec(raw) ?? 0 : personalPct;
+      return [demoLabel, isOn("personalIncomeTax") ? val : 0];
     })
   );
 
-  // New: price_cap is a per-industry $ map (keys must be labels). If toggle OFF → 0 for all industries.
+  // price_cap map (USD). When disabled → null to indicate "no cap".
   const priceCapMap = Object.fromEntries(
     INDUSTRY_ENTRIES.map(([enumKey, label]) => {
-      const overrideRaw = byIndustry?.[enumKey]?.priceCap;
-      const vUSD =
-        overrideRaw !== undefined && overrideRaw !== "" ? usd(overrideRaw) : globalPriceCapUSD;
-      return [label, enabled.priceCap ? vUSD : 0];
+      const overrideRaw =
+        byIndustry?.[enumKey]?.priceCap ??
+        byIndustry?.[label]?.priceCap;
+      const val =
+        overrideRaw !== undefined && overrideRaw !== ""
+          ? toNum(overrideRaw)
+          : globalCapUSD;
+      return [label, isOn("priceCap") ? (toNum(val) ?? null) : null];
     })
   );
 
-  // Build payload
-  const payload = {
-    corporate_income_tax: buildIndustryPctMap(
-      !!enabled.corporateTax,
-      corporatePct,
-      "corporateTax"
-    ),
-    personal_income_tax: personalIncomeTaxMap,
-    sales_tax: buildIndustryPctMap(!!enabled.salesTax, salesPct, "salesTax"),
-    property_tax: !!enabled.propertyTax ? propertyPct : 0,
-    tariffs: buildIndustryPctMap(!!enabled.tariffs, tariffsPct, "tariffs"),
-    subsidies: buildIndustryPctMap(!!enabled.subsidies, subsidiesPct, "subsidies"),
-
-    // IMPORTANT: backend requires 'price_cap' (per-industry map). Do NOT send 'rent_cap'.
-    price_cap: priceCapMap,
-
-    minimum_wage: !!enabled.minimumWage ? usd(policyParams.minimumWage) : 0,
+  // Assemble payload expected by backend
+  return {
+    corporate_income_tax: buildIndustryPctMap(corporatePct, "corporateTax", "corporateTax"),
+    personal_income_tax : personalIncomeTaxMap,
+    sales_tax           : buildIndustryPctMap(salesPct, "salesTax", "salesTax"),
+    property_tax        : isOn("propertyTax") ? propertyPct : 0,
+    tariffs             : buildIndustryPctMap(tariffsPct, "tariffs", "tariffs"),
+    subsidies           : buildIndustryPctMap(subsidiesPct, "subsidies", "subsidies"),
+    price_cap           : priceCapMap,                 // NEW (required)
+    minimum_wage        : isOn("minimumWage") ? (toNum(policyParams.minimumWage) ?? 0) : 0,
   };
-
-  return payload;
 }
 
-/* ------------------------- Environment (UI -> backend) ------------------------- */
+/* -------------------------------------------------------------------------- */
 /**
- * Environment fields used on create.
- * UI shows annual % for inflation; backend expects weekly rate (decimal).
+ * Transforms the frontend 'envParams' to a JSON valid for the backend.
+ * @param {object} envParams - The envParams object from the frontend state.
+ * @returns {object} The environment-related part of the backend payload.
+ *
+ * Notes:
+ *  - UI shows annual % for inflation; backend expects a weekly rate (decimal).
  */
-export function buildEnvironmentPayload(envParams) {
-  const annualPct = Number(envParams?.inflationRate ?? 0) / 100.0;
-  const weekly = (1 + annualPct) ** (1 / 52) - 1;
+export function buildEnvironmentPayload(envParams = {}) {
+  const annual = toNum(envParams.inflationRate) ?? 0;
+  const weekly = Math.pow(1 + annual / 100.0, 1 / 52) - 1;
 
   return {
-    max_simulation_length: Number(envParams?.maxSimulationLength ?? 52),
-    num_people: Number(envParams?.numPeople ?? 0),
+    max_simulation_length: toNum(envParams.maxSimulationLength) ?? 52,
+    num_people: toNum(envParams.numPeople) ?? 0,
     inflation_rate: weekly,
-    random_events: !!envParams?.randomEvents,
+    random_events: !!envParams.randomEvents,
   };
 }
 
-/* ------------------------- Demographics (UI -> backend) ------------------------- */
+/* -------------------------------------------------------------------------- */
 /**
- * Demographics: convert percentages to decimals and flatten spending behavior.
+ * Transforms the frontend 'demoParams' to a JSON valid for the backend.
+ * @param {object} demoParams - The demoParams object from the frontend state.
+ * @returns {object} The demographics part of the backend payload.
  */
-export function buildDemographicsPayload(demoParams) {
+export function buildDemographicsPayload(demoParams = {}) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
-      const d = demoParams?.[demoValue] || {};
+      const d = demoParams[demoValue] || {};
 
-      // Build spending behavior map per IndustryType label
+      // Build a dictionary of actual spending behavior per industry (labels as keys)
       const spendingBehaviorDict = Object.fromEntries(
-        INDUSTRY_ENTRIES.map(([enumKey, label]) => [
+        Object.entries(IndustryType).map(([enumKey, label]) => [
           label,
-          pct(d?.[enumKey]),
+          pctToDec(d[enumKey]) ?? 0, // convert % to decimal
         ])
       );
 
-      const out = {
-        income: {
-          mean: Number(d?.meanIncome ?? 0),
-          sd: Number(d?.sdIncome ?? 0),
+      return [
+        demoValue,
+        {
+          income: {
+            mean: toNum(d.meanIncome) ?? 0,
+            sd: toNum(d.sdIncome) ?? 0,
+          },
+          proportion: pctToDec(d.proportion) ?? 0,
+          unemployment_rate: pctToDec(d.unemploymentRate) ?? 0,
+          spending_behavior: spendingBehaviorDict,
+          balance: {
+            mean: toNum(d.meanSavings) ?? 0,
+            sd: toNum(d.sdSavings) ?? 0,
+          },
         },
-        proportion: pct(d?.proportion),
-        unemployment_rate: pct(d?.unemploymentRate),
-        spending_behavior: spendingBehaviorDict,
-        balance: {
-          mean: Number(d?.meanSavings ?? 0),
-          sd: Number(d?.sdSavings ?? 0),
-        },
-      };
-      return [demoValue, out];
+      ];
     })
   );
 }
 
-/* -------------------------- Industries (UI -> backend) -------------------------- */
+/* -------------------------------------------------------------------------- */
 /**
- * Industries for create: backend expects "starting_*" keys PLUS several required fields.
- * We provide sensible defaults (mirroring backend defaults) when the UI doesn't collect them.
+ * Transforms the frontend 'industryParams' to a JSON valid for the backend.
+ * @param {object} industryParams - The industryParams object from the frontend state.
+ * @returns {object} The industries part of the backend payload.
+ *
+ * Notes (added):
+ *  - Backend creation now validates a full set of **starting_*** keys.
+ *  - UI may not expose all of them yet, so we provide sane defaults here.
+ *  - Keeps backward compatibility with `industrySavings` (mapped to starting_balance).
  */
-export function buildIndustriesPayload(industryParams) {
+export function buildIndustriesPayload(industryParams = {}) {
   return Object.fromEntries(
-    Object.entries(industryParams || {}).map(([industryKey, data]) => {
-      const d = data || {};
+    Object.entries(industryParams).map(([industryKey, p = {}]) => {
       const out = {
-        // Required "starting_*" keys
-        starting_price: Number(d.startingPrice ?? DEFAULTS.starting_price),
-        starting_inventory: Number(
-          d.startingInventory ?? DEFAULTS.starting_inventory
+        // Required starting_* fields (some may come from UI; otherwise default)
+        starting_price: toNum(p.startingPrice) ?? DEFAULTS.starting_price,
+        starting_inventory: Math.trunc(
+          toNum(p.startingInventory) ?? DEFAULTS.starting_inventory
         ),
-        starting_balance: Number(
-          d.industrySavings ?? DEFAULTS.starting_balance
-        ),
-        starting_offered_wage: Number(
-          d.offeredWage ?? DEFAULTS.starting_offered_wage
-        ),
+        starting_balance:
+          toNum(p.cashBalance ?? p.industrySavings) ?? DEFAULTS.starting_balance,
+        starting_offered_wage:
+          toNum(p.offeredWage) ?? DEFAULTS.starting_offered_wage,
 
-        // Additional required fields (not captured by UI; use defaults)
-        starting_fixed_cost: DEFAULTS.starting_fixed_cost,
-        starting_raw_mat_cost: DEFAULTS.starting_raw_mat_cost,
-        starting_number_of_employees: DEFAULTS.starting_number_of_employees,
-        starting_worker_efficiency: DEFAULTS.starting_worker_efficiency,
-        starting_debt_allowed: DEFAULTS.starting_debt_allowed,
-        starting_demand_intercept: DEFAULTS.starting_demand_intercept,
-        starting_demand_slope: DEFAULTS.starting_demand_slope,
+        // Advanced/operational parameters
+        starting_fixed_cost:
+          toNum(p.fixedCost) ?? DEFAULTS.starting_fixed_cost,
+        starting_raw_mat_cost:
+          toNum(p.rawMatCost) ?? DEFAULTS.starting_raw_mat_cost,
+        starting_number_of_employees: Math.trunc(
+          toNum(p.numberOfEmployees) ?? DEFAULTS.starting_number_of_employees
+        ),
+        starting_worker_efficiency:
+          toNum(p.workerEfficiency) ?? DEFAULTS.starting_worker_efficiency,
+        starting_debt_allowed:
+          typeof p.debtAllowed === "boolean"
+            ? p.debtAllowed
+            : DEFAULTS.starting_debt_allowed,
+
+        // Demand curve (linear): P = A − B·Q
+        starting_demand_intercept:
+          toNum(p.demandIntercept) ?? DEFAULTS.starting_demand_intercept,
+        starting_demand_slope:
+          toNum(p.demandSlope) ?? DEFAULTS.starting_demand_slope,
       };
-
       return [industryKey, out];
     })
   );
 }
 
-/* --------------------------- Compose create payload --------------------------- */
+/* -------------------------------------------------------------------------- */
 /**
- * Build the full ModelCreateRequest payload from SetupPage state `params`.
+ * Transforms the frontend 'params' state into the JSON payload
+ * expected by the backend's ModelCreateRequest.
+ * @param {object} params - The 'params' state from SetupPage.jsx
+ * @returns {object} The backend-ready payload
  */
-export function buildCreatePayload(params) {
+export function buildCreatePayload(params = {}) {
   return {
-    ...buildEnvironmentPayload(params?.envParams || {}),
-    demographics: buildDemographicsPayload(params?.demoParams || {}),
-    industries: buildIndustriesPayload(params?.industryParams || {}),
-    policies: buildPoliciesPayload(params?.policyParams || {}),
+    ...buildEnvironmentPayload(params.envParams || {}),
+    demographics: buildDemographicsPayload(params.demoParams || {}),
+    industries: buildIndustriesPayload(params.industryParams || {}),
+    policies: buildPoliciesPayload(params.policyParams || {}),
   };
 }
