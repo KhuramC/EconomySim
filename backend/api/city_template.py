@@ -13,7 +13,6 @@ _SMALL_CONFIG = {
         Demographic.LOWER_CLASS: {
             "income": {"mean": 6.31, "sd": 0.40},  # Median: $548/wk (~$28.5k/yr)
             "proportion": 0.35,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.15,
                 IndustryType.UTILITIES: 0.11,
@@ -28,7 +27,6 @@ _SMALL_CONFIG = {
         Demographic.MIDDLE_CLASS: {
             "income": {"mean": 7.00, "sd": 0.30},  # Median: $1096/wk (~$57k/yr)
             "proportion": 0.50,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.12,
                 IndustryType.UTILITIES: 0.09,
@@ -43,7 +41,6 @@ _SMALL_CONFIG = {
         Demographic.UPPER_CLASS: {
             "income": {"mean": 7.92, "sd": 0.60},  # Median: $2740/wk (~$142.5k/yr)
             "proportion": 0.15,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.08,
@@ -194,7 +191,6 @@ _MEDIUM_CONFIG = {
         Demographic.LOWER_CLASS: {
             "income": {"mean": 6.55, "sd": 0.40},  # Median: $702/wk (~$36.5k/yr)
             "proportion": 0.30,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.16,
                 IndustryType.UTILITIES: 0.12,
@@ -209,7 +205,6 @@ _MEDIUM_CONFIG = {
         Demographic.MIDDLE_CLASS: {
             "income": {"mean": 7.25, "sd": 0.30},  # Median: $1404/wk (~$73k/yr)
             "proportion": 0.55,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
@@ -224,7 +219,6 @@ _MEDIUM_CONFIG = {
         Demographic.UPPER_CLASS: {
             "income": {"mean": 8.16, "sd": 0.60},  # Median: $3510/wk (~$182.5k/yr)
             "proportion": 0.15,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
@@ -373,7 +367,6 @@ _LARGE_CONFIG = {
         Demographic.LOWER_CLASS: {
             "income": {"mean": 6.76, "sd": 0.40},  # Median: $865/wk (~$45k/yr)
             "proportion": 0.35,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.14,
                 IndustryType.UTILITIES: 0.15,
@@ -388,7 +381,6 @@ _LARGE_CONFIG = {
         Demographic.MIDDLE_CLASS: {
             "income": {"mean": 7.79, "sd": 0.30},  # Median: $2423/wk (~$126k/yr)
             "proportion": 0.40,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.12,
                 IndustryType.UTILITIES: 0.12,
@@ -403,7 +395,6 @@ _LARGE_CONFIG = {
         Demographic.UPPER_CLASS: {
             "income": {"mean": 8.71, "sd": 0.60},  # Median: $6058/wk (~$315k/yr)
             "proportion": 0.25,
-            "unemployment_rate": 0.00,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
