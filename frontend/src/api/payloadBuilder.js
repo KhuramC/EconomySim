@@ -94,8 +94,8 @@ export function buildDemographicsPayload(demoParams) {
       const demoData = demoParams[demoValue];
       // Create a dictionary of actual spending behavior per industry
       const spendingBehaviorDict = Object.fromEntries(
-        Object.values(IndustryType).map(([industry, label]) => [
-          label,
+        Object.values(IndustryType).map((industry) => [
+          industry,
           percentToDecimal(Number(demoData[industry]) || 0),
         ])
       );
