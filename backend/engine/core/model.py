@@ -97,6 +97,7 @@ class EconomyModel(Model):
                     IndustryMetrics.INVENTORY: "inventory",
                     IndustryMetrics.BALANCE: "balance",
                     IndustryMetrics.WAGE: "offered_wage",
+                    IndustryMetrics.NUM_EMPLOYEES: "num_employees",
                 }
             },
         )
@@ -222,19 +223,24 @@ class EconomyModel(Model):
                 raise ValueError(
                     f"Industry info must be a dictionary at industries[{industry_type}]."
                 )
-            starting_price = industry_info.get("starting_price", 0.0)
-            starting_inventory = industry_info.get("starting_inventory", 0)
-            starting_balance = industry_info.get("starting_balance", 0.0)
-            starting_offered_wage = industry_info.get("starting_offered_wage", 0.0)
 
             IndustryAgent.create_agents(
                 model=self,
                 n=1,
                 industry_type=industry_type,
-                starting_price=starting_price,
-                starting_inventory=starting_inventory,
-                starting_balance=starting_balance,
-                starting_offered_wage=starting_offered_wage,
+                starting_price=industry_info.get("starting_price", 0.0),
+                starting_inventory=industry_info.get("starting_inventory", 0),
+                starting_balance=industry_info.get("starting_balance", 0.0),
+                starting_offered_wage=industry_info.get("starting_offered_wage", 0.0),
+                starting_fixed_cost=industry_info.get("starting_fixed_cost", 0.0),
+                starting_raw_mat_cost=industry_info.get("starting_raw_mat_cost", 0.0),
+                starting_number_of_employees=industry_info.get(
+                    "starting_number_of_employees", 0
+                ),
+                starting_worker_efficiency=industry_info.get(
+                    "starting_worker_efficiency", 1.0
+                ),
+                starting_debt_allowed=industry_info.get("starting_debt_allowed", False),
             )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:

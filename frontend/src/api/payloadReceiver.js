@@ -1,5 +1,6 @@
 import { IndustryType } from "../types/IndustryType.js";
 import { Demographic } from "../types/Demographic.js";
+import { IndustryMetrics } from "../types/IndustryMetrics.js";
 
 function decimalToPercent(decimal) {
   return decimal * 100;
@@ -178,9 +179,12 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
       } else {
         frontendIndustry = {
           startingInventory: backendIndustry.Inventory,
-          startingPrice: backendIndustry.Price.toFixed(2),
-          industrySavings: backendIndustry.Balance.toFixed(2),
-          offeredWage: weeklyWageToHourly(backendIndustry.Wage).toFixed(2),
+          startingPrice: backendIndustry[IndustryMetrics.PRICE].toFixed(2),
+          industrySavings: backendIndustry[IndustryMetrics.BALANCE].toFixed(2),
+          offeredWage: weeklyWageToHourly(
+            backendIndustry[IndustryMetrics.WAGE]
+          ).toFixed(2),
+          startingNumEmployees: backendIndustry[IndustryMetrics.NUM_EMPLOYEES],
         };
       }
 
