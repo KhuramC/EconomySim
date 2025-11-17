@@ -2,7 +2,7 @@ import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
 from mesa.datacollection import DataCollector
-
+from typing import Dict, Tuple, Optional
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
@@ -50,6 +50,9 @@ class EconomyModel(Model):
 
     week: int
     """The current week in the simulation."""
+    
+    model_demand_parameters: Dict[str, Tuple[float, Optional[float]]]
+    """Stores the slope and price at quantity zero of the model's demand for each industry"""
 
     def __init__(
         self,
@@ -313,7 +316,6 @@ class EconomyModel(Model):
         """
         return self.week
 
-    from typing import Dict, Tuple, Optional
 
     def aggregate_person_demand_tangents(
         self,
@@ -371,4 +373,4 @@ class EconomyModel(Model):
             avg_pzero = sum(pzeros) / len(pzeros) if pzeros else None
             aggregated[industry_key] = (0.0, avg_pzero)
 
-        return aggregated
+        self.model_demand_parameters = aggregated

@@ -375,9 +375,9 @@ class IndustryAgent(Agent):
             # final capacity is the min of worker limit and funds limit
             return min(worker_limit, funds_limit)
 
-    def set_demand_graph_params(self, A: float, B: float):
+    def get_demand_graph_params(self):
         """
-            Set the demand graph parameters for the industry.
+            Get the demand graph parameters for the industry.
             Called after demand graph is externally calculated
         args:
             A (float): demand intercept (P at Q=0)
@@ -386,8 +386,8 @@ class IndustryAgent(Agent):
             self.demand_intercept
             self.demand_slope
         """
-        self.demand_intercept = A
-        self.demand_slope = B
+        self.demand_slope = self.Model.model_demand_parameters[self.industry_type][0]
+        self.demand_intercept = self.Model.model_demand_parameters[self.industry_type][1]
 
     def get_weekly_pay(self):
         """

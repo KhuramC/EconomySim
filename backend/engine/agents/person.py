@@ -111,11 +111,11 @@ class PersonAgent(Agent):
         valid_goods = [g for g in prefs if g in prices]
 
         sigma = self.sigma
-        A = {g: prefs[g] ** sigma for g in valid_goods}
-        p = {g: max(prices[g], epsilon) for g in valid_goods}
+        A = {g: prefs[g] ** sigma for g in valid_goods}         #get spending preferences for each industry
+        p = {g: max(prices[g], epsilon) for g in valid_goods}   #clamp to zero
 
         # denominator of CES demand
-        D = sum(A[g] * (p[g] ** (1 - sigma)) for g in valid_goods)
+        D = sum(A[g] * (p[g] ** (1 - sigma)) for g in valid_goods) 
 
         # If denominator is zero, return zero slope & None zero-price
         if D <= 0:
@@ -132,13 +132,14 @@ class PersonAgent(Agent):
 
             # quantity at current price (continuous)
             q0 = budget * (Ai * (pi ** (-sigma)) / D)
-
+            #if sigma = 1, this is budget * (pref/price)
+            
             # derivative dq/dp (own-price partial)
             B = budget
             dD_dpi = Ai * (1 - sigma) * (pi ** (-sigma))
-
-            term1 = Ai * (-sigma) * (pi ** (-sigma - 1)) / D
-            term2 = Ai * (pi ** (-sigma)) * (-1) * dD_dpi / (D * D)
+            # if sigma = 1, dD_dpi = 0
+            term1 = Ai * (-sigma) * (pi ** (-sigma - 1)) / D    #pref * -1 * (price ^ -2) = -pref/price^2
+            term2 = Ai * (pi ** (-sigma)) * (-1) * dD_dpi / (D * D) #(pref * (price ^ -1) * -1 * 0) 
             slope = B * (term1 + term2)
 
             # compute tangent-line zero point
