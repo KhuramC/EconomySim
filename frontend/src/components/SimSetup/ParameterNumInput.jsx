@@ -1,61 +1,47 @@
-import ParameterInput from "./ParameterInput";
-import { deepmerge } from "@mui/utils";
-import { InputAdornment, Tooltip } from "@mui/material";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import ParameterInput from "./ParameterInput.jsx";
 
 /**
- * Number input wrapper:
- * - Uses TextField `type="number"`.
- * - Shows a "?" tooltip as an end adornment (inside the input) so hover always works.
- * - Supports `readOnly` via slotProps (without disabling the visual).
+ * Numeric input that supports spinner + free typing.
+ * - Keeps a controlled string so partial values are allowed ("", "-", "1.", ".5").
+ * - Uses native <input type="number"> for spinner & mobile numeric keypad.
+ * - Parsing/validation is deferred to the caller/builder.
  */
-const ParameterNumInput = ({
+export default function ParameterNumInput({
   label,
   value,
   onChange,
-  xs = 6,　// Can still override grid size
+  onBlur,              // forwarded so parent can force a flush on blur
+  xs = 6,
+  fullWidth = true,
   error = false,
+  helpText,
   readOnly = false,
-  helpText,            // tooltip content
-  slotProps,
-  inputProps,
-  InputProps,          // allow callers to pass their own adornments if needed
-  ...otherProps
-}) => {
-  const internalSlotProps = readOnly ? { input: { readOnly: true } } : {};
-
-  // Build an end adornment tooltip icon when helpText is provided
-  const endAdornment = helpText ? (
-    <InputAdornment position="end">
-      <Tooltip title={helpText} arrow enterDelay={300}>
-        <HelpOutlineIcon sx={{ cursor: "help", opacity: 0.7 }} />
-      </Tooltip>
-    </InputAdornment>
-  ) : undefined;
-
-  // Merge caller-provided InputProps (if any) with our adornment
-  const mergedInputPropsForBase = {
-    ...(InputProps || {}),
-    endAdornment: (InputProps && InputProps.endAdornment) || endAdornment,
-  };
-
+  min,
+  max,
+  ...rest
+}) {
   return (
     <ParameterInput
       label={label}
-      value={value}
+      value={value ?? ""}           // keep typing-friendly controlled value
       onChange={onChange}
-      type="number"
+      onBlur={onBlur}
       xs={xs}
+      fullWidth={fullWidth}
       error={error}
-      // IMPORTANT: Do NOT pass helpText down, to avoid a duplicate label icon.
-      // The tooltip is shown via endAdornment instead.
-      helpText={undefined}
-      slotProps={deepmerge(internalSlotProps, slotProps)}
-      inputProps={{ step: "any", ...(inputProps || {}) }}
-      InputProps={mergedInputPropsForBase}
-      {...otherProps}
+      helpText={helpText}
+      type="number"
+      // These go to the native <input>; ParameterInput maps to slotProps.input.inputProps
+      nativeInputProps={{
+        inputMode: "decimal",
+        step: "any",
+        ...(min !== undefined ? { min } : {}),
+        ...(max !== undefined ? { max } : {}),
+        readOnly,
+      }}
+      // Prevent wheel from changing value unintentionally while focused
+      onWheel={(e) => e.currentTarget.blur()}
+      {...rest}
     />
   );
-};
-
-export default ParameterNumInput;
+}

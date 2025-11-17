@@ -1,226 +1,245 @@
+// frontend/src/api/SimulationAPI.js
 import { HTTP_STATUS } from "./httpCodes";
 import { buildPoliciesPayload, buildCreatePayload } from "./payloadBuilder";
 import {
   receivePoliciesPayload,
   receiveTemplatePayload,
 } from "./payloadReceiver";
+
 const BASE_HTTP_URL = "http://localhost:8000";
 const BASE_WS_URL = "ws://localhost:8000";
 
+/**
+ * Thin client for our simulation backend.
+ * - REST methods (fetch): create/read/update resources
+ * - WebSocket methods: push-style interactions (step, get_current_week, set_policies)
+ */
 export class SimulationAPI {
   constructor(modelId) {
     if (!modelId) {
       throw new Error("SimulationAPI requires a modelId to be instantiated.");
     }
+    /** @type {number|string} The model identifier used in all calls. */
     this.modelId = modelId;
+
+    /** @type {WebSocket|null} Active WS connection, if any. */
     this.websocket = null;
+
+    /** @type {Set<Function>} WS message subscribers. Each gets parsed JSON messages. */
     this.messageListeners = new Set();
-    this.messageQueue = []; // Queue for messages sent before connection is open
+
+    /** @type {Array<object>} Messages queued while WS is CONNECTING. */
+    this.messageQueue = [];
   }
 
-  // --- Static Methods (don't require a model instance) ---
+  /* ------------------------------------------------------------------
+   * Helpers
+   * ------------------------------------------------------------------ */
 
-  /**
-   * Attempts to create a readable error depending on what was sent back.
-   * @param {*} response - the response from the last request made.
-   * @param {*} defaultMessage - the default message if nothing could be obtained.
-   * @returns an error with a message.
-   */
-  static async throwReadableError(response, defaultMessage) {
-    let readableError = defaultMessage;
-
+  /** Try to parse JSON from a Response's body; return undefined if it isn't JSON. */
+  static async tryParseJson(response) {
+    const text = await response.text();
     try {
-      const errorData = await response.json();
-      if (errorData.detail) {
-        if (Array.isArray(errorData.detail)) {
-          // This handles Pydantic 422 validation errors
-          const firstError = errorData.detail[0];
-          // 'loc' is an array like ["body", "inflation_rate"]
-          const field = firstError.loc.slice(1).join(" > ");
-          readableError = `Invalid field '${field}': ${firstError.msg}`;
-        } else {
-          // This handles other errors, like 400 or 404
-          readableError = errorData.detail;
-        }
-      }
-    } catch (e) {}
-    throw new Error(readableError);
-  }
-
-  /**
-   * Fetches the configuration for a given template.
-   * @param {*} template - The name of the template to fetch configuration for.
-   * @returns {Promise<object>} config - The configuration object for the specified template.
-   * @throws {Error} If the fetch fails or the response is not OK.
-   */
-  static async getTemplateConfig(template) {
-    const response = await fetch(`${BASE_HTTP_URL}/templates/${template}`);
-    if (response.status === HTTP_STATUS.OK) {
-      const backendConfig = await response.json();
-      // Transform the backend config into the frontend's `params` format
-      return receiveTemplatePayload(backendConfig);
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to fetch configuration for template: ${template}`
-      );
+      return JSON.parse(text);
+    } catch {
+      return undefined;
     }
   }
 
   /**
-   * @param {object} params - Parameters for the model
-   * @returns {Promsise<number>} modelId - The ID of the created model.
-   * @throws {Error} If the model creation fails.
+   * Create a friendly Error from a failed fetch `Response`.
+   * - Supports FastAPI/Pydantic 422: detail: [{ loc, msg, ... }]
+   * - Supports { detail: "..." } or object detail
+   * - Falls back to server text or the provided default
+   */
+  static async throwReadableError(response, defaultMessage) {
+    let readable = defaultMessage;
+    try {
+      // Try the standard JSON path first; if it fails, try best-effort parsing.
+      const data = await response.clone().json().catch(async () => {
+        return await SimulationAPI.tryParseJson(response);
+      });
+
+      if (data && data.detail) {
+        if (Array.isArray(data.detail) && data.detail.length > 0) {
+          // Typical Pydantic validation error format
+          const first = data.detail[0];
+          const field =
+            Array.isArray(first.loc) && first.loc.length > 1
+              ? first.loc.slice(1).join(" > ")
+              : "field";
+          const msg = first.msg || JSON.stringify(first);
+          readable = `Invalid field '${field}': ${msg}`;
+        } else if (typeof data.detail === "string") {
+          readable = data.detail;
+        } else if (typeof data.detail === "object") {
+          readable = JSON.stringify(data.detail);
+        }
+      } else if (data && data.message) {
+        readable = data.message;
+      } else {
+        // If body isn't JSON, surface the plain text if present
+        const text = await response.clone().text();
+        if (text && text.trim().length > 0) readable = text.trim();
+      }
+    } catch {
+      // Keep default message on any parsing failure
+    }
+    throw new Error(readable);
+  }
+
+  /* ------------------------------------------------------------------
+   * Static REST (no instance required)
+   * ------------------------------------------------------------------ */
+
+  /**
+   * Fetch a template config and convert it to the frontend `params` shape.
+   * @returns {Promise<object>} SetupPage-compatible params object
+   */
+  static async getTemplateConfig(template) {
+    const response = await fetch(`${BASE_HTTP_URL}/templates/${template}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+
+    if (response.status === HTTP_STATUS.OK) {
+      const backendConfig = await response.json();
+      return receiveTemplatePayload(backendConfig);
+    }
+    throw await SimulationAPI.throwReadableError(
+      response,
+      `Failed to fetch configuration for template: ${template}`
+    );
+  }
+
+  /**
+   * Create a model using the SetupPage `params` tree.
+   * @returns {Promise<number|string>} modelId (whatever backend returns)
    */
   static async createModel(params) {
     const payload = buildCreatePayload(params);
     const response = await fetch(`${BASE_HTTP_URL}/models/create`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (response.status === HTTP_STATUS.CREATED) {
+      // Backend is expected to return the raw model id (number/string)
       const modelId = await response.json();
       return modelId;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        "Failed to create model."
-      );
     }
+    throw await SimulationAPI.throwReadableError(response, "Failed to create model.");
   }
 
-  // --- Instance Methods (require a model instance) ---
+  /* ------------------------------------------------------------------
+   * Instance REST (uses this.modelId)
+   * ------------------------------------------------------------------ */
 
   /**
-   * Gets the model policies for a given model ID.
-   * @param {*} modelId - The ID of the model to fetch policies for.
-   * @returns {Promise<object>} policies - The policies associated with the specified model, in a frontend format.
-   * @throws {Error} If the fetch fails or the response is not OK.
+   * Get current model policies and convert to UI `policyParams` shape.
    */
   async getModelPolicies(modelId = this.modelId) {
-    const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}/policies`);
+    const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}/policies`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
 
     if (response.status === HTTP_STATUS.OK) {
       const policies = await response.json();
-      console.log("Policies received:", policies);
       return receivePoliciesPayload(policies);
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to fetch policies for model ID ${modelId}`
-      );
     }
+    throw await SimulationAPI.throwReadableError(
+      response,
+      `Failed to fetch policies for model ID ${modelId}`
+    );
   }
 
   /**
-   * Sets the model policies for a given model ID.
-   * @param {Object} policyParams - The policies to set for the model.
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @throws {Error} If the policies could not be set because the response is not NO_CONTENT.
+   * Set model policies (accepts UI `policyParams`, converts to backend payload).
    */
   async setModelPolicies(policyParams, modelId = this.modelId) {
     const policies = buildPoliciesPayload(policyParams);
-    const response = await fetch(
-      `${BASE_HTTP_URL}/models/${modelId}/policies`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(policies),
-      }
-    );
+    const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}/policies`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(policies),
+    });
 
-    if (response.status === HTTP_STATUS.NO_CONTENT) {
-      return;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to set policies for model ID ${modelId}`
-      );
-    }
+    if (response.status === HTTP_STATUS.NO_CONTENT) return;
+    throw await SimulationAPI.throwReadableError(
+      response,
+      `Failed to set policies for model ID ${modelId}`
+    );
   }
 
   /**
-   * Retrieves all of the model indicators for a given model ID.
-   * @param {number} [startTime=0] - The start time to get indicators for.
-   * @param {number} [endTime=0] - The end time to get indicators for (0 means current time).
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @returns {Object} - the indicator as a list of records.
-   * @throws {Error} If the indicators could not be retrieved.
+   * Get indicators over a time range.
+   * - `endTime = 0` typically means "up to current week" (per backend contract).
    */
   async getModelIndicators(startTime = 0, endTime = 0, modelId = this.modelId) {
-    // TODO: Should we give ability to fetch specific indicators? API can be changed to do that, see controller method to get indicators.
     const url = new URL(`${BASE_HTTP_URL}/models/${modelId}/indicators`);
     url.searchParams.append("start_time", startTime);
     url.searchParams.append("end_time", endTime);
 
-    const response = await fetch(url.toString(), { method: "GET" });
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+
     if (response.status === HTTP_STATUS.OK) {
-      const data = await response.json();
-      return data;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to fetch indicators for model ID ${modelId}`
-      );
+      return await response.json();
     }
+    throw await SimulationAPI.throwReadableError(
+      response,
+      `Failed to fetch indicators for model ID ${modelId}`
+    );
   }
 
   /**
-   * Steps 1 time step for a given model ID.
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @throws {Error} If the model could not be stepped through.
+   * Advance the model by one time step.
    */
   async stepModel(modelId = this.modelId) {
     const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}/step`, {
       method: "POST",
     });
 
-    if (response.status === HTTP_STATUS.NO_CONTENT) {
-      return;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to step model ID ${modelId}`
-      );
-    }
+    if (response.status === HTTP_STATUS.NO_CONTENT) return;
+    throw await SimulationAPI.throwReadableError(
+      response,
+      `Failed to step model ID ${modelId}`
+    );
   }
 
   /**
-   * Deletes a model for a given model ID.
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @throws {Error} If the model could not be deleted.
+   * Delete the model.
    */
   async deleteModel(modelId = this.modelId) {
     const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}`, {
       method: "DELETE",
     });
 
-    if (response.status === HTTP_STATUS.NO_CONTENT) {
-      return;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to delete model ID ${modelId}`
-      );
-    }
+    if (response.status === HTTP_STATUS.NO_CONTENT) return;
+    throw await SimulationAPI.throwReadableError(
+      response,
+      `Failed to delete model ID ${modelId}`
+    );
   }
 
-  // --- WebSocket Methods ---
+  /* ------------------------------------------------------------------
+   * WebSocket
+   * ------------------------------------------------------------------ */
 
   /**
-   * Connects to the model's WebSocket endpoint.
-   * @returns {Promise<void>} A promise that resolves when the connection is open, or rejects on error.
+   * Open a WS connection for this model.
+   * - Outbound messages are queued until the socket is OPEN.
+   * - Call `addMessageListener(fn)` to receive parsed JSON messages.
+   * @returns {Promise<void>}
    */
   connect() {
     return new Promise((resolve, reject) => {
+      // If already OPEN, resolve immediately
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-        console.warn("WebSocket is already connected or connecting.");
         resolve();
         return;
       }
@@ -229,81 +248,77 @@ export class SimulationAPI {
       this.websocket = new WebSocket(url);
 
       this.websocket.onopen = () => {
-        console.log(`WebSocket connected to model ${this.modelId}`);
+        // Flush any messages queued during CONNECTING
         this.processMessageQueue();
         resolve();
       };
 
       this.websocket.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        // Notify all registered listeners
-        this.messageListeners.forEach((listener) => {
-          listener(message);
-        });
+        // Defensive parse: ignore malformed frames
+        try {
+          const message = JSON.parse(event.data);
+          this.messageListeners.forEach((listener) => listener(message));
+        } catch {
+          // ignore bad WS payloads
+        }
       };
 
       this.websocket.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        // Surface connection errors to the caller
         reject(error);
       };
 
       this.websocket.onclose = () => {
-        console.log("WebSocket connection closed.");
+        // Drop the ref; callers may choose to reconnect
         this.websocket = null;
       };
     });
   }
 
-  /**
-   * Processes and sends any messages that were queued while the WebSocket was connecting.
-   */
+  /** Send all messages that were queued while CONNECTING. */
   processMessageQueue() {
     while (this.messageQueue.length > 0) {
       this.sendMessage(this.messageQueue.shift());
     }
   }
 
-  /**
-   * Registers a callback function to be executed when a WebSocket message is received.
-   * @param {function} callback - The function to call with the message data.
-   */
+  /** Subscribe to WS messages (parsed JSON). */
   addMessageListener(callback) {
     this.messageListeners.add(callback);
   }
 
-  /**
-   * Unregisters a callback function.
-   * @param {function} callback - The function to remove from the listeners.
-   */
+  /** Unsubscribe from WS messages. */
   removeMessageListener(callback) {
     this.messageListeners.delete(callback);
   }
 
   /**
-   * Sends a JSON message through the WebSocket.
-   * @param {object} message - The message object to send (e.g., { action: "step" }).
+   * Send a JSON-serializable object over WS.
+   * - If OPEN: send immediately.
+   * - If CONNECTING: queue.
+   * - If CLOSED/absent: log and drop (call `connect()` first).
    */
   sendMessage(message) {
     if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
       console.error("WebSocket is not connected. Cannot send message.");
       return;
     }
-
     if (this.websocket.readyState === WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(message));
     } else if (this.websocket.readyState === WebSocket.CONNECTING) {
-      console.log("WebSocket is connecting. Queuing message:", message);
       this.messageQueue.push(message);
     }
   }
 
-  /**
-   * Sends a message through the WebSocket to get the current week.
-   */
+  /** Ask backend (via WS) for the current simulation week. */
   getCurrentWeek() {
     this.sendMessage({ action: "get_current_week" });
   }
 
+  /**
+   * Push policies over WS.
+   * Uses the same payload shape as REST (decimals + label keys).
+   */
   setPolicies(policyParams) {
     this.sendMessage({
       action: "set_policies",
@@ -311,9 +326,7 @@ export class SimulationAPI {
     });
   }
 
-  /**
-   * Closes the WebSocket connection if it is open.
-   */
+  /** Close the WS connection, if any. */
   disconnect() {
     if (this.websocket) {
       this.websocket.close();
