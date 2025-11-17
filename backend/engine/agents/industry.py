@@ -62,6 +62,8 @@ class IndustryAgent(Agent):
     fixed_cost : float      #shorthand value used for testing. Will eventually be phased out in favor of calls to get_fixed_cost, which will work similarly to get_variable_cost
     """The fixed cost incurred by this industry per time step."""
     
+    
+    
     #Used in profit calculation
     total_cost: float
     """total cost of goods this tick"""
@@ -180,11 +182,11 @@ class IndustryAgent(Agent):
 
         Price = self.price
         Suggested_Quantity = self.inventory
-
+        F = self.get_fixed_cost_naiive()
         # Determine pricing strategy
         strategy = INDUSTRY_PRICING[self.industry_type]
         if strategy == PricingType.AVG_COST:
-            Suggested_Quantity = avg_cost(A, B, V, float(self.fixed_cost))
+            Suggested_Quantity = avg_cost(A, B, V, float(F))
         elif strategy == PricingType.LINEAR_PROFIT_MAX:
             Suggested_Quantity = linear_profit_max(A, B, m, n)
 
@@ -240,6 +242,8 @@ class IndustryAgent(Agent):
             self.balance (float): Funds available after production
             self.goods_produced (int): Number of good produced this cycle. Tracker for indicator calculations.
         """
+        Fixed = self.get_fixed_cost_naiive()
+        
         # produce needed inventory without re-producing inventory aready in storage
         quantity_to_produce = self.inventory_available_this_step - self.inventory
 
@@ -248,9 +252,9 @@ class IndustryAgent(Agent):
         ):  # no production this turn, already have enough inventory
             self.hours_worked = 0
             self.total_cost = (
-                self.fixed_cost
+                Fixed
             )  # fixed cost is still factored into losses this tick
-            self.balance -= self.fixed_cost
+            self.balance -= Fixed
             return
 
         variable_cost_per_unit = self.get_variable_cost()
@@ -277,11 +281,11 @@ class IndustryAgent(Agent):
         self.inventory += quantity_to_produce
         self.goods_produced = quantity_to_produce
         spent_variable = variable_cost_per_unit * quantity_to_produce
-        self.total_cost = self.fixed_cost + spent_variable
+        self.total_cost = Fixed + spent_variable
         self.balance = self.balance - self.total_cost 
         logging.info(
             f"Produced {quantity_to_produce:.2f} units; spent_variable={spent_variable:.2f}; "
-            f"spent_fixed={self.fixed_cost:.2f}; remaining funds {self.balance:.2f}; "
+            f"spent_fixed={Fixed:.2f}; remaining funds {self.balance:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
 
@@ -370,6 +374,19 @@ class IndustryAgent(Agent):
         #NOTE: self.fixed_cost will eventually be phased out.  It is kept now for testing purposes
         #When it is phased out, this function will return a value instead of just updating a variable
         self.fixed_cost = self.salary_cost + property_cost + self.insurance + self.equipment_cost
+    def get_fixed_cost_naiive(self) -> float:
+        """
+            in order to show for now on the frontend that changing property tax will affect the fixed costs,
+            This function will directly apply the property tax modifier to the fixed cost value
+            
+            This function will eventually be removed in favor of get_fixed_cost
+            returns:
+                naiive_fixed_cost (float)
+        """
+        property_tax = self.model.policies["property_tax"]
+        if property_tax is not None:
+            property_cost = self.fixed_cost * property_tax
+        return self.fixed_cost + property_cost
         
     def get_production_capacity(self):
         """
@@ -398,6 +415,8 @@ class IndustryAgent(Agent):
                                        or the min of fund cap and worker cap
 
         """
+        Fixed = self.get_fixed_cost_naiive()
+        
         # worker_limit: how many units can workers produce this period
         # (num_employees * efficiency * hours_per_worker); hours assumed 40 here
         # clamp at zero and floor to int
@@ -427,7 +446,7 @@ class IndustryAgent(Agent):
             else:
                 # compute funds_limit safely — protect against unreasonable huge values
                 funds_limit_raw = (
-                    self.balance - self.fixed_cost
+                    self.balance - Fixed
                 ) / variable_cost_per_unit
                 # if funds_limit_raw is not finite for some reason, fall back to 0
                 if not math.isfinite(funds_limit_raw):
@@ -436,7 +455,7 @@ class IndustryAgent(Agent):
                     # clamp to a sensible integer range before floor to avoid overflow
                     # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
                     funds_limit = int(max(0, math.floor(funds_limit_raw)))
-                if self.fixed_cost > self.balance:
+                if Fixed > self.balance:
                     funds_limit = 0
                     # TODO add handler for if fixed cost is more than total money -> Bankruptcy imminent!
 
