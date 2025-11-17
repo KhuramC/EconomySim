@@ -45,7 +45,8 @@ class EconomyModel(Model):
 
     # Changeable by the user at any time
 
-    policies: dict[str, float | dict[IndustryType | Demographic, float]]
+    # NOTE (update): allow None inside nested dict for price_cap values.
+    policies: dict[str, float | dict[IndustryType | Demographic, float | None]]
     """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
 
     week: int
@@ -59,7 +60,7 @@ class EconomyModel(Model):
             Demographic, dict[str, float | dict[str | IndustryType, float]]
         ],
         industries: dict[IndustryType, dict[str, float | int]],
-        starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
+        starting_policies: dict[str, float | dict[IndustryType | Demographic, float | None]],
         inflation_rate: float = 0.001,
         random_events: bool = False,
     ):
