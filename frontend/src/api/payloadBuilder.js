@@ -55,7 +55,7 @@ export function buildEnvironmentPayload(envParams) {
   return {
     max_simulation_length: envParams.maxSimulationLength,
     num_people: envParams.numPeople,
-    inflation_rate: (1 + envParams.inflationRate / 100)**(1/52) - 1, // Convert annual % to a weekly rate
+    inflation_rate: (1 + envParams.inflationRate / 100) ** (1 / 52) - 1, // Convert annual % to a weekly rate
   };
 }
 
@@ -102,11 +102,18 @@ export function buildIndustriesPayload(industryParams) {
   return Object.fromEntries(
     Object.entries(industryParams).map(([industryKey, industryData]) => {
       const backendIndustryData = {
-        price: industryData.startingPrice,
-        inventory: industryData.startingInventory,
-        balance: industryData.industrySavings,
-        offered_wage: industryData.offeredWage,
-      };
+        starting_price: industryData.startingPrice,
+        starting_inventory: industryData.startingInventory,
+        starting_balance: industryData.industrySavings,
+        starting_offered_wage: industryData.offeredWage,
+        starting_fixed_cost: industryData.startingFixedCost,
+        starting_raw_mat_cost: industryData.startingMaterialCost,
+        starting_number_of_employees: industryData.startingNumEmployees,
+        starting_worker_efficiency: industryData.startingEmpEfficiency,
+        starting_debt_allowed: industryData.startingDebtAllowed,
+        starting_demand_intercept: 200,
+        starting_demand_slope: 0.01,
+      }; // TODO: remove demand stuff whenever backend is ready to not need it passed in.
       return [industryKey, backendIndustryData];
     })
   );

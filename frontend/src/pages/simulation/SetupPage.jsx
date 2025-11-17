@@ -34,6 +34,11 @@ const getDefaultIndustryParams = () => ({
   startingPrice: 10,
   industrySavings: 50000,
   offeredWage: 15,
+  startingFixedCost: 100,
+  startingMaterialCost: 5,
+  startingNumEmployees: 10,
+  startingEmpEfficiency: 1.0,
+  startingDebtAllowed: true,
 });
 
 export default function SetupPage() {
@@ -80,7 +85,7 @@ export default function SetupPage() {
       propertyTax: 10,
       tariffs: 5,
       subsidies: 20,
-      rentCap: 20,       // $ > 0
+      rentCap: 20, // $ > 0
       minimumWage: 7.25, // $/hr > 0
     },
   });
@@ -105,13 +110,17 @@ export default function SetupPage() {
 
     // ----- Environmental -----
     const env = params.envParams;
-    if (isBlank(env.maxSimulationLength) || Number(env.maxSimulationLength) <= 10) {
+    if (
+      isBlank(env.maxSimulationLength) ||
+      Number(env.maxSimulationLength) <= 10
+    ) {
       msgs.env_maxSimulationLength =
         "Environmental: Max simulation length must be greater than 10 weeks.";
       flags.env.maxSimulationLength = true;
     }
     if (isBlank(env.numPeople) || Number(env.numPeople) <= 0) {
-      msgs.env_numPeople = "Environmental: Total people must be greater than 0.";
+      msgs.env_numPeople =
+        "Environmental: Total people must be greater than 0.";
       flags.env.numPeople = true;
     }
 
@@ -137,21 +146,29 @@ export default function SetupPage() {
 
       // Std dev > 0
       if (isBlank(d?.sdIncome) || Number(d?.sdIncome) <= 0) {
-        msgs[`demo_sdIncome_${dk}`] = `Demographics (${dk}): Income standard deviation must be greater than 0.`;
+        msgs[
+          `demo_sdIncome_${dk}`
+        ] = `Demographics (${dk}): Income standard deviation must be greater than 0.`;
         markDemo(dk, "sdIncome");
       }
       if (isBlank(d?.sdSavings) || Number(d?.sdSavings) <= 0) {
-        msgs[`demo_sdSavings_${dk}`] = `Demographics (${dk}): Savings standard deviation must be greater than 0.`;
+        msgs[
+          `demo_sdSavings_${dk}`
+        ] = `Demographics (${dk}): Savings standard deviation must be greater than 0.`;
         markDemo(dk, "sdSavings");
       }
 
       // Optional sanity checks
       if (isBlank(d?.meanIncome) || Number(d?.meanIncome) <= 0) {
-        msgs[`demo_meanIncome_${dk}`] = `Demographics (${dk}): Mean income must be greater than 0.`;
+        msgs[
+          `demo_meanIncome_${dk}`
+        ] = `Demographics (${dk}): Mean income must be greater than 0.`;
         markDemo(dk, "meanIncome");
       }
       if (isBlank(d?.meanSavings) || Number(d?.meanSavings) < 0) {
-        msgs[`demo_meanSavings_${dk}`] = `Demographics (${dk}): Mean savings must be 0 or greater.`;
+        msgs[
+          `demo_meanSavings_${dk}`
+        ] = `Demographics (${dk}): Mean savings must be 0 or greater.`;
         markDemo(dk, "meanSavings");
       }
 
@@ -161,7 +178,9 @@ export default function SetupPage() {
         0
       );
       if (Math.abs(spendingSum - 100) > 0.1) {
-        msgs[`demo_spending_${dk}`] = `Demographics (${dk}): Spending behavior percentages must add up to 100%. Current sum: ${spendingSum.toFixed(
+        msgs[
+          `demo_spending_${dk}`
+        ] = `Demographics (${dk}): Spending behavior percentages must add up to 100%. Current sum: ${spendingSum.toFixed(
           1
         )}% (${(100 - spendingSum).toFixed(1)}% remaining).`;
         // Mark every cell in that row so all become red
@@ -176,8 +195,9 @@ export default function SetupPage() {
       const prev = Number(params.demoParams[prevKey]?.meanIncome);
       const curr = Number(params.demoParams[currKey]?.meanIncome);
       if (!(curr > prev)) {
-        msgs[`demo_meanIncome_monotonic_${currKey}`] =
-          `Demographics: Mean income for "${currKey}" must be greater than "${prevKey}".`;
+        msgs[
+          `demo_meanIncome_monotonic_${currKey}`
+        ] = `Demographics: Mean income for "${currKey}" must be greater than "${prevKey}".`;
         markDemo(currKey, "meanIncome");
       }
     }
@@ -185,24 +205,31 @@ export default function SetupPage() {
     // ----- Industry -----
     Object.values(IndustryType).forEach((ik) => {
       const ind = params.industryParams[ik];
-      if (isBlank(ind?.startingInventory) || Number(ind?.startingInventory) <= 0) {
-        msgs[`industry_inventory_${ik}`] =
-          `Industry (${ik}): Starting inventory must be greater than 0.`;
+      if (
+        isBlank(ind?.startingInventory) ||
+        Number(ind?.startingInventory) <= 0
+      ) {
+        msgs[
+          `industry_inventory_${ik}`
+        ] = `Industry (${ik}): Starting inventory must be greater than 0.`;
         markIndustry(ik, "startingInventory");
       }
       if (isBlank(ind?.startingPrice) || Number(ind?.startingPrice) <= 0) {
-        msgs[`industry_price_${ik}`] =
-          `Industry (${ik}): Starting price must be greater than 0.`;
+        msgs[
+          `industry_price_${ik}`
+        ] = `Industry (${ik}): Starting price must be greater than 0.`;
         markIndustry(ik, "startingPrice");
       }
       if (isBlank(ind?.industrySavings) || Number(ind?.industrySavings) <= 0) {
-        msgs[`industry_savings_${ik}`] =
-          `Industry (${ik}): Industry savings must be greater than 0.`;
+        msgs[
+          `industry_savings_${ik}`
+        ] = `Industry (${ik}): Industry savings must be greater than 0.`;
         markIndustry(ik, "industrySavings");
       }
       if (isBlank(ind?.offeredWage) || Number(ind?.offeredWage) <= 0) {
-        msgs[`industry_wage_${ik}`] =
-          `Industry (${ik}): Offered wage must be greater than 0.`;
+        msgs[
+          `industry_wage_${ik}`
+        ] = `Industry (${ik}): Offered wage must be greater than 0.`;
         markIndustry(ik, "offeredWage");
       }
     });
@@ -228,7 +255,8 @@ export default function SetupPage() {
       flags.policy.rentCap = true;
     }
     if (isBlank(p?.minimumWage) || Number(p?.minimumWage) <= 0) {
-      msgs.policy_minimumWage = "Policies: Minimum wage must be greater than 0.";
+      msgs.policy_minimumWage =
+        "Policies: Minimum wage must be greater than 0.";
       flags.policy.minimumWage = true;
     }
 
@@ -241,7 +269,9 @@ export default function SetupPage() {
   // We keep raw strings so users can type freely (e.g., "-", "1.", "", etc.).
   const handleEnvChange = (key) => (event) => {
     const value =
-      event.target.type === "checkbox" ? event.target.checked : event.target.value;
+      event.target.type === "checkbox"
+        ? event.target.checked
+        : event.target.value;
     setParams((prev) => ({
       ...prev,
       envParams: { ...prev.envParams, [key]: value },
@@ -376,7 +406,13 @@ export default function SetupPage() {
             }}
           >
             Please fix the following issues:
-            <ul style={{ margin: "0.5rem 0 0 1rem", padding: 0, textAlign: "left" }}>
+            <ul
+              style={{
+                margin: "0.5rem 0 0 1rem",
+                padding: 0,
+                textAlign: "left",
+              }}
+            >
               {Object.values(formErrors).map((text) => (
                 <li key={text}>{text}</li>
               ))}
