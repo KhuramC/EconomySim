@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Grid, Switch, FormControlLabel, Tooltip, MenuItem } from "@mui/material";
+import {
+  Grid,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  MenuItem,
+} from "@mui/material";
 import ParameterMenuInput from "./ParameterMenuInput.jsx";
 import ParameterNumInput from "./ParameterNumInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
@@ -96,35 +102,6 @@ export default function IndustryAccordion({
       <ParameterNumInput
         label={
           starting === true
-            ? "Starting Fixed Costs ($/week)"
-            : "Fixed Costs ($/week)"
-        }
-        value={current.startingFixedCost}
-        onChange={handleIndustryChange(selectedIndustry, "startingFixedCost")}
-        error={!!err.startingFixedCost}
-        readOnly={readOnly}
-        helpText="Fixed costs incurred weekly regardless of production levels."
-      />
-
-      <ParameterNumInput
-        label={
-          starting === true
-            ? "Starting Raw Material Cost ($/unit)"
-            : "Raw Material Cost ($/unit)"
-        }
-        value={current.startingMaterialCost}
-        onChange={handleIndustryChange(
-          selectedIndustry,
-          "startingMaterialCost"
-        )}
-        error={!!err.startingMaterialCost}
-        readOnly={readOnly}
-        helpText="Cost of raw materials needed for production of an individual item. Influences overall expenses and pricing."
-      />
-
-      <ParameterNumInput
-        label={
-          starting === true
             ? "Starting Number of Employees"
             : "Number of Employees"
         }
@@ -137,44 +114,79 @@ export default function IndustryAccordion({
         readOnly={readOnly}
         helpText="Number of employees at the start. Affects production capacity and operational efficiency."
       />
+      {starting === true ? (
+        <>
+          <ParameterNumInput
+            label={
+              starting === true
+                ? "Starting Fixed Costs ($/week)"
+                : "Fixed Costs ($/week)"
+            }
+            value={current.startingFixedCost}
+            onChange={handleIndustryChange(
+              selectedIndustry,
+              "startingFixedCost"
+            )}
+            error={!!err.startingFixedCost}
+            readOnly={readOnly}
+            helpText="Fixed costs incurred weekly regardless of production levels."
+          />
 
-      <ParameterNumInput
-        label={
-          starting === true
-            ? "Starting Worker Efficiency (unit/hr)"
-            : "Worker Efficiency (unit/hr)"
-        }
-        value={current.startingEmpEfficiency}
-        onChange={handleIndustryChange(
-          selectedIndustry,
-          "startingEmpEfficiency"
-        )}
-        error={!!err.startingEmpEfficiency}
-        readOnly={readOnly}
-        helpText="Efficiency of each employee in goods produced per hour. Affects productivity and output levels."
-      />
+          <ParameterNumInput
+            label={
+              starting === true
+                ? "Starting Raw Material Cost ($/unit)"
+                : "Raw Material Cost ($/unit)"
+            }
+            value={current.startingMaterialCost}
+            onChange={handleIndustryChange(
+              selectedIndustry,
+              "startingMaterialCost"
+            )}
+            error={!!err.startingMaterialCost}
+            readOnly={readOnly}
+            helpText="Cost of raw materials needed for production of an individual item. Influences overall expenses and pricing."
+          />
 
-      <Grid item xs={6}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={!!current.startingDebtAllowed}
-              onChange={handleIndustryChange(
-                selectedIndustry,
-                "startingDebtAllowed"
-              )}
+          <ParameterNumInput
+            label={
+              starting === true
+                ? "Starting Worker Efficiency (unit/hr)"
+                : "Worker Efficiency (unit/hr)"
+            }
+            value={current.startingEmpEfficiency}
+            onChange={handleIndustryChange(
+              selectedIndustry,
+              "startingEmpEfficiency"
+            )}
+            error={!!err.startingEmpEfficiency}
+            readOnly={readOnly}
+            helpText="Efficiency of each employee in goods produced per hour. Affects productivity and output levels."
+          />
+
+          <Grid item xs={6}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!current.startingDebtAllowed}
+                  onChange={handleIndustryChange(
+                    selectedIndustry,
+                    "startingDebtAllowed"
+                  )}
+                />
+              }
+              label={
+                <Tooltip
+                  title="Enable the industry to go into debt. Allows the industry to be more flexible."
+                  arrow
+                >
+                  <span>Debt Allowed</span>
+                </Tooltip>
+              }
             />
-          }
-          label={
-            <Tooltip
-              title="Enable the industry to go into debt. Allows the industry to be more flexible."
-              arrow
-            >
-              <span>Debt Allowed</span>
-            </Tooltip>
-          }
-        />
-      </Grid>
+          </Grid>
+        </>
+      ) : null}
     </>
   );
 
