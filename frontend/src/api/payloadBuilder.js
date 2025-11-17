@@ -27,7 +27,10 @@ export function buildPoliciesPayload(policyParams) {
         policyParams.salesTax / 100.0,
       ])
     ),
-    property_tax: policyParams.propertyTax / 100.0,
+    property_tax: {
+      residential: policyParams.propertyTax / 100.0,
+      commercial: policyParams.propertyTax / 100.0,
+    },
     tariffs: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
@@ -40,7 +43,12 @@ export function buildPoliciesPayload(policyParams) {
         policyParams.subsidies / 100.0, // Assuming %
       ])
     ),
-    rent_cap: policyParams.rentCap,
+    price_cap: Object.fromEntries(
+      Object.values(IndustryType).map((value) => [
+        value,
+        policyParams.priceCap / 100.0, // Assuming %
+      ])
+    ),
     minimum_wage: policyParams.minimumWage,
   };
   return policies;

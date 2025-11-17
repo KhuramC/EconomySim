@@ -85,7 +85,7 @@ export default function SetupPage() {
       propertyTax: 10,
       tariffs: 5,
       subsidies: 20,
-      rentCap: 20, // $ > 0
+      priceCap: 20, // $ > 0
       minimumWage: 7.25, // $/hr > 0
     },
   });
@@ -250,9 +250,9 @@ export default function SetupPage() {
         flags.policy[k] = true;
       }
     });
-    if (isBlank(p?.rentCap) || Number(p?.rentCap) <= 0) {
-      msgs.policy_rentCap = "Policies: Rent cap must be greater than 0.";
-      flags.policy.rentCap = true;
+    if (isBlank(p?.priceCap) || Number(p?.priceCap) < 0) {
+      msgs.policy_priceCap = "Policies: Price cap must be nonnegative.";
+      flags.policy.priceCap = true;
     }
     if (isBlank(p?.minimumWage) || Number(p?.minimumWage) <= 0) {
       msgs.policy_minimumWage =

@@ -33,7 +33,7 @@ export default function PolicyAccordion({
         value={policyParams.personalIncomeTax}
         onChange={handlePolicyChange("personalIncomeTax")}
         error={!!formErrors.personalIncomeTax}
-        helpText="Tax on individual income. Lowers disposable income and consumption."
+        helpText="Progressive tax on individual income. Lowers disposable income and consumption."
       />
       <ParameterNumInput
         label="Property Tax (%)"
@@ -48,7 +48,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("minimumWage")}
         error={!!formErrors.minimumWage}
         helpText="Legal wage floor. Firms cannot offer wages below this value."
-        
       />
       <ParameterNumInput
         label="Tariffs (%)"
@@ -65,19 +64,22 @@ export default function PolicyAccordion({
         helpText="Government support paid to industries. Lowers effective costs or boosts income."
       />
       <ParameterNumInput
-        label="Rent Cap ($)"
-        value={policyParams.rentCap}
-        onChange={handlePolicyChange("rentCap")}
-        error={!!formErrors.rentCap}
-        helpText="Upper bound on weekly housing rent. If binding, it limits rent growth."
+        label="Price Cap (%)"
+        value={policyParams.priceCap}
+        onChange={handlePolicyChange("priceCap")}
+        error={!!formErrors.priceCap}
+        helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
       />
-      
     </>
   );
 
   return (
     <ParameterAccordion
-      title={starting === true ? "Starting Government Policies" : "Government Policies"}
+      title={
+        starting === true
+          ? "Starting Government Policies"
+          : "Government Policies"
+      }
       advancedContent={null}
     >
       {coreFields}
