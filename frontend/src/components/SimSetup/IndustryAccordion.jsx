@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
-import { MenuItem } from "@mui/material";
+import { Grid, Switch, FormControlLabel, Tooltip, MenuItem } from "@mui/material";
 import ParameterMenuInput from "./ParameterMenuInput.jsx";
 import ParameterNumInput from "./ParameterNumInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import { IndustryType } from "../../types/IndustryType.js";
-
 /**
  * Industry section with tooltips for each field.
  * - Highlights invalid fields via `formErrors[selectedIndustry]`.
@@ -142,8 +141,8 @@ export default function IndustryAccordion({
       <ParameterNumInput
         label={
           starting === true
-            ? "Starting Worker Efficiency (%)"
-            : "Worker Efficiency (%)"
+            ? "Starting Worker Efficiency (unit/hr)"
+            : "Worker Efficiency (unit/hr)"
         }
         value={current.startingEmpEfficiency}
         onChange={handleIndustryChange(
@@ -152,8 +151,30 @@ export default function IndustryAccordion({
         )}
         error={!!err.startingEmpEfficiency}
         readOnly={readOnly}
-        helpText="Efficiency of each employee. Affects productivity and output levels."
+        helpText="Efficiency of each employee in goods produced per hour. Affects productivity and output levels."
       />
+
+      <Grid item xs={6}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={!!current.startingDebtAllowed}
+              onChange={handleIndustryChange(
+                selectedIndustry,
+                "startingDebtAllowed"
+              )}
+            />
+          }
+          label={
+            <Tooltip
+              title="Enable the industry to go into debt. Allows the industry to be more flexible."
+              arrow
+            >
+              <span>Debt Allowed</span>
+            </Tooltip>
+          }
+        />
+      </Grid>
     </>
   );
 

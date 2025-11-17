@@ -36,10 +36,10 @@ export default function EnvironmentalAccordion({
   const advancedFields = (
     <>
       <ParameterNumInput
-        label="National Inflation Rate (%/week)"
+        label="National Inflation Rate (%/year)"
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}
-        helpText="Baseline weekly inflation rate. Prices tend to drift upward by this percentage each step."
+        helpText="Baseline annual inflation rate. Prices tend to drift upward by this percentage each year."
       />
     </>
   );
