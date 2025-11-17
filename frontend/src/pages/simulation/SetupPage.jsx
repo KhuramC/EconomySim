@@ -322,9 +322,11 @@ export default function SetupPage() {
     }));
   };
 
-  // TODO: UPDATE TO SUPPORT TOGGLEABLE FOR BOOLEAN FIELDS
   const handleIndustryChange = (industryValue, prop) => (event) => {
-    const { value } = event.target;
+    const value =
+      event.target.type === "checkbox"
+        ? event.target.checked
+        : event.target.value;
     setParams((prev) => ({
       ...prev,
       industryParams: {
