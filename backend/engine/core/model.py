@@ -162,6 +162,7 @@ class EconomyModel(Model):
             savings_rate = demo_info.get("savings_rate", 0.10)
 
             # Generate distributed parameters for N agents
+            # Incomes from lognormal distribution
             incomes = generate_lognormal(
                 log_mean=income_info.get("mean", 0),
                 log_std=income_info.get("sd", 0),
