@@ -28,10 +28,12 @@ export function buildPoliciesPayload(policyParams) {
         annualPercentToWeeklyDecimal(policyParams.corporateTax),
       ])
     ),
-    personal_income_tax: policyParams.personalIncomeTax.map((bracket) => ({
-      threshold: bracket.threshold,
-      rate: annualPercentToWeeklyDecimal(bracket.rate),
-    })),
+    personal_income_tax: policyParams.personalIncomeTax
+      .map((bracket) => ({
+        threshold: bracket.threshold,
+        rate: annualPercentToWeeklyDecimal(bracket.rate),
+      }))
+      .sort((a, b) => b.threshold - a.threshold), // descending order by threshold
     sales_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,

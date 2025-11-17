@@ -74,6 +74,7 @@ export class SimulationAPI {
    */
   static async createModel(params) {
     const payload = buildCreatePayload(params);
+    console.log("Simulation parameters/payload:", payload);
     const response = await fetch(`${BASE_HTTP_URL}/models/create`, {
       method: "POST",
       headers: {

@@ -341,7 +341,7 @@ export default function SetupPage() {
     const { value } = event.target;
     setParams((prev) => ({
       ...prev,
-      policyParams: { ...prev.policyParams, [key]: value },
+      policyParams: { ...prev.policyParams, [key]: Number(value) },
     }));
   };
 
@@ -351,7 +351,7 @@ export default function SetupPage() {
       const newTaxBrackets = [...prev.policyParams.personalIncomeTax];
       newTaxBrackets[index] = {
         ...newTaxBrackets[index],
-        [field]: value,
+        [field]: Number(value),
       };
       return {
         ...prev,
@@ -392,8 +392,6 @@ export default function SetupPage() {
   const handleBegin = async () => {
     setBackendError(null);
     try {
-      // If backend requires numbers, coerce here before POST.
-      console.log("Simulation parameters:", params);
       const modelId = await SimulationAPI.createModel(params);
       console.log("Model created with ID:", modelId);
       // Navigate to simulation view with the new model ID
