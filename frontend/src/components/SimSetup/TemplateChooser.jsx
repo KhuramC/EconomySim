@@ -26,8 +26,8 @@ export default function TemplateChooser({ onTemplateSelect }) {
 
   return (
     <Paper elevation={2} sx={{ padding: 2, mb: 2 }}>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12}>
+      <Grid container spacing={2} justifyContent="center">
+        <Grid item xs={12} sx={{ textAlign: "center" }}>
           <Typography variant="h6" gutterBottom>
             City Templates
           </Typography>
@@ -35,7 +35,9 @@ export default function TemplateChooser({ onTemplateSelect }) {
             Select a template to pre-fill all simulation parameters.
           </Typography>
         </Grid>
-        <Grid item xs={12} sx={{ textAlign: "center" }}>
+      </Grid>
+      <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
+        <Grid item>
           <ToggleButtonGroup
             value={selectedTemplate}
             exclusive
