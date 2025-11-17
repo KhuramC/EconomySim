@@ -6,7 +6,7 @@ function percentToDecimal(percent) {
 }
 
 /**
- * Transforms an annual percentage to a weekly decimal rate.
+ * Transforms an annual percentage to a weekly compounding decimal rate.
  * @param {object} annualPercent
  * @returns {object}
  */
@@ -14,6 +14,9 @@ function annualPercentToWeeklyDecimal(annualPercent) {
   return (1 + percentToDecimal(annualPercent)) ** (1 / 52) - 1;
 }
 
+function hourlyWageToWeekly(hourlyWage) {
+  return hourlyWage * 40;
+}
 /**
  * Transforms the frontend 'policyParams' to a JSON valid for backend.
  * @param {object} policyParams
@@ -62,7 +65,7 @@ export function buildPoliciesPayload(policyParams) {
         annualPercentToWeeklyDecimal(policyParams.priceCap),
       ])
     ),
-    minimum_wage: policyParams.minimumWage,
+    minimum_wage: hourlyWageToWeekly(policyParams.minimumWage),
   };
   return policies;
 }
@@ -126,7 +129,7 @@ export function buildIndustriesPayload(industryParams) {
         starting_price: industryData.startingPrice,
         starting_inventory: industryData.startingInventory,
         starting_balance: industryData.industrySavings,
-        starting_offered_wage: industryData.offeredWage,
+        starting_offered_wage: hourlyWageToWeekly(industryData.offeredWage),
         starting_fixed_cost: industryData.startingFixedCost,
         starting_raw_mat_cost: industryData.startingMaterialCost,
         starting_number_of_employees: industryData.startingNumEmployees,

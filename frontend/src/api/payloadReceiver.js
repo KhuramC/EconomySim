@@ -1,6 +1,23 @@
 import { IndustryType } from "../types/IndustryType.js";
 import { Demographic } from "../types/Demographic.js";
 
+function decimalToPercent(decimal) {
+  return decimal * 100;
+}
+
+/**
+ * Transforms a weekly compounding decimal rate to an annual percentage.
+ * @param {object} weeklyDecimal
+ * @returns {object}
+ */
+function weeklyDecimaltoAnnualPercent(weeklyDecimal) {
+  return decimalToPercent((1 + weeklyDecimal) ** 52 - 1);
+}
+
+function weeklyWageToHourly(weeklyWage) {
+  return weeklyWage / 40;
+}
+
 /**
  * Transforms the policies received from the backend to a format used by the frontend.
  * This function reverses the logic of `buildPoliciesPayload`.
@@ -50,23 +67,36 @@ export function receivePoliciesPayload(backendPolicies) {
   };
 
   // Policies that are percentages and are uniform across industries in the frontend
-  frontendPolicies.corporateTax =
-    getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax) * 100;
-  frontendPolicies.salesTax =
-    getUniformIndustryPolicyValue(backendPolicies.sales_tax) * 100;
-  frontendPolicies.tariffs =
-    getUniformIndustryPolicyValue(backendPolicies.tariffs) * 100;
-  frontendPolicies.subsidies =
-    getUniformIndustryPolicyValue(backendPolicies.subsidies) * 100;
+  frontendPolicies.corporateTax = weeklyDecimaltoAnnualPercent(
+    getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax)
+  ).toFixed(2);
 
-  // Policies that are percentages and are single values in the frontend
-  frontendPolicies.personalIncomeTax =
-    getUniformDemographicPolicyValue(backendPolicies.personal_income_tax) * 100;
-  frontendPolicies.propertyTax = backendPolicies.property_tax * 100;
+  frontendPolicies.personalIncomeTax = backendPolicies.personal_income_tax.map(
+    (bracket) => ({
+      threshold: bracket.threshold,
+      rate: weeklyDecimaltoAnnualPercent(bracket.rate).toFixed(2),
+    })
+  );
+  frontendPolicies.salesTax = weeklyDecimaltoAnnualPercent(
+    getUniformIndustryPolicyValue(backendPolicies.sales_tax)
+  ).toFixed(2);
+  // TODO: make property tax actually support both rates in the frontend
+  frontendPolicies.propertyTax = weeklyDecimaltoAnnualPercent(
+    backendPolicies.property_tax.residential
+  ).toFixed(2);
+  frontendPolicies.tariffs = weeklyDecimaltoAnnualPercent(
+    getUniformIndustryPolicyValue(backendPolicies.tariffs)
+  ).toFixed(2);
+  frontendPolicies.subsidies = weeklyDecimaltoAnnualPercent(
+    getUniformIndustryPolicyValue(backendPolicies.subsidies)
+  ).toFixed(2);
 
-  // Policies that are direct values (not percentages)
-  frontendPolicies.rentCap = backendPolicies.rent_cap;
-  frontendPolicies.minimumWage = backendPolicies.minimum_wage;
+  frontendPolicies.priceCap = weeklyDecimaltoAnnualPercent(
+    getUniformIndustryPolicyValue(backendPolicies.price_cap)
+  ).toFixed(2);
+  frontendPolicies.minimumWage = weeklyWageToHourly(
+    backendPolicies.minimum_wage
+  ).toFixed(2);
 
   return frontendPolicies;
 }
@@ -81,7 +111,7 @@ export function receivePoliciesPayload(backendPolicies) {
 export function receiveEnvironmentPayload(backendConfig) {
   return {
     numPeople: backendConfig.num_people,
-    inflationRate: ((1 + backendConfig.inflation_rate) ** 52 - 1) * 100, // convert to annual, then make percentage
+    inflationRate: weeklyDecimaltoAnnualPercent(backendConfig.inflation_rate),
     // Note: maxSimulationLength is not part of the template,
     // so it will retain its original value in SetupPage.
   };
@@ -103,14 +133,17 @@ export function receiveDemographicsPayload(backendDemographics) {
       const frontendDemo = {
         meanIncome: backendDemo.income.mean,
         sdIncome: backendDemo.income.sd,
-        proportion: backendDemo.proportion * 100, // 0.33 -> 33
+        proportion: decimalToPercent(backendDemo.proportion).toFixed(2),
         meanSavings: backendDemo.balance.mean,
         sdSavings: backendDemo.balance.sd,
-        // Convert spending behavior from backend decimal to frontend percentage
-        // and spread them as individual properties (e.g., GROCERIES: 25)
+
         ...Object.fromEntries(
+          //spread spending as individual properties (e.g., GROCERIES: 25)
           Object.entries(backendDemo.spending_behavior).map(
-            ([industryKey, value]) => [industryKey, value * 100]
+            ([industryKey, value]) => [
+              industryKey,
+              decimalToPercent(value).toFixed(2),
+            ]
           )
         ),
       };
@@ -136,16 +169,18 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
       if (isSetup) {
         frontendIndustry = {
           startingInventory: backendIndustry.inventory,
-          startingPrice: backendIndustry.price,
-          industrySavings: backendIndustry.balance,
-          offeredWage: backendIndustry.offered_wage,
+          startingPrice: backendIndustry.price.toFixed(2),
+          industrySavings: backendIndustry.balance.toFixed(2),
+          offeredWage: weeklyWageToHourly(backendIndustry.offered_wage).toFixed(
+            2
+          ),
         };
       } else {
         frontendIndustry = {
           startingInventory: backendIndustry.Inventory,
-          startingPrice: backendIndustry.Price,
-          industrySavings: backendIndustry.Balance,
-          offeredWage: backendIndustry.Wage,
+          startingPrice: backendIndustry.Price.toFixed(2),
+          industrySavings: backendIndustry.Balance.toFixed(2),
+          offeredWage: weeklyWageToHourly(backendIndustry.Wage).toFixed(2),
         };
       }
 
