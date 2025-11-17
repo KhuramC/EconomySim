@@ -51,14 +51,30 @@ class PersonAgent(Agent):
         self.savings_rate = savings_rate
         self.sigma = DEMOGRAPHIC_SIGMAS[self.demographic]
 
-    def payday(self):
-        """Weekly payday for the agent based on their income."""
+    def deduct_income_tax(self) -> None:
+        """Deducts personal income tax from the agent's balance based on their income."""
+        personal_income_tax: list = self.model.policies["personal_income_tax"]
+        if not personal_income_tax:
+            return
+        
+        previous_threshold = float('inf')
+        for bracket in personal_income_tax:
+            threshold = bracket["threshold"]
+            rate = bracket["rate"]
+
+            if self.income > threshold:
+                taxable_income = min(previous_threshold, self.income) - threshold
+                tax = taxable_income * rate
+                self.balance -= tax
+            else:
+                continue
+
+            previous_threshold = threshold
+
+    def payday(self) -> None:
+        """Weekly payday(after tax) for the agent based on their income."""
         self.balance += self.income
-        taxed_amt = 0.0
-        personal_income_tax = self.model.policies["personal_income_tax"][self.demographic]
-        if personal_income_tax is not None:
-            taxed_amt = (self.income * personal_income_tax)
-        self.balance -= taxed_amt
+        self.deduct_income_tax()
 
     def demand_func(
         self,
@@ -90,14 +106,14 @@ class PersonAgent(Agent):
         demands = {}
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            #NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
-            
+            # NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
+
             quantity_unrounded = (numerator / denominator) * budget
             quantity = self.custom_round(quantity_unrounded)
             demands[name] = quantity
 
         return demands
-    
+
     def custom_round(self, x: float) -> int:
         """
         Round up if x is within 0.05 of the next whole number,
@@ -135,10 +151,16 @@ class PersonAgent(Agent):
 
         # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
-        
-        #sales tax will now be incorperated into price calculation
-        prices = {agent.industry_type: (agent.price * (1 + self.model.policies["sales_tax"][agent.industry_type])) for agent in industry_agents}
-        
+
+        # sales tax will now be incorporated into price calculation
+        prices = {
+            agent.industry_type: (
+                agent.price
+                * (1 + self.model.policies["sales_tax"][agent.industry_type])
+            )
+            for agent in industry_agents
+        }
+
         # Calculate desired purchases
         desired_quantities = self.demand_func(
             budget=self.determine_budget(), prefs=self.preferences, prices=prices
@@ -162,12 +184,12 @@ class PersonAgent(Agent):
             available_quantity = industry.inventory_available_this_step
             quantity_to_buy = min(desired_quantity, available_quantity)
 
-            #sales tax logic
+            # sales tax logic
             cost = quantity_to_buy * industry.price
             sales_tax = self.model.policies["sales_tax"][industry.industry_type]
             if sales_tax is not None:
-                cost += (cost * sales_tax)
-                
+                cost += cost * sales_tax
+
             if self.balance >= cost:
                 # Execute transaction
                 self.balance -= cost
@@ -193,4 +215,3 @@ class PersonAgent(Agent):
         # TODO: Implement person employment logic
         # deals with trying to find a new job if unemployed
         pass
-        

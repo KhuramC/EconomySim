@@ -1,6 +1,22 @@
 import { IndustryType } from "../types/IndustryType.js";
 import { Demographic } from "../types/Demographic.js";
 
+function percentToDecimal(percent) {
+  return percent / 100.0;
+}
+
+/**
+ * Transforms an annual percentage to a weekly compounding decimal rate.
+ * @param {object} annualPercent
+ * @returns {object}
+ */
+function annualPercentToWeeklyDecimal(annualPercent) {
+  return (1 + percentToDecimal(annualPercent)) ** (1 / 52) - 1;
+}
+
+function hourlyWageToWeekly(hourlyWage) {
+  return hourlyWage * 40;
+}
 /**
  * Transforms the frontend 'policyParams' to a JSON valid for backend.
  * @param {object} policyParams
@@ -12,36 +28,44 @@ export function buildPoliciesPayload(policyParams) {
     corporate_income_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        policyParams.corporateTax / 100.0,
+        annualPercentToWeeklyDecimal(policyParams.corporateTax),
       ])
     ),
-    personal_income_tax: Object.fromEntries(
-      Object.values(Demographic).map((value) => [
-        value,
-        policyParams.personalIncomeTax / 100.0,
-      ])
-    ),
+    personal_income_tax: policyParams.personalIncomeTax
+      .map((bracket) => ({
+        threshold: bracket.threshold,
+        rate: annualPercentToWeeklyDecimal(bracket.rate),
+      }))
+      .sort((a, b) => b.threshold - a.threshold), // descending order by threshold
     sales_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        policyParams.salesTax / 100.0,
+        annualPercentToWeeklyDecimal(policyParams.salesTax),
       ])
     ),
-    property_tax: policyParams.propertyTax / 100.0,
+    property_tax: {
+      residential: annualPercentToWeeklyDecimal(policyParams.propertyTax),
+      commercial: annualPercentToWeeklyDecimal(policyParams.propertyTax),
+    },
     tariffs: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        policyParams.tariffs / 100.0,
+        annualPercentToWeeklyDecimal(policyParams.tariffs),
       ])
     ),
     subsidies: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        policyParams.subsidies / 100.0, // Assuming %
+        annualPercentToWeeklyDecimal(policyParams.subsidies),
       ])
     ),
-    rent_cap: policyParams.rentCap,
-    minimum_wage: policyParams.minimumWage,
+    price_cap: Object.fromEntries(
+      Object.values(IndustryType).map((value) => [
+        value,
+        annualPercentToWeeklyDecimal(policyParams.priceCap),
+      ])
+    ),
+    minimum_wage: hourlyWageToWeekly(policyParams.minimumWage),
   };
   return policies;
 }
@@ -55,8 +79,7 @@ export function buildEnvironmentPayload(envParams) {
   return {
     max_simulation_length: envParams.maxSimulationLength,
     num_people: envParams.numPeople,
-    inflation_rate: (1 + envParams.inflationRate / 100)**(1/52) - 1, // Convert annual % to a weekly rate
-    random_events: envParams.randomEvents,
+    inflation_rate: annualPercentToWeeklyDecimal(envParams.inflationRate),
   };
 }
 
@@ -73,7 +96,7 @@ export function buildDemographicsPayload(demoParams) {
       const spendingBehaviorDict = Object.fromEntries(
         Object.entries(IndustryType).map(([industry, label]) => [
           label,
-          (Number(demoData[industry]) || 0) / 100.0, // convert % to decimal
+          percentToDecimal(Number(demoData[industry]) || 0),
         ])
       );
 
@@ -82,8 +105,7 @@ export function buildDemographicsPayload(demoParams) {
           mean: demoData.meanIncome,
           sd: demoData.sdIncome,
         },
-        proportion: demoData.proportion / 100.0, // 33 -> 0.33
-        unemployment_rate: demoData.unemploymentRate / 100.0, // 5.0 -> 0.05
+        proportion: percentToDecimal(demoData.proportion),
         spending_behavior: spendingBehaviorDict,
         balance: {
           mean: demoData.meanSavings,
@@ -104,11 +126,18 @@ export function buildIndustriesPayload(industryParams) {
   return Object.fromEntries(
     Object.entries(industryParams).map(([industryKey, industryData]) => {
       const backendIndustryData = {
-        price: industryData.startingPrice,
-        inventory: industryData.startingInventory,
-        balance: industryData.industrySavings,
-        offered_wage: industryData.offeredWage,
-      };
+        starting_price: industryData.startingPrice,
+        starting_inventory: industryData.startingInventory,
+        starting_balance: industryData.industrySavings,
+        starting_offered_wage: hourlyWageToWeekly(industryData.offeredWage),
+        starting_fixed_cost: industryData.startingFixedCost,
+        starting_raw_mat_cost: industryData.startingMaterialCost,
+        starting_number_of_employees: industryData.startingNumEmployees,
+        starting_worker_efficiency: industryData.startingEmpEfficiency,
+        starting_debt_allowed: industryData.startingDebtAllowed,
+        starting_demand_intercept: 200,
+        starting_demand_slope: 0.01,
+      }; // TODO: remove demand stuff whenever backend is ready to not need it passed in.
       return [industryKey, backendIndustryData];
     })
   );

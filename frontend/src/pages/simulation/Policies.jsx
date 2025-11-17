@@ -29,8 +29,8 @@ export default function Policies() {
     fetchPolicies(); // Initial fetch
 
     const handleWebSocketMessage = (message) => {
-      // Refetch policies if they were changed by another client or if a step occurs
-      if (message.action === "set_policies" || message.action === "step") {
+      // Refetch policies if a step occurs
+      if (message.action === "step" || message.action === "reverse_step") {
         console.log("Policies updated via WebSocket, refetching...");
         fetchPolicies();
       }
@@ -76,6 +76,44 @@ export default function Policies() {
     });
   };
 
+  const handlePersonalIncomeTaxChange = (index, field) => (event) => {
+    const { value } = event.target;
+    setPolicies((prevPolicies) => {
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
+      newTaxBrackets[index] = {
+        ...newTaxBrackets[index],
+        [field]: parseFloat(value) || 0,
+      };
+      newPolicies.personalIncomeTax = newTaxBrackets;
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
+  const addPersonalIncomeTaxBracket = () => {
+    setPolicies((prevPolicies) => {
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
+      newTaxBrackets.push({ threshold: 0, rate: 0 });
+      newPolicies.personalIncomeTax = newTaxBrackets;
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
+  const removePersonalIncomeTaxBracket = (index) => {
+    setPolicies((prevPolicies) => {
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const newTaxBrackets = (newPolicies.personalIncomeTax || []).filter(
+        (_, i) => i !== index
+      );
+      newPolicies.personalIncomeTax = newTaxBrackets;
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
   return (
     <Box>
       {error && (
@@ -101,6 +139,9 @@ export default function Policies() {
               policyParams={policies}
               handlePolicyChange={handlePolicyChange}
               starting={false}
+              handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
+              addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
+              removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
             />
           ) : null}
         </Grid>

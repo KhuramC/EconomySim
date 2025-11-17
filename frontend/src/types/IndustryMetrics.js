@@ -3,6 +3,7 @@ export const IndustryMetrics = {
   INVENTORY: "Inventory",
   BALANCE: "Balance",
   WAGE: "Wage",
+  NUM_EMPLOYEES: "Number of Employees",
 };
 
 Object.freeze(IndustryMetrics);
