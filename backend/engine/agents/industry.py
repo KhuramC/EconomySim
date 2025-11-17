@@ -85,9 +85,9 @@ class IndustryAgent(Agent):
         # TODO: Demand logic will be pulled from another file, either demand.py or person.py.  These values are currently black box standins to enable determine_price logic
         starting_demand_intercept: float = 400.0,
         starting_demand_slope: float = 1.0,
-        salary_cost = 0.0,
-        equipment_cost = 0.0,
-        property_value = 0.0,
+        salary_cost = 100.0,
+        equipment_cost = 100.0,
+        property_value = 2000.0,
         insurance = 0.0
     ):
         """
@@ -361,7 +361,7 @@ class IndustryAgent(Agent):
         """
             update fixed cost based on salary, property cost, insurance, equipment cost, and property tax
         """
-        
+        #TODO have property value, salary cost, and equipment cost scale with the level of production 
         property_cost = 0.0
         property_tax = self.model.policies["property_tax"] 
         if property_tax is not None:
