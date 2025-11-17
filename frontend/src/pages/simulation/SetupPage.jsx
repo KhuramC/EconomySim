@@ -81,7 +81,7 @@ export default function SetupPage() {
       // TODO: update to be industry and demographic specific
       salesTax: 7,
       corporateTax: 21,
-      personalIncomeTax: 15,
+      personalIncomeTax: [{ threshold: 0, rate: 0.0 }],
       propertyTax: 10,
       tariffs: 5,
       subsidies: 20,
@@ -239,10 +239,10 @@ export default function SetupPage() {
     const pctKeys = [
       ["salesTax", "Sales tax"],
       ["corporateTax", "Corporate income tax"],
-      ["personalIncomeTax", "Personal income tax"],
       ["propertyTax", "Property tax"],
       ["tariffs", "Tariffs"],
       ["subsidies", "Subsidies"],
+      ["priceCap", "Price cap"],
     ];
     pctKeys.forEach(([k, label]) => {
       if (isBlank(p?.[k]) || Number(p?.[k]) < 0 || Number(p?.[k]) > 100) {
@@ -250,15 +250,38 @@ export default function SetupPage() {
         flags.policy[k] = true;
       }
     });
-    if (isBlank(p?.priceCap) || Number(p?.priceCap) < 0) {
-      msgs.policy_priceCap = "Policies: Price cap must be nonnegative.";
-      flags.policy.priceCap = true;
-    }
     if (isBlank(p?.minimumWage) || Number(p?.minimumWage) <= 0) {
       msgs.policy_minimumWage =
         "Policies: Minimum wage must be greater than 0.";
       flags.policy.minimumWage = true;
     }
+    p.personalIncomeTax.forEach((bracket, index) => {
+      const setFlag = (field) => {
+        if (!flags.policy.personalIncomeTax)
+          flags.policy.personalIncomeTax = [];
+        if (!flags.policy.personalIncomeTax[index])
+          flags.policy.personalIncomeTax[index] = {};
+        flags.policy.personalIncomeTax[index][field] = true;
+      };
+
+      if (isBlank(bracket.threshold) || Number(bracket.threshold) < 0) {
+        msgs[`policy_pit_threshold_${index}`] = `Policies: Tax bracket ${
+          index + 1
+        } threshold must be non-negative.`;
+        setFlag("threshold");
+      }
+
+      if (
+        isBlank(bracket.rate) ||
+        Number(bracket.rate) < 0 ||
+        Number(bracket.rate) > 100
+      ) {
+        msgs[`policy_pit_rate_${index}`] = `Policies: Tax bracket ${
+          index + 1
+        } rate must be between 0-100.`;
+        setFlag("rate");
+      }
+    });
 
     setFormErrors(msgs);
     setInputErrors(flags);
@@ -292,6 +315,7 @@ export default function SetupPage() {
     }));
   };
 
+  // TODO: UPDATE TO SUPPORT TOGGLEABLE FOR BOOLEAN FIELDS
   const handleIndustryChange = (industryValue, prop) => (event) => {
     const { value } = event.target;
     setParams((prev) => ({
@@ -311,6 +335,49 @@ export default function SetupPage() {
     setParams((prev) => ({
       ...prev,
       policyParams: { ...prev.policyParams, [key]: value },
+    }));
+  };
+
+  const handlePersonalIncomeTaxChange = (index, field) => (event) => {
+    const { value } = event.target;
+    setParams((prev) => {
+      const newTaxBrackets = [...prev.policyParams.personalIncomeTax];
+      newTaxBrackets[index] = {
+        ...newTaxBrackets[index],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          personalIncomeTax: newTaxBrackets,
+        },
+      };
+    });
+  };
+
+  const addPersonalIncomeTaxBracket = () => {
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        personalIncomeTax: [
+          ...prev.policyParams.personalIncomeTax,
+          { threshold: 0, rate: 0 },
+        ],
+      },
+    }));
+  };
+
+  const removePersonalIncomeTaxBracket = (index) => {
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        personalIncomeTax: prev.policyParams.personalIncomeTax.filter(
+          (_, i) => i !== index
+        ),
+      },
     }));
   };
 
@@ -367,6 +434,9 @@ export default function SetupPage() {
         policyParams={params.policyParams}
         handlePolicyChange={handlePolicyChange}
         formErrors={inputErrors.policy}
+        handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
+        addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
+        removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
       />
 
       {backendError && (

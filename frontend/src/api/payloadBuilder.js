@@ -25,41 +25,39 @@ export function buildPoliciesPayload(policyParams) {
     corporate_income_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        percentToDecimal(policyParams.corporateTax),
+        annualPercentToWeeklyDecimal(policyParams.corporateTax),
       ])
     ),
-    personal_income_tax: Object.fromEntries(
-      Object.values(Demographic).map((value) => [
-        value,
-        percentToDecimal(policyParams.personalIncomeTax),
-      ])
-    ),
+    personal_income_tax: policyParams.personalIncomeTax.map((bracket) => ({
+      threshold: bracket.threshold,
+      rate: annualPercentToWeeklyDecimal(bracket.rate),
+    })),
     sales_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        percentToDecimal(policyParams.salesTax),
+        annualPercentToWeeklyDecimal(policyParams.salesTax),
       ])
     ),
     property_tax: {
-      residential: percentToDecimal(policyParams.propertyTax),
-      commercial: percentToDecimal(policyParams.propertyTax),
+      residential: annualPercentToWeeklyDecimal(policyParams.propertyTax),
+      commercial: annualPercentToWeeklyDecimal(policyParams.propertyTax),
     },
     tariffs: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        percentToDecimal(policyParams.tariffs),
+        annualPercentToWeeklyDecimal(policyParams.tariffs),
       ])
     ),
     subsidies: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        percentToDecimal(policyParams.subsidies),
+        annualPercentToWeeklyDecimal(policyParams.subsidies),
       ])
     ),
     price_cap: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        percentToDecimal(policyParams.priceCap),
+        annualPercentToWeeklyDecimal(policyParams.priceCap),
       ])
     ),
     minimum_wage: policyParams.minimumWage,
