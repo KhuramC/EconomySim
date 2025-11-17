@@ -85,10 +85,10 @@ export function receivePoliciesPayload(backendPolicies) {
   frontendPolicies.propertyTax = weeklyDecimaltoAnnualPercent(
     backendPolicies.property_tax.residential
   ).toFixed(2);
-  frontendPolicies.tariffs = weeklyDecimaltoAnnualPercent(
+  frontendPolicies.tariffs = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.tariffs)
   ).toFixed(2);
-  frontendPolicies.subsidies = weeklyDecimaltoAnnualPercent(
+  frontendPolicies.subsidies = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.subsidies)
   ).toFixed(2);
 

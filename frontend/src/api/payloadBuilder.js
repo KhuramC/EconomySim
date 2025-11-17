@@ -50,13 +50,13 @@ export function buildPoliciesPayload(policyParams) {
     tariffs: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.tariffs),
+        percentToDecimal(policyParams.tariffs),
       ])
     ),
     subsidies: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.subsidies),
+        percentToDecimal(policyParams.subsidies),
       ])
     ),
     price_cap: Object.fromEntries(

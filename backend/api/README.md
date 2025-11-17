@@ -221,7 +221,7 @@ This policy was changed from a fixed dollar amount to a **weekly compounding eff
 
 ### Tariffs
 
-This policy represents a **percentage markup on the variable cost** of imported goods for a given industry. As a federal policy, the rates are identical across all three cities. The values are based on the 2025 high-tariff environment, with an average effective rate around 18%. Rates are applied as weekly compounding percentages.
+This policy represents a **percentage markup on the cost of imported raw materials** for a given industry. As a federal policy, the rates are identical across all three cities. The values are based on the 2025 high-tariff environment, with an average effective rate around 18%. Rates are applied as percentages.
 
 **Industry-Specific Values (2025):**
 

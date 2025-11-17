@@ -167,15 +167,15 @@ _SMALL_CONFIG = {
             "commercial": 0.000410,
         },  # Annual: 0.92%, 2.159%
         "tariffs": {
-            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.GROCERIES: 0.25,  # Annual: 25%
             IndustryType.UTILITIES: 0.0,  # (Domestic service)
-            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
-            IndustryType.HOUSING: 0.001835,  # Annual: 10%
-            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.AUTOMOBILES: 0.25,  # Annual: 25%
+            IndustryType.HOUSING: 0.10,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.25,  # Annual: 25%
             IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
-            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+            IndustryType.LUXURY: 0.10,  # Annual: 10%
         },
-        "subsidies": {itype.value: 1 for itype in IndustryType},
+        "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
         "minimum_wage": 550.00,  # $13.75/hr x 40 hrs
     },
@@ -343,15 +343,15 @@ _MEDIUM_CONFIG = {
             "commercial": 0.000339,
         },  # Annual: 1.78%
         "tariffs": {
-            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.GROCERIES: 0.25,  # Annual: 25%
             IndustryType.UTILITIES: 0.0,  # (Domestic service)
-            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
-            IndustryType.HOUSING: 0.001835,  # Annual: 10%
-            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.AUTOMOBILES: 0.25,  # Annual: 25%
+            IndustryType.HOUSING: 0.10,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.25,  # Annual: 25%
             IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
-            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+            IndustryType.LUXURY: 0.10,  # Annual: 10%
         },
-        "subsidies": {itype.value: 1 for itype in IndustryType},
+        "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
         "minimum_wage": 290.00,  # $7.25/hr x 40 hrs
     },
@@ -524,15 +524,15 @@ _LARGE_CONFIG = {
             "commercial": 0.000126,
         },  # Annual: 0.66%
         "tariffs": {
-            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.GROCERIES: 0.25,  # Annual: 25%
             IndustryType.UTILITIES: 0.0,  # (Domestic service)
-            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
-            IndustryType.HOUSING: 0.001835,  # Annual: 10%
-            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.AUTOMOBILES: 0.25,  # Annual: 25%
+            IndustryType.HOUSING: 0.10,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.25,  # Annual: 25%
             IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
-            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+            IndustryType.LUXURY: 0.10,  # Annual: 10%
         },
-        "subsidies": {itype.value: 1 for itype in IndustryType},
+        "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {
             itype.value: (
                 0.000267 if itype.value == IndustryType.HOUSING else None

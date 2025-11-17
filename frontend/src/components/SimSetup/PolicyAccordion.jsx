@@ -48,14 +48,14 @@ export default function PolicyAccordion({
         helpText="Legal wage floor. Firms cannot offer wages below this value."
       />
       <ParameterNumInput
-        label="Tariffs (%/year)"
+        label="Tariffs (%)"
         value={policyParams.tariffs}
         onChange={handlePolicyChange("tariffs")}
         error={!!formErrors.tariffs}
         helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
       />
       <ParameterNumInput
-        label="Subsidies (%/year)"
+        label="Subsidies (%)"
         value={policyParams.subsidies}
         onChange={handlePolicyChange("subsidies")}
         error={!!formErrors.subsidies}
