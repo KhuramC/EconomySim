@@ -34,9 +34,9 @@ INDUSTRIES_SCHEMA = {
 
 POLICIES_SCHEMA = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": {demo.value: None for demo in Demographic},
+    "personal_income_tax": None,
     "sales_tax": {itype.value: None for itype in IndustryType},
-    "property_tax": None,
+    "property_tax": {"residential": None, "commercial": None},
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
     "price_cap": {itype.value: None for itype in IndustryType},
@@ -75,7 +75,7 @@ def num_prop(ratio: list[int | float], total: int):
     Calculates the whole number in each category based on the proportion of the total.
 
     Args:
-        ratio (Iterable): the proportion associated with category.
+        ratio (list): the proportion associated with category.
         total (int): the total number of items.
     """
     if total == 0:

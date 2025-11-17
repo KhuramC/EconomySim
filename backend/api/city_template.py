@@ -149,14 +149,14 @@ _SMALL_CONFIG = {
     "policies": {
         "corporate_income_tax": {itype.value: 0.04 for itype in IndustryType},
         "personal_income_tax": [
-            (176.75, 0.000882),  # Annual: ($9,191, 4.7%)
-            (151.50, 0.000846),  # Annual: ($7,878, 4.5%)
-            (126.25, 0.000754),  # Annual: ($6,565, 4.0%)
-            (101.00, 0.000662),  # Annual: ($5,252, 3.5%)
-            (75.75, 0.000570),  # Annual: ($3,939, 3.0%)
-            (50.50, 0.000476),  # Annual: ($2,626, 2.5%)
-            (25.25, 0.000381),  # Annual: ($1,313, 2.0%)
-            (0, 0.0),  # Annual: ($0, 0.0%)
+            {"threshold": 176.75, "rate": 0.000882},  # Annual: ($9,191, 4.7%)
+            {"threshold": 151.50, "rate": 0.000846},  # Annual: ($7,878, 4.5%)
+            {"threshold": 126.25, "rate": 0.000754},  # Annual: ($6,565, 4.0%)
+            {"threshold": 101.00, "rate": 0.000662},  # Annual: ($5,252, 3.5%)
+            {"threshold": 75.75, "rate": 0.000570},  # Annual: ($3,939, 3.0%)
+            {"threshold": 50.50, "rate": 0.000476},  # Annual: ($2,626, 2.5%)
+            {"threshold": 25.25, "rate": 0.000381},  # Annual: ($1,313, 2.0%)
+            {"threshold": 0, "rate": 0.0},  # Annual: ($0, 0.0%)
         ],
         "sales_tax": {
             itype.value: 0.000933 if itype == IndustryType.GROCERIES else 0.001476
@@ -329,10 +329,10 @@ _MEDIUM_CONFIG = {
             itype.value: 0.079 for itype in IndustryType
         },  # Flat rate
         "personal_income_tax": [
-            (6063.65, 0.001416),  # Annual: ($315,310, 7.65%)
-            (550.77, 0.000992),  # Annual: ($28,640, 5.3%)
-            (275.38, 0.000828),  # Annual: ($14,320, 4.4%)
-            (0, 0.000662),  # Annual: ($0, 3.5%)
+            {"threshold": 6063.65, "rate": 0.001416},  # Annual: ($315,310, 7.65%)
+            {"threshold": 550.77, "rate": 0.000992},  # Annual: ($28,640, 5.3%)
+            {"threshold": 275.38, "rate": 0.000828},  # Annual: ($14,320, 4.4%)
+            {"threshold": 0, "rate": 0.000662},  # Annual: ($0, 3.5%)
         ],
         "sales_tax": {
             itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001030
@@ -505,15 +505,15 @@ _LARGE_CONFIG = {
             itype.value: 0.0884 for itype in IndustryType
         },  # Flat rate
         "personal_income_tax": [
-            (13871.42, 0.002235),  # Annual: ($721,314, 12.3%)
-            (8322.83, 0.002061),  # Annual: ($432,787, 11.3%)
-            (6935.75, 0.001886),  # Annual: ($360,659, 10.3%)
-            (1357.81, 0.001713),  # Annual: ($70,606, 9.3%)
-            (1074.35, 0.001479),  # Annual: ($55,866, 8.0%)
-            (773.94, 0.001121),  # Annual: ($40,245, 6.0%)
-            (490.37, 0.000754),  # Annual: ($25,499, 4.0%)
-            (206.85, 0.000381),  # Annual: ($10,756, 2.0%)
-            (0, 0.000191),  # Annual: ($0, 1.0%)
+            {"threshold": 13871.42, "rate": 0.002235},  # Annual: ($721,314, 12.3%)
+            {"threshold": 8322.83, "rate": 0.002061},  # Annual: ($432,787, 11.3%)
+            {"threshold": 6935.75, "rate": 0.001886},  # Annual: ($360,659, 10.3%)
+            {"threshold": 1357.81, "rate": 0.001713},  # Annual: ($70,606, 9.3%)
+            {"threshold": 1074.35, "rate": 0.001479},  # Annual: ($55,866, 8.0%)
+            {"threshold": 773.94, "rate": 0.001121},  # Annual: ($40,245, 6.0%)
+            {"threshold": 490.37, "rate": 0.000754},  # Annual: ($25,499, 4.0%)
+            {"threshold": 206.85, "rate": 0.000381},  # Annual: ($10,756, 2.0%)
+            {"threshold": 0, "rate": 0.000191},  # Annual: ($0, 1.0%)
         ],
         "sales_tax": {
             itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001586

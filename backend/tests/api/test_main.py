@@ -120,10 +120,15 @@ def test_get_and_set_policies(
 
     # Set new policies
     new_policies = copy.deepcopy(initial_policies)
-    new_policies["personal_income_tax"] = {
-        demo: i * 3 for i, demo in enumerate(Demographic)
-    }
-    new_policies["property_tax"] = 0.1
+    new_personal_income_tax = [
+        {"threshold": 1000, "rate": 0.01416},
+        {"threshold": 0, "rate": 0.000662},
+    ]
+
+    new_policies["personal_income_tax"] = new_personal_income_tax
+
+    new_property_tax = {"residential": 0.05, "commercial": 0.07}
+    new_policies["property_tax"] = new_property_tax
 
     response_set = api_client.post(
         f"/models/{created_model}/policies", json=new_policies
@@ -134,10 +139,8 @@ def test_get_and_set_policies(
     response_get2 = api_client.get(f"/models/{created_model}/policies")
     assert response_get2.status_code == status.HTTP_200_OK
     updated_policies = response_get2.json()
-    assert updated_policies["personal_income_tax"] == {
-        demo: i * 3 for i, demo in enumerate(Demographic)
-    }
-    assert updated_policies["property_tax"] == 0.1
+    assert updated_policies["personal_income_tax"] == new_personal_income_tax
+    assert updated_policies["property_tax"] == new_property_tax
 
     # Try to set policies to an incorrect structure.
     newer_policies = copy.deepcopy(updated_policies)
