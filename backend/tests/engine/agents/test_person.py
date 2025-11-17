@@ -119,7 +119,7 @@ def test_demand_func(mock_economy_model):
 
 @mark.parametrize(
     "food_sales_tax, entertainment_sales_tax, purchased_food_inventory, purchased_entertainment_inventory, total_spent",
-    [(0.1, 0.15,29,21,802), (1, 0.5,16,16,800), (1/3, 5/7,24,14,800), (0, 0,32,24,800)],
+    [(0.1, 0.15,29,20,779), (1, 0.5,16,16,800), (1/3, 5/7,24,14,800), (0, 0,32,24,800)],
 )
 def test_purchase_goods(mock_economy_model, food_sales_tax, entertainment_sales_tax, purchased_food_inventory, purchased_entertainment_inventory, total_spent):
     """
@@ -157,8 +157,8 @@ def test_purchase_goods(mock_economy_model, food_sales_tax, entertainment_sales_
     
     # 1. Payday: Current money becomes 1000. Budget is 800.
     # 2. GROCERY: 800 * 0.4 = 320. Quantity: 320 / (10 * 1.1) ~= 29, actually spent 11 * 29 = 319.
-    # 3. ENTERTAINMENT: 800 * 0.6 = 480. Quantity: 480 / (20*1.15) ~= 21, actually spent 23 * 21 = 483.
-    # 4. Total spent: 319 + 460 = 802
+    # 3. ENTERTAINMENT: 800 * 0.6 = 480. Quantity: 480 / (20*1.15) ~= 20, actually spent 23 * 21 = 460.
+    # 4. Total spent: 319 + 460 = 779
     
     # 1. Payday: Current money becomes 1000. Budget is 800.
     # 2. GROCERY: 800 * 0.4 = 320. Quantity: 320 / (10 * 2) = 16, actually spent 20 * 16 = 320.

@@ -91,12 +91,26 @@ class PersonAgent(Agent):
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
             #NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
-            quantity: int = round(
-                (numerator / denominator) * budget
-            )  # The good's share of the budget, rounded down
+            
+            quantity_unrounded = (numerator / denominator) * budget
+            quantity = self.custom_round(quantity_unrounded)
             demands[name] = quantity
 
         return demands
+    
+    def custom_round(self, x: float) -> int:
+        """
+        Round up if x is within 0.05 of the next whole number,
+        otherwise round down.
+        """
+        lower = math.floor(x)
+        upper = lower + 1
+
+        # If x is within 0.05 of the upper integer, round up
+        if upper - x <= 0.05:
+            return upper
+        else:
+            return lower
 
     def determine_budget(self) -> float:
         """
