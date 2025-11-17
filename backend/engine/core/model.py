@@ -225,7 +225,15 @@ class EconomyModel(Model):
             )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
-        """Gets all employees that are employed to the specified industry."""
+        """
+        Gets all employees that are employed to the specified industry.
+
+        Args:
+            industry (IndustryType): The industry type to filter employees by.
+
+        Returns:
+            AgentSet: An AgentSet of PersonAgents employed in the specified industry.
+        """
         peopleAgents = self.agents_by_type[PersonAgent]
         return peopleAgents.select(
             lambda agent: (
