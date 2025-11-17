@@ -40,9 +40,6 @@ class ModelCreateRequest(BaseModel):
     )
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
     inflation_rate: float = Field(..., ge=0.0, description="Weekly inflation rate.")
-    random_events: bool = Field(
-        ..., description="Whether to enable random events in the simulation."
-    )
     demographics: dict[
         Demographic, dict[str, float | dict[str | IndustryType, float]]
     ] = Field(..., description="Demographic distribution for the population.")
@@ -106,7 +103,6 @@ async def create_model(
             max_simulation_length=model_parameters.max_simulation_length,
             num_people=model_parameters.num_people,
             inflation_rate=model_parameters.inflation_rate,
-            random_events=model_parameters.random_events,
             demographics=model_parameters.demographics,
             industries=model_parameters.industries,
             starting_policies=model_parameters.policies,

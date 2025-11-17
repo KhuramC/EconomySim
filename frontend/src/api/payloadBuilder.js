@@ -56,7 +56,6 @@ export function buildEnvironmentPayload(envParams) {
     max_simulation_length: envParams.maxSimulationLength,
     num_people: envParams.numPeople,
     inflation_rate: (1 + envParams.inflationRate / 100)**(1/52) - 1, // Convert annual % to a weekly rate
-    random_events: envParams.randomEvents,
   };
 }
 

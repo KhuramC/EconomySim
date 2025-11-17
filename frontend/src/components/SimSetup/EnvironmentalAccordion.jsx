@@ -41,22 +41,6 @@ export default function EnvironmentalAccordion({
         onChange={handleEnvChange("inflationRate")}
         helpText="Baseline weekly inflation rate. Prices tend to drift upward by this percentage each step."
       />
-      {/* Wrap the switch in a Grid item to keep layout consistent */}
-      <Grid item xs={6}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={!!envParams.randomEvents}
-              onChange={handleEnvChange("randomEvents")}
-            />
-          }
-          label={
-            <Tooltip title="Enable stochastic shocks (e.g., demand/supply shocks). Adds variability to outcomes." arrow>
-              <span>Random Events</span>
-            </Tooltip>
-          }
-        />
-      </Grid>
     </>
   );
 

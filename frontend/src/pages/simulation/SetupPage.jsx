@@ -59,7 +59,6 @@ export default function SetupPage() {
       numPeople: 1000,
       maxSimulationLength: 100,
       inflationRate: 1.0,
-      randomEvents: false,
     },
 
     demoParams: Object.fromEntries(
