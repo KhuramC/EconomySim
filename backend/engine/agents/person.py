@@ -53,7 +53,12 @@ class PersonAgent(Agent):
 
     def payday(self):
         """Weekly payday for the agent based on their income."""
-        self.balance = self.balance + self.income
+        self.balance += self.income
+        taxed_amt = 0.0
+        personal_income_tax = self.model.policies["personal_income_tax"][self.demographic]
+        if personal_income_tax is not None:
+            taxed_amt = (self.income * personal_income_tax)
+        self.balance -= taxed_amt
 
     def demand_func(
         self,
@@ -85,12 +90,27 @@ class PersonAgent(Agent):
         demands = {}
         for name in valid_goods:
             numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity: int = math.floor(
-                (numerator / denominator) * budget
-            )  # The good's share of the budget, rounded down
+            #NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
+            
+            quantity_unrounded = (numerator / denominator) * budget
+            quantity = self.custom_round(quantity_unrounded)
             demands[name] = quantity
 
         return demands
+    
+    def custom_round(self, x: float) -> int:
+        """
+        Round up if x is within 0.05 of the next whole number,
+        otherwise round down.
+        """
+        lower = math.floor(x)
+        upper = lower + 1
+
+        # If x is within 0.05 of the upper integer, round up
+        if upper - x <= 0.05:
+            return upper
+        else:
+            return lower
 
     def determine_budget(self) -> float:
         """
@@ -115,8 +135,10 @@ class PersonAgent(Agent):
 
         # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
-        prices = {agent.industry_type: agent.price for agent in industry_agents}
-
+        
+        #sales tax will now be incorperated into price calculation
+        prices = {agent.industry_type: (agent.price * (1 + self.model.policies["sales_tax"][agent.industry_type])) for agent in industry_agents}
+        
         # Calculate desired purchases
         desired_quantities = self.demand_func(
             budget=self.determine_budget(), prefs=self.preferences, prices=prices
@@ -137,11 +159,15 @@ class PersonAgent(Agent):
             # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
             # This unspent money is effectively saved for the next cycle.
 
-            available_quantity = industry.inventory
+            available_quantity = industry.inventory_available_this_step
             quantity_to_buy = min(desired_quantity, available_quantity)
 
+            #sales tax logic
             cost = quantity_to_buy * industry.price
-
+            sales_tax = self.model.policies["sales_tax"][industry.industry_type]
+            if sales_tax is not None:
+                cost += (cost * sales_tax)
+                
             if self.balance >= cost:
                 # Execute transaction
                 self.balance -= cost
@@ -167,3 +193,4 @@ class PersonAgent(Agent):
         # TODO: Implement person employment logic
         # deals with trying to find a new job if unemployed
         pass
+        

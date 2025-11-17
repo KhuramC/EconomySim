@@ -47,7 +47,7 @@ class EconomyModel(Model):
 
     policies: dict[str, float | dict[IndustryType | Demographic, float]]
     """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
-
+    
     week: int
     """The current week in the simulation."""
 
@@ -78,7 +78,8 @@ class EconomyModel(Model):
         self.inflation_rate = inflation_rate
         self.random_events = random_events
         self.policies = starting_policies
-
+        
+        
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={

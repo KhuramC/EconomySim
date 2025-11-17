@@ -27,6 +27,11 @@ TODO: Implement a demographic-specific value. This adds a layer of realism for e
 
 The agent allocates their weekly income minus their `savings_rate` to their spending budget.
 
+### Determining Purchase Quantity
+
+In cases where the person agent can not afford an additional unit without going overbudget, the agent will typically not purchase the additional unit
+However, in cases where the agent can afford 95% of the additional unit, they are allowed to go exceed their budget slightly.  
+This implementation is largely a way to compensate for floating point errors resulting from long decimal numbers
 
 ### Shortage Handling
 
