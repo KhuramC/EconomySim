@@ -27,7 +27,6 @@ export default function Demographics() {
       share: 40,
       income: 30000,
       savingsRate: 5,
-      unemployment: 9,
       // Optional per-class spending behavior map (percent-of-income per industry)
       spending: {
         Groceries: 25,
@@ -43,9 +42,8 @@ export default function Demographics() {
       share: 55,
       income: 80000,
       savingsRate: 12,
-      unemployment: 4,
       spending: {
-         Groceries: 25,
+        Groceries: 25,
         Utilities: 18,
         Automobiles: 8,
         Housing: 35,
@@ -58,9 +56,8 @@ export default function Demographics() {
       share: 5,
       income: 500000,
       savingsRate: 25,
-      unemployment: 1,
       spending: {
-         Groceries: 25,
+        Groceries: 25,
         Utilities: 18,
         Automobiles: 8,
         Housing: 35,
@@ -79,13 +76,7 @@ export default function Demographics() {
     spendingBehaviorPct: 70, // if no per-class map, use this % uniformly per industry (demo fallback)
     meanSavings: 10000,
     savingsStd: 5000,
-    startingUnemploymentRate: 0.05,
   });
-
-  const formattedUnemp = useMemo(
-    () => (globalParams.startingUnemploymentRate * 100).toFixed(2),
-    [globalParams.startingUnemploymentRate]
-  );
 
   return (
     <Box>
@@ -165,14 +156,6 @@ export default function Demographics() {
                     label="Savings Std. Deviation ($)"
                     value={formatCurrency(globalParams.savingsStd)}
                     adornStart="$"
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <ReadOnlyField
-                    label="Starting Unemployment Rate"
-                    value={formattedUnemp}
-                    adornEnd="%"
                   />
                 </Grid>
               </Grid>

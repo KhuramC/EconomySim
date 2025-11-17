@@ -106,7 +106,6 @@ export function receiveDemographicsPayload(backendDemographics) {
         proportion: backendDemo.proportion * 100, // 0.33 -> 33
         meanSavings: backendDemo.balance.mean,
         sdSavings: backendDemo.balance.sd,
-        unemploymentRate: backendDemo.unemployment_rate * 100, // 0.05 -> 5
         // Convert spending behavior from backend decimal to frontend percentage
         // and spread them as individual properties (e.g., GROCERIES: 25)
         ...Object.fromEntries(

@@ -18,9 +18,6 @@ const getDefaultDemographicParams = () => ({
   proportion: 33,
   meanSavings: 10000,
   sdSavings: 5000,
-  // NOTE: UI label is (%) so we validate against 0–100.
-  // Current default 0.05 means 0.05% (change to 5 if you intend 5%).
-  unemploymentRate: 0.05,
   // Flat per-industry spending shares (keys match IndustryType enum)
   GROCERIES: 25,
   UTILITIES: 18,
@@ -137,12 +134,6 @@ export default function SetupPage() {
     // Per-demographic checks
     demoOrder.forEach((dk) => {
       const d = params.demoParams[dk];
-
-      // Unemployment 0–100
-      if (isBlank(d?.unemploymentRate) || Number(d?.unemploymentRate) < 0 || Number(d?.unemploymentRate) > 100) {
-        msgs[`demo_unemp_${dk}`] = `Demographics (${dk}): Unemployment rate must be between 0 and 100.`;
-        markDemo(dk, "unemploymentRate");
-      }
 
       // Std dev > 0
       if (isBlank(d?.sdIncome) || Number(d?.sdIncome) <= 0) {

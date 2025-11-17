@@ -7,7 +7,6 @@ DEMOGRAPHICS_SCHEMA = {
     demo.value: {
         "income": {"mean": None, "sd": None},
         "proportion": None,
-        "unemployment_rate": None,
         "spending_behavior": {itype.value: None for itype in IndustryType},
         "balance": {"mean": None, "sd": None},
     }

@@ -47,7 +47,7 @@ class EconomyModel(Model):
 
     policies: dict[str, float | dict[IndustryType | Demographic, float]]
     """A dictionary of the various policies available to change in the simulation. Needs to match policies_schema."""
-    
+
     week: int
     """The current week in the simulation."""
 
@@ -78,8 +78,7 @@ class EconomyModel(Model):
         self.inflation_rate = inflation_rate
         self.random_events = random_events
         self.policies = starting_policies
-        
-        
+
         self.week = 0
         self.datacollector = DataCollector(
             model_reporters={
@@ -157,10 +156,6 @@ class EconomyModel(Model):
             starting_balance_info = demo_info.get("balance", {})
             spending_behavior_info = demo_info.get("spending_behavior")
 
-            # TODO: set unemployment based on starting_unemployment_rate per demographic
-            # actually do something with unemployment rate
-            unemployment_rate = demo_info.get("unemployment_rate", 0)
-
             # TODO: set savings_rate per demographic
             # Does this also get randomized?
             savings_rate = demo_info.get("savings_rate", 0.10)
@@ -196,8 +191,6 @@ class EconomyModel(Model):
                 }
                 pref_list.append(pref_dict)
 
-            # TODO: Distribute starting employment based on unemployment_rate
-
             PersonAgent.create_agents(
                 model=self,
                 n=num_demo_people,
@@ -223,6 +216,7 @@ class EconomyModel(Model):
         Raises:
             ValueError: if the industries dictionary is invalid.
         """
+        # TODO: Distribute starting employment based on num_employees
         for industry_type, industry_info in industries.items():
             if not isinstance(industry_info, dict):
                 raise ValueError(

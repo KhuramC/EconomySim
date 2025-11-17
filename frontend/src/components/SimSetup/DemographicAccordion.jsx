@@ -42,9 +42,6 @@ export default function DemographicAccordion({
   const hasProportionError =
     !!nestedErr.proportion || !!formErrors.proportion;
 
-  const hasUnempError =
-    !!nestedErr.unemploymentRate || !!formErrors[`demo_unemp_${selectedDemographic}`];
-
   const hasMeanIncomeError =
     !!nestedErr.meanIncome ||
     !!formErrors[`demo_meanIncome_${selectedDemographic}`] ||
@@ -108,19 +105,6 @@ export default function DemographicAccordion({
             error={hasProportionError}
             readOnly={readOnly}
             helpText="Share of the total population in this group. All groups together must sum to 100%."
-          />
-
-          <ParameterNumInput
-            label={
-              starting === true
-                ? "Starting Unemployment Rate (%)"
-                : "Unemployment Rate (%)"
-            }
-            value={selectedDemo.unemploymentRate}
-            onChange={handleDemographicChange(selectedDemographic, "unemploymentRate")}
-            error={hasUnempError}
-            readOnly={readOnly}
-            helpText="Percent of people in this group who are unemployed. Higher unemployment lowers income and demand."
           />
 
           <ParameterNumInput

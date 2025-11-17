@@ -82,7 +82,6 @@ export function buildDemographicsPayload(demoParams) {
           sd: demoData.sdIncome,
         },
         proportion: demoData.proportion / 100.0, // 33 -> 0.33
-        unemployment_rate: demoData.unemploymentRate / 100.0, // 5.0 -> 0.05
         spending_behavior: spendingBehaviorDict,
         balance: {
           mean: demoData.meanSavings,
