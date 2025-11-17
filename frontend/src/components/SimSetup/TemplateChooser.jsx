@@ -42,31 +42,34 @@ export default function TemplateChooser({ onTemplateSelect }) {
             onChange={handleTemplateChange}
             aria-label="city template chooser"
           >
-            <Tooltip title="A small, balanced town. Good for learning.">
+            <Tooltip title="A small town based on Columbia, MO.">
               {/* Tooltip wraps the button */}
               <ToggleButton
                 value={CityTemplate.SMALL}
                 aria-label="small template"
               >
-                Small
+                {CityTemplate.SMALL.charAt(0).toUpperCase() +
+                  CityTemplate.SMALL.slice(1)}
               </ToggleButton>
             </Tooltip>
 
-            <Tooltip title="A medium-sized city with some economic challenges.">
+            <Tooltip title="A medium-sized city based on Madison, WI.">
               <ToggleButton
                 value={CityTemplate.MEDIUM}
                 aria-label="medium template"
               >
-                Medium
+                {CityTemplate.MEDIUM.charAt(0).toUpperCase() +
+                  CityTemplate.MEDIUM.slice(1)}
               </ToggleButton>
             </Tooltip>
 
-            <Tooltip title="A large, complex metropolis. For advanced users.">
+            <Tooltip title="A large, complex metropolis based on San Francisco, CA.">
               <ToggleButton
                 value={CityTemplate.LARGE}
                 aria-label="big template"
               >
-                Big
+                {CityTemplate.LARGE.charAt(0).toUpperCase() +
+                  CityTemplate.LARGE.slice(1)}
               </ToggleButton>
             </Tooltip>
           </ToggleButtonGroup>
