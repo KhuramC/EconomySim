@@ -205,33 +205,40 @@ export default function SetupPage() {
     // ----- Industry -----
     Object.values(IndustryType).forEach((ik) => {
       const ind = params.industryParams[ik];
-      if (
-        isBlank(ind?.startingInventory) ||
-        Number(ind?.startingInventory) <= 0
-      ) {
-        msgs[
-          `industry_inventory_${ik}`
-        ] = `Industry (${ik}): Starting inventory must be greater than 0.`;
-        markIndustry(ik, "startingInventory");
-      }
-      if (isBlank(ind?.startingPrice) || Number(ind?.startingPrice) <= 0) {
-        msgs[
-          `industry_price_${ik}`
-        ] = `Industry (${ik}): Starting price must be greater than 0.`;
-        markIndustry(ik, "startingPrice");
-      }
-      if (isBlank(ind?.industrySavings) || Number(ind?.industrySavings) <= 0) {
-        msgs[
-          `industry_savings_${ik}`
-        ] = `Industry (${ik}): Industry savings must be greater than 0.`;
-        markIndustry(ik, "industrySavings");
-      }
-      if (isBlank(ind?.offeredWage) || Number(ind?.offeredWage) <= 0) {
-        msgs[
-          `industry_wage_${ik}`
-        ] = `Industry (${ik}): Offered wage must be greater than 0.`;
-        markIndustry(ik, "offeredWage");
-      }
+
+      // Non-negative checks (> 0)
+      const nonNegativeFields = [
+        ["startingInventory", "Starting inventory"],
+        ["startingPrice", "Starting price"],
+        ["industrySavings", "Industry savings"],
+        ["offeredWage", "Offered wage"],
+        ["startingEmpEfficiency", "Worker efficiency"],
+      ];
+
+      nonNegativeFields.forEach(([key, label]) => {
+        if (isBlank(ind?.[key]) || Number(ind?.[key]) <= 0) {
+          msgs[
+            `industry_${key}_${ik}`
+          ] = `Industry (${ik}): ${label} must be greater than 0.`;
+          markIndustry(ik, key);
+        }
+      });
+
+      // Zero or greater checks (>= 0)
+      const zeroOrGreaterFields = [
+        ["startingFixedCost", "Fixed costs"],
+        ["startingMaterialCost", "Raw material cost"],
+        ["startingNumEmployees", "Number of employees"],
+      ];
+
+      zeroOrGreaterFields.forEach(([key, label]) => {
+        if (isBlank(ind?.[key]) || Number(ind?.[key]) < 0) {
+          msgs[
+            `industry_${key}_${ik}`
+          ] = `Industry (${ik}): ${label} must be non-negative.`;
+          markIndustry(ik, key);
+        }
+      });
     });
 
     // ----- Policies -----
