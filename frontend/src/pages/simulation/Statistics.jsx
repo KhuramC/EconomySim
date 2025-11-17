@@ -32,6 +32,7 @@ export default function Statistics() {
   const [startUnit, setStartUnit] = useState("week");
   // Default graphs to show
   const [graphs, setGraphs] = useState([Indicators.GDP]);
+  //TODO: allow for plotting the Lorenz Curve, which has a different structure.
 
   useEffect(() => {
     if (!simAPI) return;
