@@ -48,25 +48,6 @@ export function receivePoliciesPayload(backendPolicies) {
     return 0;
   };
 
-  // Helper to safely get the first value from a demographic-specific policy dictionary.
-  // This assumes that for policies like personal income tax, the frontend
-  // currently uses a single input that is applied uniformly across all demographics.
-  // TODO: make this just give every value. Currently, the frontend is not setup to
-  // get the taxes on a demographic-specific basis.
-  const getUniformDemographicPolicyValue = (policyDict) => {
-    if (typeof policyDict === "object" && policyDict !== null) {
-      const demographicKeys = Object.values(Demographic);
-      if (
-        demographicKeys.length > 0 &&
-        policyDict[demographicKeys[0]] !== undefined
-      ) {
-        return policyDict[demographicKeys[0]];
-      }
-    }
-    // Fallback if the structure is unexpected or empty
-    return 0;
-  };
-
   // Policies that are percentages and are uniform across industries in the frontend
   frontendPolicies.corporateTax = weeklyDecimaltoAnnualPercent(
     getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax)
@@ -169,12 +150,17 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
       let frontendIndustry = {};
       if (isSetup) {
         frontendIndustry = {
-          startingInventory: backendIndustry.inventory,
-          startingPrice: backendIndustry.price.toFixed(2),
-          industrySavings: backendIndustry.balance.toFixed(2),
-          offeredWage: weeklyWageToHourly(backendIndustry.offered_wage).toFixed(
-            2
-          ),
+          startingInventory: backendIndustry.starting_inventory,
+          startingPrice: backendIndustry.starting_price.toFixed(2),
+          industrySavings: backendIndustry.starting_balance.toFixed(2),
+          offeredWage: weeklyWageToHourly(
+            backendIndustry.starting_offered_wage
+          ).toFixed(2),
+          startingFixedCost: backendIndustry.starting_fixed_cost,
+          startingMaterialCost: backendIndustry.starting_raw_mat_cost,
+          startingNumEmployees: backendIndustry.starting_number_of_employees,
+          startingEmpEfficiency: backendIndustry.starting_worker_efficiency,
+          startingDebtAllowed: backendIndustry.starting_debt_allowed,
         };
       } else {
         frontendIndustry = {

@@ -30,8 +30,10 @@ export default function DemographicAccordion({
   readOnly = false,
 }) {
   const demographics = useMemo(() => Object.values(Demographic), []);
-  const industryEntries = useMemo(() => Object.entries(IndustryType), []);
-  const [selectedDemographic, setSelectedDemographic] = useState(demographics[0]);
+  const industryEntries = useMemo(() => Object.values(IndustryType), []);
+  const [selectedDemographic, setSelectedDemographic] = useState(
+    demographics[0]
+  );
 
   const selectedDemo = demoParams[selectedDemographic] || {};
 
@@ -39,8 +41,7 @@ export default function DemographicAccordion({
   const nestedErr = (formErrors && formErrors[selectedDemographic]) || {};
 
   // Backward-compatible helpers to detect errors from either nested flags or flat keys
-  const hasProportionError =
-    !!nestedErr.proportion || !!formErrors.proportion;
+  const hasProportionError = !!nestedErr.proportion || !!formErrors.proportion;
 
   const hasMeanIncomeError =
     !!nestedErr.meanIncome ||
@@ -48,13 +49,16 @@ export default function DemographicAccordion({
     !!formErrors[`demo_meanIncome_monotonic_${selectedDemographic}`];
 
   const hasSdIncomeError =
-    !!nestedErr.sdIncome || !!formErrors[`demo_sdIncome_${selectedDemographic}`];
+    !!nestedErr.sdIncome ||
+    !!formErrors[`demo_sdIncome_${selectedDemographic}`];
 
   const hasMeanSavingsError =
-    !!nestedErr.meanSavings || !!formErrors[`demo_meanSavings_${selectedDemographic}`];
+    !!nestedErr.meanSavings ||
+    !!formErrors[`demo_meanSavings_${selectedDemographic}`];
 
   const hasSdSavingsError =
-    !!nestedErr.sdSavings || !!formErrors[`demo_sdSavings_${selectedDemographic}`];
+    !!nestedErr.sdSavings ||
+    !!formErrors[`demo_sdSavings_${selectedDemographic}`];
 
   // Spending row: mark all cells red ONLY when:
   // - nested flags per cell exist, OR
@@ -66,7 +70,7 @@ export default function DemographicAccordion({
 
   // Compute row total for visual hint (not required, but helpful)
   const spendingTotal = industryEntries.reduce(
-    (sum, [upperKey]) => sum + (Number(selectedDemo?.[upperKey]) || 0),
+    (sum, industry) => sum + (Number(selectedDemo[industry]) || 0),
     0
   );
 
@@ -101,7 +105,10 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Proportion of Population (%)"
             value={selectedDemo.proportion}
-            onChange={handleDemographicChange(selectedDemographic, "proportion")}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "proportion"
+            )}
             error={hasProportionError}
             readOnly={readOnly}
             helpText="Share of the total population in this group. All groups together must sum to 100%."
@@ -110,7 +117,10 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Mean Income ($/week)"
             value={selectedDemo.meanIncome}
-            onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "meanIncome"
+            )}
             error={hasMeanIncomeError}
             readOnly={readOnly}
             helpText="Target average weekly income used for sampling individual incomes. Larger values raise purchasing power."
@@ -128,7 +138,10 @@ export default function DemographicAccordion({
           <ParameterNumInput
             label="Mean Savings ($)"
             value={selectedDemo.meanSavings}
-            onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
+            onChange={handleDemographicChange(
+              selectedDemographic,
+              "meanSavings"
+            )}
             error={hasMeanSavingsError}
             readOnly={readOnly}
             helpText="Average starting cash on hand. Higher savings allow households to smooth consumption."
@@ -151,16 +164,25 @@ export default function DemographicAccordion({
         </Typography>
 
         <Grid container spacing={1}>
-          {industryEntries.map(([upperKey, label]) => (
-            <Grid key={`spendingBehavior-${upperKey}`} item xs={12} sm={6} md={4}>
+          {industryEntries.map((industry) => (
+            <Grid
+              key={`spendingBehavior-${industry}`}
+              item
+              xs={12}
+              sm={6}
+              md={4}
+            >
               <ParameterNumInput
-                label={label}
-                value={selectedDemo?.[upperKey] ?? ""}
-                onChange={handleDemographicChange(selectedDemographic, upperKey)}
+                label={industry}
+                value={selectedDemo?.[industry] ?? ""}
+                onChange={handleDemographicChange(
+                  selectedDemographic,
+                  industry
+                )}
                 readOnly={readOnly}
                 // Mark each cell red if the row is invalid OR that cell is flagged.
-                error={spendingRowInvalid || !!nestedErr[upperKey]}
-                helpText={`Share of this group's income allocated to ${label.toLowerCase()}. Row should total 100%.`}
+                error={spendingRowInvalid || !!nestedErr[industry]}
+                helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
               />
             </Grid>
           ))}
@@ -170,7 +192,9 @@ export default function DemographicAccordion({
             <Typography
               variant="caption"
               sx={{ display: "block", mt: 0.5 }}
-              color={Math.round(spendingTotal) === 100 ? "text.secondary" : "error"}
+              color={
+                Math.round(spendingTotal) === 100 ? "text.secondary" : "error"
+              }
             >
               Row total: {spendingTotal.toFixed(1)}%
               {Math.round(spendingTotal) === 100 ? "" : " (should be 100%)"}
