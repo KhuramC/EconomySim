@@ -49,7 +49,7 @@ export function receivePoliciesPayload(backendPolicies) {
   };
 
   // Policies that are percentages and are uniform across industries in the frontend
-  frontendPolicies.corporateTax = weeklyDecimaltoAnnualPercent(
+  frontendPolicies.corporateTax = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax)
   ).toFixed(2);
 
@@ -59,11 +59,11 @@ export function receivePoliciesPayload(backendPolicies) {
       rate: weeklyDecimaltoAnnualPercent(bracket.rate).toFixed(2),
     })
   );
-  frontendPolicies.salesTax = weeklyDecimaltoAnnualPercent(
+  frontendPolicies.salesTax = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.sales_tax)
   ).toFixed(2);
   // TODO: make property tax actually support both rates in the frontend
-  frontendPolicies.propertyTax = weeklyDecimaltoAnnualPercent(
+  frontendPolicies.propertyTax = decimalToPercent(
     backendPolicies.property_tax.residential
   ).toFixed(2);
   frontendPolicies.tariffs = decimalToPercent(

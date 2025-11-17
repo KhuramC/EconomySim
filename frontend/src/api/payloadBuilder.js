@@ -28,7 +28,7 @@ export function buildPoliciesPayload(policyParams) {
     corporate_income_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.corporateTax),
+        percentToDecimal(policyParams.corporateTax),
       ])
     ),
     personal_income_tax: policyParams.personalIncomeTax
@@ -40,12 +40,13 @@ export function buildPoliciesPayload(policyParams) {
     sales_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.salesTax),
+        percentToDecimal(policyParams.salesTax),
       ])
     ),
+    // TODO: change this whenever property tax is separated by residential/commercial in the frontend
     property_tax: {
-      residential: annualPercentToWeeklyDecimal(policyParams.propertyTax),
-      commercial: annualPercentToWeeklyDecimal(policyParams.propertyTax),
+      residential: percentToDecimal(policyParams.propertyTax),
+      commercial: percentToDecimal(policyParams.propertyTax),
     },
     tariffs: Object.fromEntries(
       Object.values(IndustryType).map((value) => [

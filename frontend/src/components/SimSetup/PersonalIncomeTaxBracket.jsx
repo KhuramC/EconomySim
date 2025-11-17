@@ -20,11 +20,11 @@ export default function PersonalIncomeTaxBracket({
           sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}
         >
           <ParameterNumInput
-            label={`Bracket ${index + 1} Threshold ($)`}
+            label={`Bracket ${index + 1} Threshold ($/week)`}
             value={bracket.threshold}
             onChange={handlePersonalIncomeTaxChange(index, "threshold")}
             error={!!formErrors.personalIncomeTax?.[index]?.threshold}
-            helpText="The income level at which this tax rate applies."
+            helpText="The weekly income level at which this tax rate applies."
           />
           <ParameterNumInput
             label="Rate (%/year)"

@@ -159,12 +159,12 @@ _SMALL_CONFIG = {
             {"threshold": 0, "rate": 0.0},  # Annual: ($0, 0.0%)
         ],
         "sales_tax": {
-            itype.value: 0.000933 if itype == IndustryType.GROCERIES else 0.001476
+            itype.value: 0.04975 if itype == IndustryType.GROCERIES else 0.07975
             for itype in IndustryType
         },  # Annual: 4.975% for food, 7.975% general
         "property_tax": {
-            "residential": 0.000176,
-            "commercial": 0.000410,
+            "residential": 0.0092,
+            "commercial": 0.02159,
         },  # Annual: 0.92%, 2.159%
         "tariffs": {
             IndustryType.GROCERIES: 0.25,  # Annual: 25%
@@ -335,12 +335,12 @@ _MEDIUM_CONFIG = {
             {"threshold": 0, "rate": 0.000662},  # Annual: ($0, 3.5%)
         ],
         "sales_tax": {
-            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001030
+            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.055
             for itype in IndustryType
         },  # Annual: 0.0% for food, 5.50% general
         "property_tax": {
-            "residential": 0.000339,
-            "commercial": 0.000339,
+            "residential": 0.0178,
+            "commercial": 0.0178,
         },  # Annual: 1.78%
         "tariffs": {
             IndustryType.GROCERIES: 0.25,  # Annual: 25%
@@ -516,12 +516,12 @@ _LARGE_CONFIG = {
             {"threshold": 0, "rate": 0.000191},  # Annual: ($0, 1.0%)
         ],
         "sales_tax": {
-            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001586
+            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.08625
             for itype in IndustryType
         },  # Annual: 0.0% for food, 8.625% general
         "property_tax": {
-            "residential": 0.000126,
-            "commercial": 0.000126,
+            "residential": 0.0066,
+            "commercial": 0.0066,
         },  # Annual: 0.66%
         "tariffs": {
             IndustryType.GROCERIES: 0.25,  # Annual: 25%

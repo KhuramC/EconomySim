@@ -19,14 +19,14 @@ export default function PolicyAccordion({
   const coreFields = (
     <>
       <ParameterNumInput
-        label="Sales Tax (%/year)"
+        label="Sales Tax (%)"
         value={policyParams.salesTax}
         onChange={handlePolicyChange("salesTax")}
         error={!!formErrors.salesTax}
         helpText="Tax applied to consumer purchases. Increases effective prices and can dampen demand."
       />
       <ParameterNumInput
-        label="Corporate Income Tax (%/year)"
+        label="Corporate Income Tax (%)"
         value={policyParams.corporateTax}
         onChange={handlePolicyChange("corporateTax")}
         error={!!formErrors.corporateTax}
@@ -34,7 +34,7 @@ export default function PolicyAccordion({
       />
 
       <ParameterNumInput
-        label="Property Tax (%/year)"
+        label="Property Tax (%)"
         value={policyParams.propertyTax}
         onChange={handlePolicyChange("propertyTax")}
         error={!!formErrors.propertyTax}
