@@ -39,7 +39,16 @@ const ParameterAccordion = ({
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             {title}
           </Typography>
-          {selector && <Box sx={{ mr: 1 }}>{selector}</Box>}
+          {selector && (
+            <Box
+              sx={{ mr: 1 }}
+              onClick={(e) => {
+                e.stopPropagation(); // do not toggle the accordion itself
+              }}
+            >
+              {selector}
+            </Box>
+          )}
 
           {advancedContent && (
             <Tooltip
