@@ -56,7 +56,7 @@ _SMALL_CONFIG = {
     "industries": {
         IndustryType.GROCERIES: {
             "starting_price": 62.47,
-            "starting_inventory": 5,
+            "starting_inventory": 504,
             "starting_balance": 199992.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 7692.00,
@@ -69,7 +69,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.UTILITIES: {
             "starting_price": 50.08,
-            "starting_inventory": 2,
+            "starting_inventory": 201,
             "starting_balance": 51843584.00,
             "starting_offered_wage": 1354.60,
             "starting_fixed_cost": 1993984.00,
