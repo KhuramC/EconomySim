@@ -97,7 +97,7 @@ export function buildDemographicsPayload(demoParams) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
       const demoData = demoParams[demoValue];
-      // Create a dictionary of actual spending behavior per industry
+      // Create a dictionary of spending behavior per industry
       const spendingBehaviorDict = Object.fromEntries(
         Object.values(IndustryType).map((industry) => [
           industry,
@@ -155,7 +155,6 @@ export function buildIndustriesPayload(industryParams) {
  * @returns {object} The backend-ready payload
  */
 export function buildCreatePayload(params) {
-  // Prepare Demographics
   const payload = {
     ...buildEnvironmentPayload(params.envParams),
     demographics: buildDemographicsPayload(params.demoParams),

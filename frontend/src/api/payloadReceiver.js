@@ -52,7 +52,6 @@ export function receivePoliciesPayload(backendPolicies) {
     return 0;
   };
 
-  // Policies that are percentages and are uniform across industries in the frontend
   frontendPolicies.corporateTax = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax)
   ).toFixed(2);

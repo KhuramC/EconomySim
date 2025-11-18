@@ -24,14 +24,14 @@ export default function PersonalIncomeTaxBracket({
             value={bracket.threshold}
             onChange={handlePersonalIncomeTaxChange(index, "threshold")}
             error={!!formErrors.personalIncomeTax?.[index]?.threshold}
-            helpText="The weekly income level at which this tax rate applies."
+            helpText="The annual salary threshold to which the corresponding tax rate applies."
           />
           <ParameterNumInput
             label="Rate (%/year)"
             value={bracket.rate}
             onChange={handlePersonalIncomeTaxChange(index, "rate")}
             error={!!formErrors.personalIncomeTax?.[index]?.rate}
-            helpText="The annual rate of tax applied to income above this threshold."
+            helpText="The annual rate of tax applied to the income above the corresponding threshold."
           />
           <IconButton
             onClick={() => removePersonalIncomeTaxBracket(index)}
