@@ -91,6 +91,7 @@ export default function BaseSimView() {
             bgcolor: "background.paper",
             p: 2,
             overflowY: "auto", // Scroll inside sidebar if it gets tall
+            overflowX: "hidden", // Prevent horizontal scroll
           }}
         >
           <SidebarNav basePath={basePath} />
@@ -121,7 +122,9 @@ export default function BaseSimView() {
               <Route path="overview" element={<Overview />} />
               <Route
                 path="industries"
-                element={<Industries oldindustryParams={initialIndustryParams} />}
+                element={
+                  <Industries oldindustryParams={initialIndustryParams} />
+                }
               />
               <Route path="policies" element={<Policies />} />
               <Route path="demographics" element={<Demographics />} />
