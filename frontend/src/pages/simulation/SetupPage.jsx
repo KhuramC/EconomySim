@@ -426,7 +426,7 @@ export default function SetupPage() {
         onTemplateSelect={async (template) => {
           console.log("Selected template:", template);
           const config = await SimulationAPI.getTemplateConfig(template);
-          config.envParams.maxSimulationLength =
+          config.envParams.maxSimulationLength = //only thing not in templates
             params.envParams.maxSimulationLength;
           setParams(config);
         }}
