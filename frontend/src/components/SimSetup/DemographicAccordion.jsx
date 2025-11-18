@@ -79,33 +79,101 @@ export default function DemographicAccordion({
     setSelectedDemographic(event.target.value);
   };
 
-  const advancedContent = industryEntries.map((industry) => (
-    <Grid key={`spendingBehavior-${industry}`} item xs={12} sm={6} md={4}>
-      <ParameterNumInput
-        label={industry}
-        value={selectedDemo?.[industry] ?? ""}
-        onChange={handleDemographicChange(selectedDemographic, industry)}
-        readOnly={readOnly}
-        // Mark each cell red if the row is invalid OR that cell is flagged.
-        error={spendingRowInvalid || !!nestedErr[industry]}
-        helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
-      />
-    </Grid>
-  ));
-
-  // Add the row total hint to the end of the content array
-  advancedContent.push(
-    <Grid item xs={12} key="spending-total">
-      <Typography
-        variant="caption"
-        sx={{ display: "block", mt: 0.5 }}
-        color={Math.round(spendingTotal) === 100 ? "text.secondary" : "error"}
-      >
-        Row total: {spendingTotal.toFixed(1)}%
-        {Math.round(spendingTotal) === 100 ? "" : " (should be 100%)"}
-      </Typography>
-    </Grid>
+  const demographicSelector = (
+    <ParameterMenuInput
+      label="Demographic"
+      value={selectedDemographic}
+      onChange={handleSelectedDemographicChange}
+      xs={12}
+      helpText="Choose which demographic group you are editing. Values below apply only to this group."
+    >
+      {demographics.map((value) => (
+        // Create a MenuItem for each Demographic
+        <MenuItem key={value} value={value}>
+          <span style={{ textTransform: "capitalize" }}>{value}</span>
+        </MenuItem>
+      ))}
+    </ParameterMenuInput>
   );
+
+  const coreContent = (
+    <>
+      <ParameterNumInput
+        label="Proportion of Population (%)"
+        value={selectedDemo.proportion}
+        onChange={handleDemographicChange(selectedDemographic, "proportion")}
+        error={hasProportionError}
+        readOnly={readOnly}
+        helpText="Share of the total population in this group. All groups together must sum to 100%."
+      />
+
+      <ParameterNumInput
+        label="Mean Income ($/week)"
+        value={selectedDemo.meanIncome}
+        onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
+        error={hasMeanIncomeError}
+        readOnly={readOnly}
+        helpText="Target average weekly income used for sampling individual incomes. Larger values raise purchasing power."
+      />
+
+      <ParameterNumInput
+        label="Income Std. Deviation ($)"
+        value={selectedDemo.sdIncome}
+        onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
+        error={hasSdIncomeError}
+        readOnly={readOnly}
+        helpText="Spread of weekly incomes around the mean (lognormal). Higher values increase inequality and volatility."
+      />
+
+      <ParameterNumInput
+        label="Mean Savings ($)"
+        value={selectedDemo.meanSavings}
+        onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
+        error={hasMeanSavingsError}
+        readOnly={readOnly}
+        helpText="Average starting cash on hand. Higher savings allow households to smooth consumption."
+      />
+
+      <ParameterNumInput
+        label="Savings Std. Deviation ($)"
+        value={selectedDemo.sdSavings}
+        onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
+        error={hasSdSavingsError}
+        readOnly={readOnly}
+        helpText="Variation in starting savings between people. Larger values create more heterogeneous behavior."
+      />
+    </>
+  );
+
+  const advancedContent = (
+    <>
+      {industryEntries.map((industry) => (
+        <Grid key={`spendingBehavior-${industry}`} item xs={12} sm={6} md={4}>
+          <ParameterNumInput
+            label={industry}
+            value={selectedDemo?.[industry] ?? ""}
+            onChange={handleDemographicChange(selectedDemographic, industry)}
+            readOnly={readOnly}
+            // Mark each cell red if the row is invalid OR that cell is flagged.
+            error={spendingRowInvalid || !!nestedErr[industry]}
+            helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
+          />
+        </Grid>
+      ))}
+
+      <Grid item xs={12} key="spending-total">
+        <Typography
+          variant="caption"
+          sx={{ display: "block", mt: 0.5 }}
+          color={Math.round(spendingTotal) === 100 ? "text.secondary" : "error"}
+        >
+          Row total: {spendingTotal.toFixed(1)}%
+          {Math.round(spendingTotal) === 100 ? "" : " (should be 100%)"}
+        </Typography>
+      </Grid>
+    </>
+  );
+
   return (
     <Accordion defaultExpanded={false}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -114,74 +182,8 @@ export default function DemographicAccordion({
 
       <AccordionDetails>
         <Grid container spacing={2}>
-          <ParameterMenuInput
-            label="Demographic"
-            value={selectedDemographic}
-            onChange={handleSelectedDemographicChange}
-            xs={12}
-            helpText="Choose which demographic group you are editing. Values below apply only to this group."
-          >
-            {demographics.map((value) => (
-              // Create a MenuItem for each Demographic
-              <MenuItem key={value} value={value}>
-                <span style={{ textTransform: "capitalize" }}>{value}</span>
-              </MenuItem>
-            ))}
-          </ParameterMenuInput>
-
-          <ParameterNumInput
-            label="Proportion of Population (%)"
-            value={selectedDemo.proportion}
-            onChange={handleDemographicChange(
-              selectedDemographic,
-              "proportion"
-            )}
-            error={hasProportionError}
-            readOnly={readOnly}
-            helpText="Share of the total population in this group. All groups together must sum to 100%."
-          />
-
-          <ParameterNumInput
-            label="Mean Income ($/week)"
-            value={selectedDemo.meanIncome}
-            onChange={handleDemographicChange(
-              selectedDemographic,
-              "meanIncome"
-            )}
-            error={hasMeanIncomeError}
-            readOnly={readOnly}
-            helpText="Target average weekly income used for sampling individual incomes. Larger values raise purchasing power."
-          />
-
-          <ParameterNumInput
-            label="Income Std. Deviation ($)"
-            value={selectedDemo.sdIncome}
-            onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
-            error={hasSdIncomeError}
-            readOnly={readOnly}
-            helpText="Spread of weekly incomes around the mean (lognormal). Higher values increase inequality and volatility."
-          />
-
-          <ParameterNumInput
-            label="Mean Savings ($)"
-            value={selectedDemo.meanSavings}
-            onChange={handleDemographicChange(
-              selectedDemographic,
-              "meanSavings"
-            )}
-            error={hasMeanSavingsError}
-            readOnly={readOnly}
-            helpText="Average starting cash on hand. Higher savings allow households to smooth consumption."
-          />
-
-          <ParameterNumInput
-            label="Savings Std. Deviation ($)"
-            value={selectedDemo.sdSavings}
-            onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
-            error={hasSdSavingsError}
-            readOnly={readOnly}
-            helpText="Variation in starting savings between people. Larger values create more heterogeneous behavior."
-          />
+          {demographicSelector}
+          {coreContent}
         </Grid>
 
         {/* Spending section */}
