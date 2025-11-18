@@ -97,7 +97,9 @@ export function receivePoliciesPayload(backendPolicies) {
 export function receiveEnvironmentPayload(backendConfig) {
   return {
     numPeople: backendConfig.num_people,
-    inflationRate: weeklyDecimaltoAnnualPercent(backendConfig.inflation_rate),
+    inflationRate: weeklyDecimaltoAnnualPercent(
+      backendConfig.inflation_rate
+    ).toFixed(2),
     // Note: maxSimulationLength is not part of the template,
     // so it will retain its original value in SetupPage.
   };
@@ -155,8 +157,10 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
       if (isSetup) {
         frontendIndustry = {
           startingInventory: backendIndustry.starting_inventory,
-          startingPrice: backendIndustry.starting_price.toFixed(2),
-          industrySavings: backendIndustry.starting_balance.toFixed(2),
+          startingPrice: parseFloat(backendIndustry.starting_price.toFixed(2)),
+          industrySavings: parseFloat(
+            backendIndustry.starting_balance.toFixed(2)
+          ),
           offeredWage: weeklyWageToHourly(
             backendIndustry.starting_offered_wage
           ).toFixed(2),
