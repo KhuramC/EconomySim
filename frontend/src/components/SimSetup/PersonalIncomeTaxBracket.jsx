@@ -20,7 +20,7 @@ export default function PersonalIncomeTaxBracket({
           sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}
         >
           <ParameterNumInput
-            label={`Bracket ${index + 1} Threshold ($/week)`}
+            label={`Bracket ${index + 1} Threshold ($/year)`}
             value={bracket.threshold}
             onChange={handlePersonalIncomeTaxChange(index, "threshold")}
             error={!!formErrors.personalIncomeTax?.[index]?.threshold}

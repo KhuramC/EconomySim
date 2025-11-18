@@ -17,6 +17,10 @@ function annualPercentToWeeklyDecimal(annualPercent) {
 function hourlyWageToWeekly(hourlyWage) {
   return hourlyWage * 40;
 }
+
+function annualSalaryToWeekly(annualSalary) {
+  return annualSalary / 52;
+}
 /**
  * Transforms the frontend 'policyParams' to a JSON valid for backend.
  * @param {object} policyParams
@@ -33,7 +37,7 @@ export function buildPoliciesPayload(policyParams) {
     ),
     personal_income_tax: policyParams.personalIncomeTax
       .map((bracket) => ({
-        threshold: bracket.threshold,
+        threshold: annualSalaryToWeekly(bracket.threshold),
         rate: annualPercentToWeeklyDecimal(bracket.rate),
       }))
       .sort((a, b) => b.threshold - a.threshold), // descending order by threshold

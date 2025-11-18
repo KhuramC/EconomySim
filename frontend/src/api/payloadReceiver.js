@@ -19,6 +19,10 @@ function weeklyWageToHourly(weeklyWage) {
   return weeklyWage / 40;
 }
 
+function weeklyWagetoAnnual(weeklyWage) {
+  return weeklyWage * 52;
+}
+
 /**
  * Transforms the policies received from the backend to a format used by the frontend.
  * This function reverses the logic of `buildPoliciesPayload`.
@@ -55,7 +59,7 @@ export function receivePoliciesPayload(backendPolicies) {
 
   frontendPolicies.personalIncomeTax = backendPolicies.personal_income_tax.map(
     (bracket) => ({
-      threshold: bracket.threshold,
+      threshold: weeklyWagetoAnnual(bracket.threshold).toFixed(2),
       rate: weeklyDecimaltoAnnualPercent(bracket.rate).toFixed(2),
     })
   );
