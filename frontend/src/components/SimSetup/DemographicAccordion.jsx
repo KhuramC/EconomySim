@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MenuItem, Grid, Typography } from "@mui/material";
+import { MenuItem, Grid } from "@mui/material";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import ParameterMenuInput from "./ParameterMenuInput.jsx";
 import ParameterNumInput from "./ParameterNumInput.jsx";
@@ -59,12 +59,6 @@ export default function DemographicAccordion({
   const spendingRowInvalid =
     industryEntries.some(([k]) => !!nestedErr[k]) ||
     !!formErrors[`demo_spending_${selectedDemographic}`];
-
-  // Compute row total for visual hint (not required, but helpful)
-  const spendingTotal = industryEntries.reduce(
-    (sum, industry) => sum + (Number(selectedDemo[industry]) || 0),
-    0
-  );
 
   // Handler for demographic selector dropdown
   const handleSelectedDemographicChange = (event) => {
@@ -152,17 +146,6 @@ export default function DemographicAccordion({
           />
         </Grid>
       ))}
-
-      <Grid item xs={12} key="spending-total">
-        <Typography
-          variant="caption"
-          sx={{ display: "block", mt: 0.5 }}
-          color={Math.round(spendingTotal) === 100 ? "text.secondary" : "error"}
-        >
-          Row total: {spendingTotal.toFixed(1)}%
-          {Math.round(spendingTotal) === 100 ? "" : " (should be 100%)"}
-        </Typography>
-      </Grid>
     </>
   );
 
