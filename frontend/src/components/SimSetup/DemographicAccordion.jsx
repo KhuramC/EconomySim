@@ -79,6 +79,33 @@ export default function DemographicAccordion({
     setSelectedDemographic(event.target.value);
   };
 
+  const advancedContent = industryEntries.map((industry) => (
+    <Grid key={`spendingBehavior-${industry}`} item xs={12} sm={6} md={4}>
+      <ParameterNumInput
+        label={industry}
+        value={selectedDemo?.[industry] ?? ""}
+        onChange={handleDemographicChange(selectedDemographic, industry)}
+        readOnly={readOnly}
+        // Mark each cell red if the row is invalid OR that cell is flagged.
+        error={spendingRowInvalid || !!nestedErr[industry]}
+        helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
+      />
+    </Grid>
+  ));
+
+  // Add the row total hint to the end of the content array
+  advancedContent.push(
+    <Grid item xs={12} key="spending-total">
+      <Typography
+        variant="caption"
+        sx={{ display: "block", mt: 0.5 }}
+        color={Math.round(spendingTotal) === 100 ? "text.secondary" : "error"}
+      >
+        Row total: {spendingTotal.toFixed(1)}%
+        {Math.round(spendingTotal) === 100 ? "" : " (should be 100%)"}
+      </Typography>
+    </Grid>
+  );
   return (
     <Accordion defaultExpanded={false}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -164,42 +191,7 @@ export default function DemographicAccordion({
         </Typography>
 
         <Grid container spacing={1}>
-          {industryEntries.map((industry) => (
-            <Grid
-              key={`spendingBehavior-${industry}`}
-              item
-              xs={12}
-              sm={6}
-              md={4}
-            >
-              <ParameterNumInput
-                label={industry}
-                value={selectedDemo?.[industry] ?? ""}
-                onChange={handleDemographicChange(
-                  selectedDemographic,
-                  industry
-                )}
-                readOnly={readOnly}
-                // Mark each cell red if the row is invalid OR that cell is flagged.
-                error={spendingRowInvalid || !!nestedErr[industry]}
-                helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
-              />
-            </Grid>
-          ))}
-
-          {/* Row total hint */}
-          <Grid item xs={12}>
-            <Typography
-              variant="caption"
-              sx={{ display: "block", mt: 0.5 }}
-              color={
-                Math.round(spendingTotal) === 100 ? "text.secondary" : "error"
-              }
-            >
-              Row total: {spendingTotal.toFixed(1)}%
-              {Math.round(spendingTotal) === 100 ? "" : " (should be 100%)"}
-            </Typography>
-          </Grid>
+          {advancedContent}
         </Grid>
       </AccordionDetails>
     </Accordion>
