@@ -1,17 +1,9 @@
 import { useMemo, useState } from "react";
-import {
-  MenuItem,
-  Divider,
-  Grid,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-} from "@mui/material";
+import { MenuItem, Grid, Typography } from "@mui/material";
+import ParameterAccordion from "./ParameterAccordion.jsx";
 import ParameterMenuInput from "./ParameterMenuInput.jsx";
 import ParameterNumInput from "./ParameterNumInput.jsx";
 import { Demographic } from "../../types/Demographic.js";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { IndustryType } from "../../types/IndustryType.js";
 
 /**
@@ -148,9 +140,9 @@ export default function DemographicAccordion({
   const advancedContent = (
     <>
       {industryEntries.map((industry) => (
-        <Grid key={`spendingBehavior-${industry}`} item xs={12} sm={6} md={4}>
+        <Grid key={`spendingBehavior-${industry}`} item xs={12}>
           <ParameterNumInput
-            label={industry}
+            label={industry + " Spending (%)"}
             value={selectedDemo?.[industry] ?? ""}
             onChange={handleDemographicChange(selectedDemographic, industry)}
             readOnly={readOnly}
@@ -175,27 +167,13 @@ export default function DemographicAccordion({
   );
 
   return (
-    <Accordion defaultExpanded={false}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography variant="h6">Demographic Parameters</Typography>
-      </AccordionSummary>
-
-      <AccordionDetails>
-        <Grid container spacing={2}>
-          {demographicSelector}
-          {coreContent}
-        </Grid>
-
-        {/* Spending section */}
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ mb: 1 }}>
-          Spending Behavior (% of income)
-        </Typography>
-
-        <Grid container spacing={1}>
-          {advancedContent}
-        </Grid>
-      </AccordionDetails>
-    </Accordion>
+    <ParameterAccordion
+      title="Demographic Parameters"
+      selector={demographicSelector}
+      advancedContent={advancedContent}
+      advancedTitle="Spending Behavior by Industry"
+    >
+      {coreContent}
+    </ParameterAccordion>
   );
 }
