@@ -11,7 +11,7 @@ _SMALL_CONFIG = {
     "inflation_rate": 0.0005,  # Inflation Rate is weekly; equates to 2.6% annually
     "demographics": {
         Demographic.LOWER_CLASS: {
-            "income": {"mean": 6.31, "sd": 0.40},  # Median: $548/wk (~$28.5k/yr)
+            "income": {"mean": 548, "sd": 25},  # Median: $548/wk (~$28.5k/yr)
             "proportion": 0.35,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.15,
@@ -25,7 +25,7 @@ _SMALL_CONFIG = {
             "balance": {"mean": 6.0, "sd": 0.5},  # Low savings
         },
         Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 7.00, "sd": 0.30},  # Median: $1096/wk (~$57k/yr)
+            "income": {"mean": 1096, "sd": 25},  # Median: $1096/wk (~$57k/yr)
             "proportion": 0.50,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.12,
@@ -39,7 +39,7 @@ _SMALL_CONFIG = {
             "balance": {"mean": 8.5, "sd": 0.4},  # Moderate savings
         },
         Demographic.UPPER_CLASS: {
-            "income": {"mean": 7.92, "sd": 0.60},  # Median: $2740/wk (~$142.5k/yr)
+            "income": {"mean": 2740, "sd": 25},  # Median: $2740/wk (~$142.5k/yr)
             "proportion": 0.15,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
@@ -56,92 +56,92 @@ _SMALL_CONFIG = {
     "industries": {
         IndustryType.GROCERIES: {
             "starting_price": 62.47,
-            "starting_inventory": 504000,
+            "starting_inventory": 5,
             "starting_balance": 199992.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 7692.00,
             "starting_raw_mat_cost": 42.48,
             "starting_number_of_employees": 162,
             "starting_worker_efficiency": 19.444,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 166.59,
             "starting_demand_slope": 0.000826,
         },
         IndustryType.UTILITIES: {
             "starting_price": 50.08,
-            "starting_inventory": 201600,
+            "starting_inventory": 2,
             "starting_balance": 51843584.00,
             "starting_offered_wage": 1354.60,
             "starting_fixed_cost": 1993984.00,
             "starting_raw_mat_cost": 10.52,
             "starting_number_of_employees": 63,
             "starting_worker_efficiency": 20.00,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 434.76,
             "starting_demand_slope": 0.00763,
         },
         IndustryType.AUTOMOBILES: {
             "starting_price": 25000.00,
-            "starting_inventory": 484,
+            "starting_inventory": 4,
             "starting_balance": 39988.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 1538.00,
             "starting_raw_mat_cost": 22500.00,
             "starting_number_of_employees": 122,
             "starting_worker_efficiency": 0.0248,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 50000.00,
             "starting_demand_slope": 206.612,
         },
         IndustryType.HOUSING: {
             "starting_price": 230.77,
-            "starting_inventory": 120960,
+            "starting_inventory": 1,
             "starting_balance": 154183146.00,
             "starting_offered_wage": 1188.40,
             "starting_fixed_cost": 5930121.00,
             "starting_raw_mat_cost": 11.54,
             "starting_number_of_employees": 274,
             "starting_worker_efficiency": 2.7591,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 998.87,
             "starting_demand_slope": 0.02540,
         },
         IndustryType.HOUSEHOLD_GOODS: {
             "starting_price": 75.00,
-            "starting_inventory": 40320,
+            "starting_inventory": 40,
             "starting_balance": 99996.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 3846.00,
             "starting_raw_mat_cost": 30.00,
             "starting_number_of_employees": 81,
             "starting_worker_efficiency": 3.111,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 241.67,
             "starting_demand_slope": 0.01653,
         },
         IndustryType.ENTERTAINMENT: {
             "starting_price": 18.00,
-            "starting_inventory": 126000,
+            "starting_inventory": 12,
             "starting_balance": 80002.00,
             "starting_offered_wage": 991.60,
             "starting_fixed_cost": 3077.00,
             "starting_raw_mat_cost": 4.95,
             "starting_number_of_employees": 290,
             "starting_worker_efficiency": 2.7155,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 33.00,
             "starting_demand_slope": 0.000476,
         },
         IndustryType.LUXURY: {
             "starting_price": 1500.00,
-            "starting_inventory": 504,
+            "starting_inventory": 50,
             "starting_balance": 10010.00,
             "starting_offered_wage": 1234.80,
             "starting_fixed_cost": 385.00,
             "starting_raw_mat_cost": 150.00,
             "starting_number_of_employees": 8,
             "starting_worker_efficiency": 0.3937,
-            "starting_debt_allowed": True,
+            "starting_debt_allowed": False,
             "starting_demand_intercept": 2500.00,
             "starting_demand_slope": 7.937,
         },

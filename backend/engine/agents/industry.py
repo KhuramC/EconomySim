@@ -81,7 +81,7 @@ class IndustryAgent(Agent):
         starting_raw_mat_cost: float = 2.0,
         starting_number_of_employees: int = 5,  # placeholder value for now that should be dependant on person agents employed at industry when employment logic has been implemented
         starting_worker_efficiency: float = 1.0,
-        starting_debt_allowed: bool = True,  # should be static
+        starting_debt_allowed: bool = False,  # should be static
         # TODO: Demand logic will be pulled from another file, either demand.py or person.py.  These values are currently black box standins to enable determine_price logic
         starting_demand_intercept: float = 400.0,
         starting_demand_slope: float = 1.0,
@@ -203,7 +203,7 @@ class IndustryAgent(Agent):
         Price = linear_price(A, B, Suggested_Quantity)
 
         price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
-        if price_cap_percentage is not None and skipPriceCap == False:
+        if price_cap_percentage is not None and skipPriceCap == False and price_cap_percentage > 0:
             price_cap = oldPrice * (
                 1 + price_cap_percentage
             )  # price cap is set to a percentage amount higher than the price from the previous tick
