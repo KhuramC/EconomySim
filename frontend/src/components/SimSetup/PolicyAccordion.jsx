@@ -19,14 +19,14 @@ export default function PolicyAccordion({
   const coreFields = (
     <>
       <ParameterNumInput
-        label="Sales Tax (%/year)"
+        label="Sales Tax (%)"
         value={policyParams.salesTax}
         onChange={handlePolicyChange("salesTax")}
         error={!!formErrors.salesTax}
         helpText="Tax applied to consumer purchases. Increases effective prices and can dampen demand."
       />
       <ParameterNumInput
-        label="Corporate Income Tax (%/year)"
+        label="Corporate Income Tax (%)"
         value={policyParams.corporateTax}
         onChange={handlePolicyChange("corporateTax")}
         error={!!formErrors.corporateTax}
@@ -34,7 +34,7 @@ export default function PolicyAccordion({
       />
 
       <ParameterNumInput
-        label="Property Tax (%/year)"
+        label="Property Tax (%)"
         value={policyParams.propertyTax}
         onChange={handlePolicyChange("propertyTax")}
         error={!!formErrors.propertyTax}
@@ -48,14 +48,14 @@ export default function PolicyAccordion({
         helpText="Legal wage floor. Firms cannot offer wages below this value."
       />
       <ParameterNumInput
-        label="Tariffs (%/year)"
+        label="Tariffs (%)"
         value={policyParams.tariffs}
         onChange={handlePolicyChange("tariffs")}
         error={!!formErrors.tariffs}
         helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
       />
       <ParameterNumInput
-        label="Subsidies (%/year)"
+        label="Subsidies (%)"
         value={policyParams.subsidies}
         onChange={handlePolicyChange("subsidies")}
         error={!!formErrors.subsidies}

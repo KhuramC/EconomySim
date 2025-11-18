@@ -17,6 +17,10 @@ function annualPercentToWeeklyDecimal(annualPercent) {
 function hourlyWageToWeekly(hourlyWage) {
   return hourlyWage * 40;
 }
+
+function annualSalaryToWeekly(annualSalary) {
+  return annualSalary / 52;
+}
 /**
  * Transforms the frontend 'policyParams' to a JSON valid for backend.
  * @param {object} policyParams
@@ -28,35 +32,36 @@ export function buildPoliciesPayload(policyParams) {
     corporate_income_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.corporateTax),
+        percentToDecimal(policyParams.corporateTax),
       ])
     ),
     personal_income_tax: policyParams.personalIncomeTax
       .map((bracket) => ({
-        threshold: bracket.threshold,
+        threshold: annualSalaryToWeekly(bracket.threshold),
         rate: annualPercentToWeeklyDecimal(bracket.rate),
       }))
       .sort((a, b) => b.threshold - a.threshold), // descending order by threshold
     sales_tax: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.salesTax),
+        percentToDecimal(policyParams.salesTax),
       ])
     ),
+    // TODO: change this whenever property tax is separated by residential/commercial in the frontend
     property_tax: {
-      residential: annualPercentToWeeklyDecimal(policyParams.propertyTax),
-      commercial: annualPercentToWeeklyDecimal(policyParams.propertyTax),
+      residential: percentToDecimal(policyParams.propertyTax),
+      commercial: percentToDecimal(policyParams.propertyTax),
     },
     tariffs: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.tariffs),
+        percentToDecimal(policyParams.tariffs),
       ])
     ),
     subsidies: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.subsidies),
+        percentToDecimal(policyParams.subsidies),
       ])
     ),
     price_cap: Object.fromEntries(
@@ -92,10 +97,10 @@ export function buildDemographicsPayload(demoParams) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
       const demoData = demoParams[demoValue];
-      // Create a dictionary of actual spending behavior per industry
+      // Create a dictionary of spending behavior per industry
       const spendingBehaviorDict = Object.fromEntries(
-        Object.entries(IndustryType).map(([industry, label]) => [
-          label,
+        Object.values(IndustryType).map((industry) => [
+          industry,
           percentToDecimal(Number(demoData[industry]) || 0),
         ])
       );
@@ -150,7 +155,6 @@ export function buildIndustriesPayload(industryParams) {
  * @returns {object} The backend-ready payload
  */
 export function buildCreatePayload(params) {
-  // Prepare Demographics
   const payload = {
     ...buildEnvironmentPayload(params.envParams),
     demographics: buildDemographicsPayload(params.demoParams),

@@ -33,22 +33,23 @@ export default function IndustryAccordion({
   const current = industryParams[selectedIndustry] || {};
   const err = formErrors[selectedIndustry] || {};
 
+  const industrySelector = (
+    <ParameterMenuInput
+      label="Industry"
+      value={selectedIndustry}
+      onChange={handleSelectedIndustryChange}
+      xs={12}
+      helpText="Choose which industry you are editing. Values below apply only to the selected industry."
+    >
+      {industryValues.map((value) => (
+        <MenuItem key={value} value={value}>
+          <span>{value}</span>
+        </MenuItem>
+      ))}
+    </ParameterMenuInput>
+  );
   const coreFields = (
     <>
-      <ParameterMenuInput
-        label="Industry"
-        value={selectedIndustry}
-        onChange={handleSelectedIndustryChange}
-        xs={12}
-        helpText="Choose which industry you are editing. Values below apply only to the selected industry."
-      >
-        {industryValues.map((value) => (
-          <MenuItem key={value} value={value}>
-            <span>{value}</span>
-          </MenuItem>
-        ))}
-      </ParameterMenuInput>
-
       <ParameterNumInput
         label={starting === true ? "Starting Price ($)" : "Price ($)"}
         value={current.startingPrice}
@@ -193,6 +194,7 @@ export default function IndustryAccordion({
   return (
     <ParameterAccordion
       title="Industry Parameters"
+      selector={industrySelector}
       advancedTitle="Advanced Industry Settings"
       advancedContent={advancedFields}
       defaultAdvancedOpen={false}

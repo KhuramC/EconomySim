@@ -159,23 +159,23 @@ _SMALL_CONFIG = {
             {"threshold": 0, "rate": 0.0},  # Annual: ($0, 0.0%)
         ],
         "sales_tax": {
-            itype.value: 0.000933 if itype == IndustryType.GROCERIES else 0.001476
+            itype.value: 0.04975 if itype == IndustryType.GROCERIES else 0.07975
             for itype in IndustryType
         },  # Annual: 4.975% for food, 7.975% general
         "property_tax": {
-            "residential": 0.000176,
-            "commercial": 0.000410,
+            "residential": 0.0092,
+            "commercial": 0.02159,
         },  # Annual: 0.92%, 2.159%
         "tariffs": {
-            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.GROCERIES: 0.25,  # Annual: 25%
             IndustryType.UTILITIES: 0.0,  # (Domestic service)
-            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
-            IndustryType.HOUSING: 0.001835,  # Annual: 10%
-            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.AUTOMOBILES: 0.25,  # Annual: 25%
+            IndustryType.HOUSING: 0.10,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.25,  # Annual: 25%
             IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
-            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+            IndustryType.LUXURY: 0.10,  # Annual: 10%
         },
-        "subsidies": {itype.value: 1 for itype in IndustryType},
+        "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
         "minimum_wage": 550.00,  # $13.75/hr x 40 hrs
     },
@@ -335,23 +335,23 @@ _MEDIUM_CONFIG = {
             {"threshold": 0, "rate": 0.000662},  # Annual: ($0, 3.5%)
         ],
         "sales_tax": {
-            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001030
+            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.055
             for itype in IndustryType
         },  # Annual: 0.0% for food, 5.50% general
         "property_tax": {
-            "residential": 0.000339,
-            "commercial": 0.000339,
+            "residential": 0.0178,
+            "commercial": 0.0178,
         },  # Annual: 1.78%
         "tariffs": {
-            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.GROCERIES: 0.25,  # Annual: 25%
             IndustryType.UTILITIES: 0.0,  # (Domestic service)
-            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
-            IndustryType.HOUSING: 0.001835,  # Annual: 10%
-            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.AUTOMOBILES: 0.25,  # Annual: 25%
+            IndustryType.HOUSING: 0.10,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.25,  # Annual: 25%
             IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
-            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+            IndustryType.LUXURY: 0.10,  # Annual: 10%
         },
-        "subsidies": {itype.value: 1 for itype in IndustryType},
+        "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
         "minimum_wage": 290.00,  # $7.25/hr x 40 hrs
     },
@@ -516,23 +516,23 @@ _LARGE_CONFIG = {
             {"threshold": 0, "rate": 0.000191},  # Annual: ($0, 1.0%)
         ],
         "sales_tax": {
-            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.001586
+            itype.value: 0.0 if itype == IndustryType.GROCERIES else 0.08625
             for itype in IndustryType
         },  # Annual: 0.0% for food, 8.625% general
         "property_tax": {
-            "residential": 0.000126,
-            "commercial": 0.000126,
+            "residential": 0.0066,
+            "commercial": 0.0066,
         },  # Annual: 0.66%
         "tariffs": {
-            IndustryType.GROCERIES: 0.004301,  # Annual: 25%
+            IndustryType.GROCERIES: 0.25,  # Annual: 25%
             IndustryType.UTILITIES: 0.0,  # (Domestic service)
-            IndustryType.AUTOMOBILES: 0.004301,  # Annual: 25%
-            IndustryType.HOUSING: 0.001835,  # Annual: 10%
-            IndustryType.HOUSEHOLD_GOODS: 0.004301,  # Annual: 25%
+            IndustryType.AUTOMOBILES: 0.25,  # Annual: 25%
+            IndustryType.HOUSING: 0.10,  # Annual: 10%
+            IndustryType.HOUSEHOLD_GOODS: 0.25,  # Annual: 25%
             IndustryType.ENTERTAINMENT: 0.0,  # (Domestic service)
-            IndustryType.LUXURY: 0.001835,  # Annual: 10%
+            IndustryType.LUXURY: 0.10,  # Annual: 10%
         },
-        "subsidies": {itype.value: 1 for itype in IndustryType},
+        "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {
             itype.value: (
                 0.000267 if itype.value == IndustryType.HOUSING else None

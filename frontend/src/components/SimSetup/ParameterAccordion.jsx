@@ -23,8 +23,9 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 const ParameterAccordion = ({
   title,
   defaultExpanded = false,
-  children,                   // Core settings -> typically <Grid item>
-  advancedContent = null,     // Advanced settings -> typically <Grid item>
+  selector = null, // a component for some selector in the header
+  children, // Core settings -> typically <Grid item>
+  advancedContent = null, // Advanced settings -> typically <Grid item>
   defaultAdvancedOpen = false,
   advancedTitle = "Advanced Settings",
   advancedTitleProps = {},
@@ -38,16 +39,30 @@ const ParameterAccordion = ({
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             {title}
           </Typography>
+          {selector && (
+            <Box
+              sx={{ mr: 1 }}
+              onClick={(e) => {
+                e.stopPropagation(); // do not toggle the accordion itself
+              }}
+            >
+              {selector}
+            </Box>
+          )}
 
           {advancedContent && (
             <Tooltip
-              title={showAdvanced ? "Hide advanced settings" : "Show advanced settings"}
+              title={
+                showAdvanced
+                  ? "Hide advanced settings"
+                  : "Show advanced settings"
+              }
             >
               <IconButton
                 size="small"
                 aria-label="toggle advanced settings"
                 onClick={(e) => {
-                  e.stopPropagation();       // do not toggle the accordion itself
+                  e.stopPropagation(); // do not toggle the accordion itself
                   setShowAdvanced((s) => !s);
                 }}
                 onFocus={(e) => e.stopPropagation()}

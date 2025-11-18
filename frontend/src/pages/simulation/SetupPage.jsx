@@ -7,6 +7,8 @@ import DemographicAccordion from "../../components/SimSetup/DemographicAccordion
 import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 
+import TemplateChooser from "../../components/SimSetup/TemplateChooser.jsx";
+
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 import { SimulationAPI } from "../../api/SimulationAPI.js";
@@ -19,13 +21,13 @@ const getDefaultDemographicParams = () => ({
   meanSavings: 10000,
   sdSavings: 5000,
   // Flat per-industry spending shares (keys match IndustryType enum)
-  GROCERIES: 25,
-  UTILITIES: 18,
-  AUTOMOBILES: 2,
-  HOUSING: 41,
-  HOUSEHOLD_GOODS: 8,
-  ENTERTAINMENT: 4,
-  LUXURY: 2,
+  Groceries: 25,
+  Utilities: 18,
+  Automobiles: 2,
+  Housing: 41,
+  "Household Goods": 8,
+  Entertainment: 4,
+  Luxury: 2,
 });
 
 // Function to generate default parameters for one industry
@@ -126,7 +128,7 @@ export default function SetupPage() {
 
     // ----- Demographics -----
     const demoOrder = Object.values(Demographic);
-    const industryKeys = Object.keys(IndustryType);
+    const industryKeys = Object.values(IndustryType);
 
     // Proportions must total 100
     const proportionSum = Object.values(params.demoParams).reduce(
@@ -413,12 +415,22 @@ export default function SetupPage() {
       <Typography variant="h4" gutterBottom>
         Simulation Setup
       </Typography>
+
       <Typography variant="body1" paragraph>
         Configure the starting parameters for your simulation. These values
         affect how the environment, demographics, industries, and policies
         behave when the simulation begins.
       </Typography>
 
+      <TemplateChooser
+        onTemplateSelect={async (template) => {
+          console.log("Selected template:", template);
+          const config = await SimulationAPI.getTemplateConfig(template);
+          config.envParams.maxSimulationLength = //only thing not in templates
+            params.envParams.maxSimulationLength;
+          setParams(config);
+        }}
+      />
       <EnvironmentalAccordion
         envParams={params.envParams}
         handleEnvChange={handleEnvChange}

@@ -58,7 +58,9 @@ export class SimulationAPI {
     if (response.status === HTTP_STATUS.OK) {
       const backendConfig = await response.json();
       // Transform the backend config into the frontend's `params` format
-      return receiveTemplatePayload(backendConfig);
+      const param = receiveTemplatePayload(backendConfig);
+      console.log("Template config received:", param);
+      return param;
     } else {
       throw await SimulationAPI.throwReadableError(
         response,
