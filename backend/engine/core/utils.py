@@ -58,8 +58,10 @@ def validate_schema(data: dict, schema: dict, path: str):
     Raises:
         ValueError: if the `data` does not match schema, or is None.
     """
-    if data is None:
-        raise ValueError(f"Data is None at {path}, expecting a dictionary.")
+    if data is None or not isinstance(data, dict):
+        raise ValueError(
+            f"Data is not a dictionary at {path} even though it was expected."
+        )
 
     missing = set(schema.keys()) - set(data.keys())
     if missing:
