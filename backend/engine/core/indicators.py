@@ -32,6 +32,7 @@ def calculate_gdp(model: Model) -> float:
     industryAgents = model.agents_by_type[IndustryAgent]
     gdp = 0.0
     for industry in industryAgents:
+        print(f"Industry {industry.industry_type} produced {industry.goods_produced} units at price {industry.price}")
         gdp += industry.goods_produced * industry.price
 
     return gdp

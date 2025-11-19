@@ -115,6 +115,8 @@ class IndustryAgent(Agent):
         self.property_value = property_value
         self.insurance = insurance
         self.goods_produced: int = 0  # Tracker for GDP indicator
+        
+        print(f"Initalized IndustryAgent of type {self.industry_type} with starting debt allowed as {self.debt_allowed}")
 
     def get_tariffs(self) -> float:
         """
@@ -219,6 +221,7 @@ class IndustryAgent(Agent):
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
         self.inventory_available_this_step = round(Suggested_Quantity)
+        print("Suggested inventory available this step:", self.inventory_available_this_step)
 
     def produce_goods(self):
         """
@@ -245,6 +248,7 @@ class IndustryAgent(Agent):
             self.balance (float): Funds available after production
             self.goods_produced (int): Number of good produced this cycle. Tracker for indicator calculations.
         """
+        print("Start of produce_goods")
         Fixed = self.get_fixed_cost_naive()
 
         # produce needed inventory without re-producing inventory aready in storage
@@ -258,6 +262,7 @@ class IndustryAgent(Agent):
                 Fixed  # fixed cost is still factored into losses this tick
             )
             self.balance -= Fixed
+            self.goods_produced = 0
             return
 
         variable_cost_per_unit = self.get_variable_cost()
@@ -279,7 +284,7 @@ class IndustryAgent(Agent):
                 f"Total employee work hours reduced by {hours_cut:.1f} to meet production quota."
             )
             # TODO If the number of hours needed can consistently be accomplished by fewer employees, trigger firing.  (call change_employment here!)
-
+        logging.info(f"Industry of type {self.industry_type} producing {quantity_to_produce} units.")
         # Update inventory and deduct costs
         self.inventory += quantity_to_produce
         self.goods_produced = quantity_to_produce
@@ -355,6 +360,7 @@ class IndustryAgent(Agent):
         tariffs = self.model.policies["tariffs"][self.industry_type]
         rawMaterialCostModifier = 0.0
         if subsidies is not None:
+            print("Subsidies:", subsidies)
             rawMaterialCostModifier -= (
                 subsidies  # subsidies reduce the cost of raw materials
             )
@@ -362,9 +368,9 @@ class IndustryAgent(Agent):
             rawMaterialCostModifier += (
                 tariffs  # Tariffs increase the cost of raw materials
             )
-
+        print(f"Raw Material before modifier: {rm}")
         rm += rm * rawMaterialCostModifier
-
+        print(f"Raw Material before modifier: {rm}")
         variable_cost = (ow / eff) + rm
 
         return variable_cost
@@ -510,12 +516,14 @@ class IndustryAgent(Agent):
             return
 
         if quantity > self.inventory_available_this_step:
+            print(f"Attempted to sell {quantity} but only have {self.inventory_available_this_step} available for sale.")
             logging.error(
                 f"Attempted to sell {quantity} but only have {self.inventory_available_this_step} available for sale."
             )
             return
-
+        print(f"Current Inventory before sale for {self.industry_type}: {self.inventory}")
         self.inventory -= quantity
+        print(f"Current Inventory after sale for {self.industry_type}: {self.inventory}")
         self.inventory_available_this_step -= quantity
         self.balance += quantity * self.price
         self.total_revenue += quantity * self.price
