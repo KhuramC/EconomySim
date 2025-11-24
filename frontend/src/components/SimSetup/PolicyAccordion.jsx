@@ -25,7 +25,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("salesTax")}
         error={!!formErrors.salesTax}
         helpText="Tax applied to consumer purchases. Increases effective prices and can dampen demand."
-        spacing={{ md: 18.5 }}
       />
       <ParameterSliderInput
         label="Corporate Income Tax (%)"
@@ -33,7 +32,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("corporateTax")}
         error={!!formErrors.corporateTax}
         helpText="Tax on industry profits. Reduces retained earnings and may affect investment."
-        spacing={{ md: 9 }}
       />
       <ParameterSliderInput
         label="Property Tax (%)"
@@ -41,7 +39,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("propertyTax")}
         error={!!formErrors.propertyTax}
         helpText="Recurring tax on property values. Can influence housing costs and investment."
-        spacing={{ md: 16.25 }}
       />
 
       <ParameterSliderInput
@@ -50,7 +47,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("priceCap")}
         error={!!formErrors.priceCap}
         helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
-        spacing={{ md: 14.5 }}
       />
 
       <ParameterSliderInput
@@ -59,7 +55,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("tariffs")}
         error={!!formErrors.tariffs}
         helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
-        spacing={{ md: 21.5 }}
       />
       <ParameterSliderInput
         label="Subsidies (%)"
@@ -67,7 +62,6 @@ export default function PolicyAccordion({
         onChange={handlePolicyChange("subsidies")}
         error={!!formErrors.subsidies}
         helpText="Government support paid to industries. Lowers effective costs or boosts income."
-        spacing={{ md: 18.5 }}
       />
 
       <ParameterNumInput

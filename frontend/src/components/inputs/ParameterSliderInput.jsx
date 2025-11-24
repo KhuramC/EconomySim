@@ -15,7 +15,6 @@ const ParameterSliderInput = ({
   onChange,
   error = false,
   readOnly = false,
-  spacing = 0,
   min = 0,
   max = 100,
   step = 1,
@@ -49,7 +48,7 @@ const ParameterSliderInput = ({
   return (
     <Grid size={{ xs: xs }}>
       {/* Label Row */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 0.5, pr: spacing }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
         <Typography variant="body2" color="text.secondary">
           {label}
         </Typography>
