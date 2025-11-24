@@ -135,17 +135,16 @@ export default function DemographicAccordion({
   const advancedContent = (
     <>
       {industryEntries.map((industry) => (
-        <Grid key={`spendingBehavior-${industry}`} size={{ xs: 12 }}>
-          <ParameterNumInput
-            label={industry + " Spending (%)"}
-            value={selectedDemo?.[industry] ?? ""}
-            onChange={handleDemographicChange(selectedDemographic, industry)}
-            readOnly={readOnly}
-            // Mark each cell red if the row is invalid OR that cell is flagged.
-            error={spendingRowInvalid || !!nestedErr[industry]}
-            helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
-          />
-        </Grid>
+        <ParameterNumInput
+          key={`spendingBehavior-${industry}`}
+          label={industry + " Spending (%)"}
+          value={selectedDemo?.[industry] ?? ""}
+          onChange={handleDemographicChange(selectedDemographic, industry)}
+          readOnly={readOnly}
+          // Mark each cell red if the row is invalid OR that cell is flagged.
+          error={spendingRowInvalid || !!nestedErr[industry]}
+          helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
+        />
       ))}
     </>
   );
