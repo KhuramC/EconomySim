@@ -6,8 +6,8 @@ import {
   Tooltip,
   MenuItem,
 } from "@mui/material";
-import ParameterMenuInput from "./ParameterMenuInput.jsx";
-import ParameterNumInput from "./ParameterNumInput.jsx";
+import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import { IndustryType } from "../../types/IndustryType.js";
 /**

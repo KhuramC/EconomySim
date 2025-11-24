@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { MenuItem, Grid } from "@mui/material";
 import ParameterAccordion from "./ParameterAccordion.jsx";
-import ParameterMenuInput from "./ParameterMenuInput.jsx";
-import ParameterNumInput from "./ParameterNumInput.jsx";
-import ParameterSliderInput from "./ParameterSliderInput.jsx";
+import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
+import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 

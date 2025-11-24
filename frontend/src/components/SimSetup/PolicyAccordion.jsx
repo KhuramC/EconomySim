@@ -1,4 +1,4 @@
-import ParameterNumInput from "./ParameterNumInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import PersonalIncomeTaxBracket from "./PersonalIncomeTaxBracket.jsx";
 
