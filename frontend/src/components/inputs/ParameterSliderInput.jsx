@@ -14,7 +14,7 @@ const ParameterSliderInput = ({
   value,
   onChange,
   error = false,
-  readonly = false,
+  readOnly = false,
   spacing = 0,
   min = 0,
   max = 100,
@@ -76,7 +76,7 @@ const ParameterSliderInput = ({
           min={min}
           max={max}
           step={step}
-          disabled={readonly}
+          disabled={readOnly}
           sx={{
             flexGrow: 1,
             minWidth: 0,
@@ -100,7 +100,7 @@ const ParameterSliderInput = ({
           size="small"
           onChange={handleInputChange}
           onBlur={handleInputBlur}
-          readonly={readonly}
+          readOnly={readOnly}
           endAdornment={
             unit && <Typography variant="caption">{unit}</Typography>
           }
