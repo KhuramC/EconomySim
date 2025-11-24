@@ -1,6 +1,6 @@
 import { Button, Box, IconButton, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ParameterNumInput from "./ParameterNumInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 
 export default function PersonalIncomeTaxBracket({
   personalIncomeTax,
