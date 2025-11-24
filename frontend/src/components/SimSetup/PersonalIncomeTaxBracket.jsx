@@ -16,7 +16,11 @@ export default function PersonalIncomeTaxBracket({
       spacing={2}
       sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}
     >
-      <Typography variant="subtitle1" gutterBottom>
+      <Typography
+        variant="subtitle1"
+        sx={{ fontWeight: 600, color: "text.secondary", mb: 1 }}
+        gutterBottom
+      >
         Personal Income Tax Brackets
       </Typography>
       {personalIncomeTax.map((bracket, index) => (
