@@ -24,8 +24,8 @@ const ParameterAccordion = ({
   title,
   defaultExpanded = false,
   selector = null, // a component for some selector in the header
-  children, // Core settings -> typically <Grid item>
-  advancedContent = null, // Advanced settings -> typically <Grid item>
+  children, // Core settings -> typically <Grid>
+  advancedContent = null, // Advanced settings -> typically <Grid>
   defaultAdvancedOpen = false,
   advancedTitle = "Advanced Settings",
   advancedTitleProps = {},

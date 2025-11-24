@@ -135,7 +135,7 @@ export default function DemographicAccordion({
   const advancedContent = (
     <>
       {industryEntries.map((industry) => (
-        <Grid key={`spendingBehavior-${industry}`} item xs={12}>
+        <Grid key={`spendingBehavior-${industry}`} size={{ xs: 12 }}>
           <ParameterNumInput
             label={industry + " Spending (%)"}
             value={selectedDemo?.[industry] ?? ""}
