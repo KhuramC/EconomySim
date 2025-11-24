@@ -105,7 +105,7 @@ const ParameterSliderInput = ({
           }
           inputProps={{ step, min, max, type: "number" }}
           error={error}
-          sx={{ width: 80 }}
+          sx={{ width: 120 }}
         />
       </Stack>
     </Grid>
