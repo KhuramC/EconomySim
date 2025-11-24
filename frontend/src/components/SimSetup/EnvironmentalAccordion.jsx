@@ -40,7 +40,6 @@ export default function EnvironmentalAccordion({
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}
         helpText="Baseline annual inflation rate. Prices tend to drift upward by this percentage each year."
-        unit="%"
       />
     </>
   );

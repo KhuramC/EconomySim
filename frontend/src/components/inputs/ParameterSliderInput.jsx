@@ -15,12 +15,13 @@ const ParameterSliderInput = ({
   onChange,
   error = false,
   readonly = false,
+  spacing = 0,
   min = 0,
   max = 100,
   step = 1,
   helpText,
   xs = 12,
-  unit = "",
+  unit = "%",
 }) => {
   const handleSliderChange = (event, newValue) => {
     onChange({ target: { value: newValue } });
@@ -46,9 +47,9 @@ const ParameterSliderInput = ({
   };
 
   return (
-    <Grid item xs={xs}>
+    <Grid item xs={xs} sx={{ minwidth: "1000px" }}>
       {/* Label Row */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 0.5, pr: spacing }}>
         <Typography variant="body2" color="text.secondary">
           {label}
         </Typography>
@@ -70,7 +71,7 @@ const ParameterSliderInput = ({
         sx={{ width: "100%" }}
       >
         <Slider
-          value={typeof value === "number" ? value : 0}
+          value={value}
           onChange={handleSliderChange}
           min={min}
           max={max}

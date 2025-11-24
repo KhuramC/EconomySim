@@ -91,7 +91,7 @@ export default function DemographicAccordion({
         error={hasProportionError}
         readOnly={readOnly}
         helpText="Share of the total population in this demographic. All demographics together must sum to 100%."
-        unit="%"
+        spacing={7.5}
       />
 
       <ParameterNumInput
