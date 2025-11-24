@@ -14,21 +14,25 @@ import { IndustryType } from "../../types/IndustryType.js";
 import { SimulationAPI } from "../../api/SimulationAPI.js";
 
 // Function to generate default parameters for one demographic
-const getDefaultDemographicParams = () => ({
-  meanIncome: 50000,
-  sdIncome: 15000,
-  proportion: 33,
-  meanSavings: 10000,
-  sdSavings: 5000,
-  // Flat per-industry spending shares (keys match IndustryType enum)
-  Groceries: 25,
-  Utilities: 18,
-  Automobiles: 2,
-  Housing: 41,
-  "Household Goods": 8,
-  Entertainment: 4,
-  Luxury: 2,
-});
+const getDefaultDemographicParams = () => {
+  const spendingAllocation = {
+    [IndustryType.GROCERIES]: 25,
+    [IndustryType.UTILITIES]: 18,
+    [IndustryType.AUTOMOBILES]: 2,
+    [IndustryType.HOUSING]: 41,
+    [IndustryType.HOUSEHOLD_GOODS]: 8,
+    [IndustryType.ENTERTAINMENT]: 4,
+    [IndustryType.LUXURY]: 2,
+  };
+  return {
+    meanIncome: 50000,
+    sdIncome: 15000,
+    proportion: 33,
+    meanSavings: 10000,
+    sdSavings: 5000,
+    ...spendingAllocation,
+  };
+};
 
 // Function to generate default parameters for one industry
 const getDefaultIndustryParams = () => ({
