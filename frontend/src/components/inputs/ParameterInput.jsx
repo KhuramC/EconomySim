@@ -16,20 +16,25 @@ const ParameterInput = ({
   xs = 6,
   fullWidth = true,
   error = false,
-  helpText,        // tooltip content shown beside the label (for select/text)
+  helpText, // tooltip content shown beside the label (for select/text)
   children,
-  slotProps,       
+  slotProps,
   ...TextFieldProps
 }) => {
   // Compose a label node that includes a tooltip icon when `helpText` is provided
   const labelNode = helpText ? (
-    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+    <Box
+      component="span"
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+    >
       <span>{label}</span>
       <Tooltip title={helpText} arrow enterDelay={300}>
         <HelpOutlineIcon
           fontSize="inherit"
           sx={{ opacity: 0.7, cursor: "help" }}
-          aria-label={typeof label === "string" ? `${label} help` : "Field help"}
+          aria-label={
+            typeof label === "string" ? `${label} help` : "Field help"
+          }
           onMouseDown={(e) => e.preventDefault()}
         />
       </Tooltip>
@@ -58,14 +63,14 @@ const ParameterInput = ({
   const mergedSlotProps = deepmerge(baseSlotProps, slotProps || {});
 
   return (
-    <Grid item xs={xs}>
+    <Grid size={{ xs: xs }}>
       <TextField
         label={labelNode}
         value={value}
         onChange={onChange}
         fullWidth={fullWidth}
         error={error}
-        slotProps={mergedSlotProps}      
+        slotProps={mergedSlotProps}
         {...TextFieldProps}
       >
         {children}

@@ -47,7 +47,7 @@ const ParameterSliderInput = ({
   };
 
   return (
-    <Grid item xs={xs} sx={{ minwidth: "1000px" }}>
+    <Grid size={{ xs: xs }}>
       {/* Label Row */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 0.5, pr: spacing }}>
         <Typography variant="body2" color="text.secondary">

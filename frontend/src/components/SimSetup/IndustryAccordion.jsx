@@ -165,7 +165,7 @@ export default function IndustryAccordion({
             helpText="Efficiency of each employee in goods produced per hour. Affects productivity and output levels."
           />
 
-          <Grid item xs={6}>
+          <Grid size={{xs:6}}>
             <FormControlLabel
               control={
                 <Switch

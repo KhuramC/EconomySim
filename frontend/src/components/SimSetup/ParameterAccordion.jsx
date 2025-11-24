@@ -87,7 +87,7 @@ const ParameterAccordion = ({
 
             {/* Title row */}
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography
                   variant="subtitle1"
                   sx={{ fontWeight: 600, color: "text.secondary", mb: 1 }}
