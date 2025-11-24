@@ -11,7 +11,7 @@ const ParameterMenuInput = ({
   onChange,
   xs = 12,
   error = false,
-  helpText,          // tooltip content
+  helpText, // tooltip content
   children,
   ...otherProps
 }) => {
@@ -23,7 +23,7 @@ const ParameterMenuInput = ({
       select
       xs={xs}
       error={error}
-      helpText={helpText}                        
+      helpText={helpText}
       {...otherProps}
     >
       {children}

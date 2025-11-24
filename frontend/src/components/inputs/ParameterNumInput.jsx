@@ -13,13 +13,13 @@ const ParameterNumInput = ({
   label,
   value,
   onChange,
-  xs = 6,　// Can still override grid size
+  xs = 6, // Can still override grid size
   error = false,
   readOnly = false,
-  helpText,            // tooltip content
+  helpText, // tooltip content
   slotProps,
   inputProps,
-  InputProps,          // allow callers to pass their own adornments if needed
+  InputProps, // allow callers to pass their own adornments if needed
   ...otherProps
 }) => {
   const internalSlotProps = readOnly ? { input: { readOnly: true } } : {};
