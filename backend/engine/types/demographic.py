@@ -6,9 +6,9 @@ class Demographic(StrEnum):
     An enumeration of the different demographics supported by the simulation.
     """
 
-    LOWER_CLASS = "lower class"
-    MIDDLE_CLASS = "middle class"
-    UPPER_CLASS = "upper class"
+    LOWER_CLASS = "Lower Class"
+    MIDDLE_CLASS = "Middle Class"
+    UPPER_CLASS = "Upper Class"
 
 # TODO: Elaborate on CES function.
 # The CES utility function that we use to model a PersonAgent's spending behavior includes a hyperparameter,

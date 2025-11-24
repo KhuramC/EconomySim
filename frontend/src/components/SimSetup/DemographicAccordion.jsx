@@ -76,7 +76,7 @@ export default function DemographicAccordion({
       {demographics.map((value) => (
         // Create a MenuItem for each Demographic
         <MenuItem key={value} value={value}>
-          <span style={{ textTransform: "capitalize" }}>{value}</span>
+          <span>{value}</span>
         </MenuItem>
       ))}
     </ParameterMenuInput>
