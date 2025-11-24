@@ -20,7 +20,7 @@ const ParameterSliderInput = ({
   max = 100,
   step = 1,
   helpText,
-  xs = 12,
+  xs = 6,
   unit = "%",
 }) => {
   const handleSliderChange = (event, newValue) => {
