@@ -13,6 +13,7 @@ const ParameterSliderInput = ({
   label,
   value,
   onChange,
+  error = false,
   min = 0,
   max = 100,
   step = 1,
@@ -73,7 +74,23 @@ const ParameterSliderInput = ({
           min={min}
           max={max}
           step={step}
-          sx={{ flexGrow: 1, minWidth: 0 }}
+          sx={{
+            flexGrow: 1,
+            minWidth: 0,
+            ...(error && {
+              // Change slider color on error
+              color: "error.main",
+              "& .MuiSlider-thumb": {
+                borderColor: "error.main",
+              },
+              "& .MuiSlider-track": {
+                backgroundColor: "error.main",
+              },
+              "& .MuiSlider-rail": {
+                backgroundColor: "error.light",
+              },
+            }),
+          }}
         />
         <Input
           value={value}
@@ -84,6 +101,7 @@ const ParameterSliderInput = ({
             unit && <Typography variant="caption">{unit}</Typography>
           }
           inputProps={{ step, min, max, type: "number" }}
+          error={error}
           sx={{ width: 80 }}
         />
       </Stack>
