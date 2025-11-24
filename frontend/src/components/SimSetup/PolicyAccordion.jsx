@@ -1,4 +1,5 @@
 import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
+import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import PersonalIncomeTaxBracket from "./PersonalIncomeTaxBracket.jsx";
 
@@ -18,55 +19,63 @@ export default function PolicyAccordion({
 }) {
   const coreFields = (
     <>
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Sales Tax (%)"
         value={policyParams.salesTax}
         onChange={handlePolicyChange("salesTax")}
         error={!!formErrors.salesTax}
         helpText="Tax applied to consumer purchases. Increases effective prices and can dampen demand."
+        spacing={{ md: 18.5 }}
       />
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Corporate Income Tax (%)"
         value={policyParams.corporateTax}
         onChange={handlePolicyChange("corporateTax")}
         error={!!formErrors.corporateTax}
         helpText="Tax on industry profits. Reduces retained earnings and may affect investment."
+        spacing={{ md: 9 }}
       />
-
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Property Tax (%)"
         value={policyParams.propertyTax}
         onChange={handlePolicyChange("propertyTax")}
         error={!!formErrors.propertyTax}
         helpText="Recurring tax on property values. Can influence housing costs and investment."
+        spacing={{ md: 16.25 }}
       />
+
+      <ParameterSliderInput
+        label="Price Cap (%/year)"
+        value={policyParams.priceCap}
+        onChange={handlePolicyChange("priceCap")}
+        error={!!formErrors.priceCap}
+        helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
+        spacing={{ md: 14.5 }}
+      />
+
+      <ParameterSliderInput
+        label="Tariffs (%)"
+        value={policyParams.tariffs}
+        onChange={handlePolicyChange("tariffs")}
+        error={!!formErrors.tariffs}
+        helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
+        spacing={{ md: 21.5 }}
+      />
+      <ParameterSliderInput
+        label="Subsidies (%)"
+        value={policyParams.subsidies}
+        onChange={handlePolicyChange("subsidies")}
+        error={!!formErrors.subsidies}
+        helpText="Government support paid to industries. Lowers effective costs or boosts income."
+        spacing={{ md: 18.5 }}
+      />
+
       <ParameterNumInput
         label="Minimum Wage ($/hr)"
         value={policyParams.minimumWage}
         onChange={handlePolicyChange("minimumWage")}
         error={!!formErrors.minimumWage}
         helpText="Legal wage floor. Firms cannot offer wages below this value."
-      />
-      <ParameterNumInput
-        label="Tariffs (%)"
-        value={policyParams.tariffs}
-        onChange={handlePolicyChange("tariffs")}
-        error={!!formErrors.tariffs}
-        helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
-      />
-      <ParameterNumInput
-        label="Subsidies (%)"
-        value={policyParams.subsidies}
-        onChange={handlePolicyChange("subsidies")}
-        error={!!formErrors.subsidies}
-        helpText="Government support paid to industries. Lowers effective costs or boosts income."
-      />
-      <ParameterNumInput
-        label="Price Cap (%/year)"
-        value={policyParams.priceCap}
-        onChange={handlePolicyChange("priceCap")}
-        error={!!formErrors.priceCap}
-        helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
       />
 
       <PersonalIncomeTaxBracket
