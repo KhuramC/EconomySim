@@ -1,12 +1,10 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-import json
+from fastapi import WebSocket, WebSocketDisconnect
 from typing import Callable
 
-from .dependencies import get_controller
+from .dependencies import get_controller, get_router, get_app
 
-# This router will be included in the main FastAPI app
-router = APIRouter()
-
+app = get_app()
+router = get_router()
 controller = get_controller()
 
 

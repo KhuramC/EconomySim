@@ -1,5 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 import pandas as pd
@@ -8,28 +7,10 @@ from typing import Any
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from .city_template import CityTemplate
-from . import websocket
-from .dependencies import get_controller
+from .dependencies import get_controller, get_router
 
 controller = get_controller()
-app = FastAPI()
-
-# Define allowed origins for both HTTP and WebSocket
-origins = [
-    "http://localhost:5173",  # React dev server
-    "http://127.0.0.1:5173",  # React dev server pt.2
-]
-
-# Middleware for standard HTTP requests
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],  # Allows all headers (like Content-Type)
-)
-
-app.include_router(websocket.router)
+router = get_router()
 
 
 class ModelCreateRequest(BaseModel):
@@ -46,21 +27,19 @@ class ModelCreateRequest(BaseModel):
     industries: dict[IndustryType, dict[str, float | int]] = Field(
         ..., description="Information about every industry."
     )
-    policies: dict[str, Any] = Field(
-        ..., description="Policies for the simulation."
-    )
+    policies: dict[str, Any] = Field(..., description="Policies for the simulation.")
 
 
 # API Endpoints
 
 
-@app.get("/", status_code=status.HTTP_200_OK)
+@router.get("/", status_code=status.HTTP_200_OK)
 async def root():
     """Sanity check for the API."""
     return {"message": "EconomySim API is running."}
 
 
-@app.get("/templates/{template}", status_code=status.HTTP_200_OK)
+@router.get("/templates/{template}", status_code=status.HTTP_200_OK)
 async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
     """
     Retrieves the simulation configuration associated with the template.
@@ -80,7 +59,7 @@ async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
     return config
 
 
-@app.post("/models/create", status_code=status.HTTP_201_CREATED)
+@router.post("/models/create", status_code=status.HTTP_201_CREATED)
 async def create_model(
     model_parameters: ModelCreateRequest,
 ) -> int:
@@ -112,7 +91,7 @@ async def create_model(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
+@router.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
 async def get_model_policies(
     model_id: int,
 ) -> dict[str, Any]:
@@ -139,7 +118,7 @@ async def get_model_policies(
         )
 
 
-@app.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
 async def set_model_policies(
     model_id: int,
     policies: dict[str, Any],
@@ -179,7 +158,7 @@ def dataframe_to_json_response(df: pd.DataFrame) -> Response:
     return Response(content=json_string, media_type="application/json")
 
 
-@app.get("/models/{model_id}/indicators", status_code=status.HTTP_200_OK)
+@router.get("/models/{model_id}/indicators", status_code=status.HTTP_200_OK)
 async def get_model_indicators(
     model_id: int,
     start_time: int,
@@ -213,7 +192,7 @@ async def get_model_indicators(
         )
 
 
-@app.post("/models/{model_id}/step", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/models/{model_id}/step", status_code=status.HTTP_204_NO_CONTENT)
 async def step_model(model_id: int):
     """
     Steps the simulation for a given model once.
@@ -234,7 +213,7 @@ async def step_model(model_id: int):
         )
 
 
-@app.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model(model_id: int):
     """
     Deletes a model.
