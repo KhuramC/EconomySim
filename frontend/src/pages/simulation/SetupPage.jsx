@@ -92,6 +92,7 @@ export default function SetupPage() {
       tariffs: 5,
       subsidies: 20,
       priceCap: 20, // $ > 0
+      priceCapEnabled: false,
       minimumWage: 7.25, // $/hr > 0
     },
   });
@@ -353,6 +354,16 @@ export default function SetupPage() {
     }));
   };
 
+  const handlePriceCapToggle = (event) => {
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        priceCapEnabled: event.target.checked,
+      },
+    }));
+  };
+
   const handlePersonalIncomeTaxChange = (index, field) => (event) => {
     const { value } = event.target;
     setParams((prev) => {
@@ -430,8 +441,10 @@ export default function SetupPage() {
         onTemplateSelect={async (template) => {
           console.log("Selected template:", template);
           const config = await SimulationAPI.getTemplateConfig(template);
-          config.envParams.maxSimulationLength = //only thing not in templates
+          config.envParams.maxSimulationLength = // not in templates
             params.envParams.maxSimulationLength;
+          config.policyParams.priceCapEnabled = // not in templates
+            params.policyParams.priceCapEnabled;
           setParams(config);
         }}
       />
@@ -457,6 +470,7 @@ export default function SetupPage() {
         policyParams={params.policyParams}
         handlePolicyChange={handlePolicyChange}
         formErrors={inputErrors.policy}
+        handlePriceCapToggle={handlePriceCapToggle}
         handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
         addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
         removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}

@@ -1,5 +1,6 @@
 import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
+import ToggleableSliderInput from "../inputs/ToggleableSliderInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import PersonalIncomeTaxBracket from "./PersonalIncomeTaxBracket.jsx";
 
@@ -13,6 +14,7 @@ export default function PolicyAccordion({
   handlePolicyChange,
   formErrors = {},
   starting = true,
+  handlePriceCapToggle,
   handlePersonalIncomeTaxChange,
   addPersonalIncomeTaxBracket,
   removePersonalIncomeTaxBracket,
@@ -41,12 +43,14 @@ export default function PolicyAccordion({
         helpText="Recurring tax on property values. Can influence housing costs and investment."
       />
 
-      <ParameterSliderInput
+      <ToggleableSliderInput
         label="Price Cap (%/year)"
         value={policyParams.priceCap}
+        onToggle={handlePriceCapToggle}
         onChange={handlePolicyChange("priceCap")}
         error={!!formErrors.priceCap}
         helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
+        defaultEnabled={policyParams.priceCapEnabled}
       />
 
       <ParameterSliderInput

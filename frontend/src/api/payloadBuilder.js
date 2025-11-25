@@ -67,7 +67,9 @@ export function buildPoliciesPayload(policyParams) {
     price_cap: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
         value,
-        annualPercentToWeeklyDecimal(policyParams.priceCap),
+        policyParams.priceCapEnabled
+          ? annualPercentToWeeklyDecimal(policyParams.priceCap)
+          : null, //null gets converted to None on Python backend
       ])
     ),
     minimum_wage: hourlyWageToWeekly(policyParams.minimumWage),
