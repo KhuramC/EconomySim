@@ -1,5 +1,4 @@
 import ParameterInput from "./ParameterInput";
-import { deepmerge } from "@mui/utils";
 import { InputAdornment, Tooltip } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
@@ -7,7 +6,6 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
  * Number input wrapper:
  * - Uses TextField `type="number"`.
  * - Shows a "?" tooltip as an end adornment (inside the input) so hover always works.
- * - Supports `readOnly` via slotProps (without disabling the visual).
  */
 const ParameterNumInput = ({
   label,
@@ -22,8 +20,6 @@ const ParameterNumInput = ({
   InputProps, // allow callers to pass their own adornments if needed
   ...otherProps
 }) => {
-  const internalSlotProps = readOnly ? { input: { readOnly: true } } : {};
-
   // Build an end adornment tooltip icon when helpText is provided
   const endAdornment = helpText ? (
     <InputAdornment position="end">
@@ -50,7 +46,8 @@ const ParameterNumInput = ({
       // IMPORTANT: Do NOT pass helpText down, to avoid a duplicate label icon.
       // The tooltip is shown via endAdornment instead.
       helpText={undefined}
-      slotProps={deepmerge(internalSlotProps, slotProps)}
+      readOnly={readOnly}
+      slotProps={slotProps}
       inputProps={{ step: "any", ...(inputProps || {}) }}
       InputProps={mergedInputPropsForBase}
       {...otherProps}

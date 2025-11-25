@@ -21,8 +21,8 @@ export default function IndustryAccordion({
   handleIndustryChange,
   formErrors = {},
   starting = true,
-  readOnly = false,
 }) {
+  const readOnly = !starting; // If not starting, make all fields read-only
   const industryValues = useMemo(() => Object.values(IndustryType), []);
   const [selectedIndustry, setSelectedIndustry] = useState(industryValues[0]);
 

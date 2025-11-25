@@ -19,6 +19,7 @@ const ParameterInput = ({
   helpText, // tooltip content shown beside the label (for select/text)
   children,
   slotProps,
+  readOnly = false,
   ...TextFieldProps
 }) => {
   // Compose a label node that includes a tooltip icon when `helpText` is provided
@@ -71,6 +72,7 @@ const ParameterInput = ({
         fullWidth={fullWidth}
         error={error}
         slotProps={mergedSlotProps}
+        disabled={readOnly}
         {...TextFieldProps}
       >
         {children}
