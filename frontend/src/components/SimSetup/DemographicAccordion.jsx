@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { MenuItem, Grid } from "@mui/material";
 import ParameterAccordion from "./ParameterAccordion.jsx";
-import ParameterMenuInput from "./ParameterMenuInput.jsx";
-import ParameterNumInput from "./ParameterNumInput.jsx";
+import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
+import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 
@@ -18,7 +19,6 @@ export default function DemographicAccordion({
   demoParams,
   handleDemographicChange,
   formErrors = {},
-  starting = true,
   readOnly = false,
 }) {
   const demographics = useMemo(() => Object.values(Demographic), []);
@@ -76,7 +76,7 @@ export default function DemographicAccordion({
       {demographics.map((value) => (
         // Create a MenuItem for each Demographic
         <MenuItem key={value} value={value}>
-          <span style={{ textTransform: "capitalize" }}>{value}</span>
+          <span>{value}</span>
         </MenuItem>
       ))}
     </ParameterMenuInput>
@@ -84,13 +84,13 @@ export default function DemographicAccordion({
 
   const coreContent = (
     <>
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Proportion of Population (%)"
         value={selectedDemo.proportion}
         onChange={handleDemographicChange(selectedDemographic, "proportion")}
         error={hasProportionError}
         readOnly={readOnly}
-        helpText="Share of the total population in this group. All groups together must sum to 100%."
+        helpText="Share of the total population in this demographic. All demographics together must sum to 100%."
       />
 
       <ParameterNumInput
@@ -134,17 +134,16 @@ export default function DemographicAccordion({
   const advancedContent = (
     <>
       {industryEntries.map((industry) => (
-        <Grid key={`spendingBehavior-${industry}`} item xs={12}>
-          <ParameterNumInput
-            label={industry + " Spending (%)"}
-            value={selectedDemo?.[industry] ?? ""}
-            onChange={handleDemographicChange(selectedDemographic, industry)}
-            readOnly={readOnly}
-            // Mark each cell red if the row is invalid OR that cell is flagged.
-            error={spendingRowInvalid || !!nestedErr[industry]}
-            helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
-          />
-        </Grid>
+        <ParameterSliderInput
+          key={`spendingBehavior-${industry}`}
+          label={industry + " Spending (%)"}
+          value={selectedDemo?.[industry] ?? ""}
+          onChange={handleDemographicChange(selectedDemographic, industry)}
+          readOnly={readOnly}
+          // Mark each cell red if the row is invalid OR that cell is flagged.
+          error={spendingRowInvalid || !!nestedErr[industry]}
+          helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
+        />
       ))}
     </>
   );

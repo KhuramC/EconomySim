@@ -177,6 +177,7 @@ _SMALL_CONFIG = {
         },
         "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
+        "price_cap_enabled": {itype.value: False for itype in IndustryType},
         "minimum_wage": 550.00,  # $13.75/hr x 40 hrs
     },
 }
@@ -353,6 +354,7 @@ _MEDIUM_CONFIG = {
         },
         "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
+        "price_cap_enabled": {itype.value: False for itype in IndustryType},
         "minimum_wage": 290.00,  # $7.25/hr x 40 hrs
     },
 }
@@ -537,6 +539,10 @@ _LARGE_CONFIG = {
             itype.value: (
                 0.000267 if itype.value == IndustryType.HOUSING else None
             )  # Annual: 1.4%
+            for itype in IndustryType
+        },
+        "price_cap_enabled": {
+            itype.value: True if itype.value == IndustryType.HOUSING else False
             for itype in IndustryType
         },
         "minimum_wage": 767.20,  # $19.18/hr x 40 hrs

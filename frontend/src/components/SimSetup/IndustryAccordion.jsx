@@ -1,13 +1,8 @@
 import { useMemo, useState } from "react";
-import {
-  Grid,
-  Switch,
-  FormControlLabel,
-  Tooltip,
-  MenuItem,
-} from "@mui/material";
-import ParameterMenuInput from "./ParameterMenuInput.jsx";
-import ParameterNumInput from "./ParameterNumInput.jsx";
+import { MenuItem } from "@mui/material";
+import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
+import ParameterToggleInput from "../inputs/ParameterToggleInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import { IndustryType } from "../../types/IndustryType.js";
 /**
@@ -21,8 +16,8 @@ export default function IndustryAccordion({
   handleIndustryChange,
   formErrors = {},
   starting = true,
-  readOnly = false,
 }) {
+  const readOnly = !starting; // If not starting, make all fields read-only
   const industryValues = useMemo(() => Object.values(IndustryType), []);
   const [selectedIndustry, setSelectedIndustry] = useState(industryValues[0]);
 
@@ -165,27 +160,15 @@ export default function IndustryAccordion({
             helpText="Efficiency of each employee in goods produced per hour. Affects productivity and output levels."
           />
 
-          <Grid item xs={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={!!current.startingDebtAllowed}
-                  onChange={handleIndustryChange(
-                    selectedIndustry,
-                    "startingDebtAllowed"
-                  )}
-                />
-              }
-              label={
-                <Tooltip
-                  title="Enable the industry to go into debt. Allows the industry to be more flexible."
-                  arrow
-                >
-                  <span>Debt Allowed</span>
-                </Tooltip>
-              }
-            />
-          </Grid>
+          <ParameterToggleInput
+            label="Debt Allowed"
+            value={current.startingDebtAllowed}
+            onChange={handleIndustryChange(
+              selectedIndustry,
+              "startingDebtAllowed"
+            )}
+            helpText="Enable the industry to go into debt. Allows the industry to be more flexible."
+          />
         </>
       ) : null}
     </>

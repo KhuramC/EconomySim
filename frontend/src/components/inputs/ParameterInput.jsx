@@ -3,11 +3,11 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { deepmerge } from "@mui/utils";
 
 /**
- * Base input wrapper:
- * - Wraps MUI TextField inside a Grid item with a configurable column span.
- * - Pass `select` to turn it into a dropdown.
- * - Accepts any TextField props via rest spread, including `helperText`.
- * - Supports per-field tooltip via `helpText`.
+ * A base input component that wraps a Material-UI TextField within a Grid item.
+ * It provides a consistent layout for form parameters and adds features like a help tooltip.
+ *
+ * To use this as a dropdown menu, see ParameterMenuInput.
+ * To use this as a number input, see ParameterNumInput.
  */
 const ParameterInput = ({
   label,
@@ -16,20 +16,26 @@ const ParameterInput = ({
   xs = 6,
   fullWidth = true,
   error = false,
-  helpText,        // tooltip content shown beside the label (for select/text)
+  helpText, // tooltip content shown beside the label (for select/text)
   children,
-  slotProps,       
+  slotProps,
+  readOnly = false,
   ...TextFieldProps
 }) => {
   // Compose a label node that includes a tooltip icon when `helpText` is provided
   const labelNode = helpText ? (
-    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+    <Box
+      component="span"
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+    >
       <span>{label}</span>
       <Tooltip title={helpText} arrow enterDelay={300}>
         <HelpOutlineIcon
           fontSize="inherit"
           sx={{ opacity: 0.7, cursor: "help" }}
-          aria-label={typeof label === "string" ? `${label} help` : "Field help"}
+          aria-label={
+            typeof label === "string" ? `${label} help` : "Field help"
+          }
           onMouseDown={(e) => e.preventDefault()}
         />
       </Tooltip>
@@ -58,14 +64,15 @@ const ParameterInput = ({
   const mergedSlotProps = deepmerge(baseSlotProps, slotProps || {});
 
   return (
-    <Grid item xs={xs}>
+    <Grid size={{ xs: xs }}>
       <TextField
         label={labelNode}
         value={value}
         onChange={onChange}
         fullWidth={fullWidth}
         error={error}
-        slotProps={mergedSlotProps}      
+        slotProps={mergedSlotProps}
+        disabled={readOnly}
         {...TextFieldProps}
       >
         {children}

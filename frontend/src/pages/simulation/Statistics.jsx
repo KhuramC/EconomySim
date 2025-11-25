@@ -75,9 +75,7 @@ export default function Statistics() {
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={8}
+          size={{ xs: 12, md: 8 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
@@ -139,9 +137,7 @@ export default function Statistics() {
 
         {/* RIGHT COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={4}
+          size={{ xs: 12, md: 4 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           {/* Add New Graph panel */}

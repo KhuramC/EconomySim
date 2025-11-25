@@ -77,13 +77,12 @@ export default function Industries({ oldindustryParams }) {
 
       <Grid container spacing={3}>
         {/* LEFT column: main content */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Industries
           </Typography>
 
-          {/* Only render the accordion when industries data is available;
-          Uses existing accordion; safe because all keys are present */}
+          {/* Only render the accordion when industries data is available */}
           {industryParams ? (
             <IndustryAccordion
               industryParams={industryParams}
@@ -91,7 +90,6 @@ export default function Industries({ oldindustryParams }) {
               // IndustryAccordion expects a higher-order handler: (k, f) => (e) => {}
               handleIndustryChange={() => () => {}}
               starting={false}
-              readOnly={true}
             />
           ) : null}
         </Grid>
