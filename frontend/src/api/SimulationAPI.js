@@ -149,52 +149,6 @@ export class SimulationAPI {
   }
 
   /**
-   * Retrieves all of the model indicators for a given model ID.
-   * @param {number} [startTime=0] - The start time to get indicators for.
-   * @param {number} [endTime=0] - The end time to get indicators for (0 means current time).
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @returns {Object} - the indicator as a list of records.
-   * @throws {Error} If the indicators could not be retrieved.
-   */
-  async getModelIndicators(startTime = 0, endTime = 0, modelId = this.modelId) {
-    // TODO: Should we give ability to fetch specific indicators? API can be changed to do that, see controller method to get indicators.
-    const url = new URL(`${BASE_HTTP_URL}/models/${modelId}/indicators`);
-    url.searchParams.append("start_time", startTime);
-    url.searchParams.append("end_time", endTime);
-
-    const response = await fetch(url.toString(), { method: "GET" });
-    if (response.status === HTTP_STATUS.OK) {
-      const data = await response.json();
-      return data;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to fetch indicators for model ID ${modelId}`
-      );
-    }
-  }
-
-  /**
-   * Steps 1 time step for a given model ID.
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @throws {Error} If the model could not be stepped through.
-   */
-  async stepModel(modelId = this.modelId) {
-    const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}/step`, {
-      method: "POST",
-    });
-
-    if (response.status === HTTP_STATUS.NO_CONTENT) {
-      return;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to step model ID ${modelId}`
-      );
-    }
-  }
-
-  /**
    * Deletes a model for a given model ID.
    * @param {string} [modelId=this.modelId] - The ID of the model.
    * @throws {Error} If the model could not be deleted.

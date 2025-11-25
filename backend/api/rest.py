@@ -30,7 +30,7 @@ class ModelCreateRequest(BaseModel):
     policies: dict[str, Any] = Field(..., description="Policies for the simulation.")
 
 
-# API Endpoints
+# API REST Endpoints
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
@@ -156,61 +156,6 @@ def dataframe_to_json_response(df: pd.DataFrame) -> Response:
 
     json_string = df.to_json(orient="columns")  # dict of columns
     return Response(content=json_string, media_type="application/json")
-
-
-@router.get("/models/{model_id}/indicators", status_code=status.HTTP_200_OK)
-async def get_model_indicators(
-    model_id: int,
-    start_time: int,
-    end_time: int,
-) -> Response:
-    """
-    Retrieves the indicators from a model at the timeframe desired.
-    The default status code is 200 upon success.
-
-    Args:
-        model_id (int): the id of the model desired.
-        start_time (int): the starting time for the indicators
-        end_time (int): the ending time for the indicators. If 0, it goes to the current time
-
-    Raises:
-        HTTPException(404): if the model does not exist.
-
-    Returns:
-        Response: A Response containing a JSON string of the dataframe on a per row basis.
-    """
-
-    try:
-        indicators_df = controller.get_indicators(
-            model_id, start_time, end_time, indicators=None
-        )
-        return dataframe_to_json_response(indicators_df)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with id {model_id} not found.",
-        )
-
-
-@router.post("/models/{model_id}/step", status_code=status.HTTP_204_NO_CONTENT)
-async def step_model(model_id: int):
-    """
-    Steps the simulation for a given model once.
-    The default status code is 204 upon success.
-
-    Args:
-        model_id (int): the model to step.
-
-    Raises:
-        HTTPException(404): if the model does not exist.
-    """
-    try:
-        controller.step_model(model_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with id {model_id} not found.",
-        )
 
 
 @router.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)

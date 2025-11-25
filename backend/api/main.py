@@ -6,7 +6,6 @@ from .dependencies import get_app, get_router
 from . import rest
 from . import websocket
 
-# Get the shared instances
 app = get_app()
 router = get_router()
 
