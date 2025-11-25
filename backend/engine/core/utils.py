@@ -40,6 +40,7 @@ POLICIES_SCHEMA = {
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
     "price_cap": {itype.value: None for itype in IndustryType},
+    "price_cap_enabled": {itype.value: None for itype in IndustryType},
     "minimum_wage": None,
 }
 """Schema for validating the policies dictionary."""

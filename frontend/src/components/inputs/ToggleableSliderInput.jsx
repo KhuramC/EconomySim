@@ -13,7 +13,8 @@ import ParameterToggleInput from "./ParameterToggleInput";
 const ToggleableSliderInput = ({
   label,
   value,
-  onToggle,
+  isEnabled,
+  setIsEnabled,
   onChange,
   error = false,
   min = 0,
@@ -22,13 +23,10 @@ const ToggleableSliderInput = ({
   helpText,
   xs = 6,
   unit = "%",
-  defaultEnabled = true,
 }) => {
-  const [isEnabled, setIsEnabled] = useState(defaultEnabled);
 
   const handleToggle = (event) => {
     setIsEnabled(event.target.checked);
-    onToggle && onToggle(event);
   };
 
   return (

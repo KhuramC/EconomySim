@@ -359,7 +359,7 @@ export default function SetupPage() {
       ...prev,
       policyParams: {
         ...prev.policyParams,
-        priceCapEnabled: event.target.checked,
+        priceCapEnabled: !prev.policyParams.priceCapEnabled,
       },
     }));
   };
@@ -443,8 +443,6 @@ export default function SetupPage() {
           const config = await SimulationAPI.getTemplateConfig(template);
           config.envParams.maxSimulationLength = // not in templates
             params.envParams.maxSimulationLength;
-          config.policyParams.priceCapEnabled = // not in templates
-            params.policyParams.priceCapEnabled;
           setParams(config);
         }}
       />

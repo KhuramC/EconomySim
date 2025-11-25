@@ -46,11 +46,11 @@ export default function PolicyAccordion({
       <ToggleableSliderInput
         label="Price Cap (%/year)"
         value={policyParams.priceCap}
-        onToggle={handlePriceCapToggle}
+        isEnabled={policyParams.priceCapEnabled}
+        setIsEnabled={handlePriceCapToggle}
         onChange={handlePolicyChange("priceCap")}
         error={!!formErrors.priceCap}
         helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
-        defaultEnabled={policyParams.priceCapEnabled}
       />
 
       <ParameterSliderInput

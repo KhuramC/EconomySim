@@ -76,6 +76,18 @@ export default function Policies() {
     });
   };
 
+  const handlePriceCapToggle = (event) => {
+    setPolicies((prevPolicies) => {
+      const newPolicies = {
+        ...prevPolicies,
+        priceCapEnabled: !prevPolicies.priceCapEnabled,
+      };
+
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
   const handlePersonalIncomeTaxChange = (index, field) => (event) => {
     const { value } = event.target;
     setPolicies((prevPolicies) => {
@@ -128,7 +140,7 @@ export default function Policies() {
 
       <Grid container spacing={3}>
         {/* LEFT column: main content (editable) */}
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Policies
           </Typography>
@@ -139,6 +151,7 @@ export default function Policies() {
               policyParams={policies}
               handlePolicyChange={handlePolicyChange}
               starting={false}
+              handlePriceCapToggle={handlePriceCapToggle}
               handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
               addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
               removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
