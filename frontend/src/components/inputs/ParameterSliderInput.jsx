@@ -105,7 +105,7 @@ const ParameterSliderInput = ({
           size="small"
           onChange={handleInputChange}
           onBlur={handleInputBlur}
-          readOnly={readOnly}
+          disabled={readOnly}
           endAdornment={
             unit && <Typography variant="caption">{unit}</Typography>
           }
