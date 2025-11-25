@@ -3,11 +3,11 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { deepmerge } from "@mui/utils";
 
 /**
- * Base input wrapper:
- * - Wraps MUI TextField inside a Grid item with a configurable column span.
- * - Pass `select` to turn it into a dropdown.
- * - Accepts any TextField props via rest spread, including `helperText`.
- * - Supports per-field tooltip via `helpText`.
+ * A base input component that wraps a Material-UI TextField within a Grid item.
+ * It provides a consistent layout for form parameters and adds features like a help tooltip.
+ *
+ * To use this as a dropdown menu, see ParameterMenuInput.
+ * To use this as a number input, see ParameterNumInput.
  */
 const ParameterInput = ({
   label,

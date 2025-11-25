@@ -4,15 +4,16 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { deepmerge } from "@mui/utils";
 
 /**
- * Number input wrapper:
- * - Uses TextField `type="number"`.
- * - Shows a "?" tooltip as an end adornment (inside the input) so hover always works.
+ * A specialized input component for numerical values, built upon `ParameterInput`.
+ *
+ * This component configures the underlying `ParameterInput` to be of `type="number"`.
+ * It also provides a help tooltip, now inside the input field as an end adornment.
  */
 const ParameterNumInput = ({
   label,
   value,
   onChange,
-  xs = 6, // Can still override grid size
+  xs = 6,
   error = false,
   readOnly = false,
   helpText, // tooltip content
@@ -43,7 +44,7 @@ const ParameterNumInput = ({
       type="number"
       xs={xs}
       error={error}
-      helpText={null} 
+      helpText={null}
       // helpText is not sent down since it's shown in the adornment in mergedSlotProps
       readOnly={readOnly}
       slotProps={mergedSlotProps}

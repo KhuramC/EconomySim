@@ -9,6 +9,12 @@ import {
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
+/**
+ * A composite input component that combines a slider with a numerical input field.
+ *
+ * It displays a label, an optional help tooltip, a slider for quick selection, and a precise
+ * numerical input field. The value is synchronized between the slider and the input.
+ */
 const ParameterSliderInput = ({
   label,
   value,
