@@ -1,6 +1,7 @@
 import ParameterInput from "./ParameterInput";
 import { InputAdornment, Tooltip } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { deepmerge } from "@mui/utils";
 
 /**
  * Number input wrapper:
@@ -16,8 +17,6 @@ const ParameterNumInput = ({
   readOnly = false,
   helpText, // tooltip content
   slotProps,
-  inputProps,
-  InputProps, // allow callers to pass their own adornments if needed
   ...otherProps
 }) => {
   // Build an end adornment tooltip icon when helpText is provided
@@ -29,11 +28,12 @@ const ParameterNumInput = ({
     </InputAdornment>
   ) : undefined;
 
-  // Merge caller-provided InputProps (if any) with our adornment
-  const mergedInputPropsForBase = {
-    ...(InputProps || {}),
-    endAdornment: (InputProps && InputProps.endAdornment) || endAdornment,
+  const baseSlotProps = {
+    input: {
+      endAdornment: endAdornment,
+    },
   };
+  const mergedSlotProps = deepmerge(baseSlotProps, slotProps || {});
 
   return (
     <ParameterInput
@@ -43,13 +43,10 @@ const ParameterNumInput = ({
       type="number"
       xs={xs}
       error={error}
-      // IMPORTANT: Do NOT pass helpText down, to avoid a duplicate label icon.
-      // The tooltip is shown via endAdornment instead.
-      helpText={undefined}
+      helpText={null} 
+      // helpText is not sent down since it's shown in the adornment in mergedSlotProps
       readOnly={readOnly}
-      slotProps={slotProps}
-      inputProps={{ step: "any", ...(inputProps || {}) }}
-      InputProps={mergedInputPropsForBase}
+      slotProps={mergedSlotProps}
       {...otherProps}
     />
   );
