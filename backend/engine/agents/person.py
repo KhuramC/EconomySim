@@ -81,7 +81,7 @@ class PersonAgent(Agent):
         budget: float,
         prefs: dict[IndustryType, float],
         prices: dict[IndustryType, float],
-    ) -> dict[str, int]:
+    ) -> dict[IndustryType, int]:
         """
         Calculates the quantity of each good to purchase based on the CES demand function.
 
