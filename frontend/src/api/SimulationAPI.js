@@ -205,12 +205,58 @@ export class SimulationAPI {
   }
 
   /**
+   * Sends a message through the WebSocket to step the simulation.
+   */
+  step() {
+    this.sendMessage({ action: "step" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to reverse the simulation.
+   */
+  reverseStep() {
+    this.sendMessage({ action: "reverse_step" });
+  }
+
+  /**
    * Sends a message through the WebSocket to get the current week.
    */
   getCurrentWeek() {
     this.sendMessage({ action: "get_current_week" });
   }
 
+  /**
+   * Sends a message through the WebSocket to get the industry metrics.
+   */
+  getIndustryData() {
+    this.sendMessage({ action: "get_industry_data" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the industry metrics for the current week.
+   */
+  getCurrentIndustryData() {
+    this.sendMessage({ action: "get_current_industry_data" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the economic indicators.
+   */
+  getIndicators() {
+    this.sendMessage({ action: "get_indicators" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the current week.
+   */
+  getPolicies() {
+    this.sendMessage({ action: "get_policies" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to set the policies.
+   * @param {*} policyParams the new policies to set.
+   */
   setPolicies(policyParams) {
     this.sendMessage({
       action: "set_policies",

@@ -19,7 +19,7 @@ export default function Policies() {
         return;
       }
       try {
-        simAPI.sendMessage({ action: "get_policies" });
+        simAPI.getPolicies();
       } catch (err) {
         setError(err.message);
       }

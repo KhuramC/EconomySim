@@ -40,8 +40,8 @@ export default function Statistics() {
     const handleWebSocketMessage = (message) => {
       // When a step happens, request the latest indicators/
       if (message.action === "step" || message.action === "reverse_step") {
-        simAPI.sendMessage({ action: "get_indicators" });
-        simAPI.sendMessage({ action: "get_industry_data" });
+        simAPI.getIndicators();
+        simAPI.getIndustryData();
       }
       // When indicator data arrives, update our state
       if (message.action === "get_indicators" && message.data) {
@@ -58,8 +58,8 @@ export default function Statistics() {
     // Add the listener
     simAPI.addMessageListener(handleWebSocketMessage);
     // Fetch initial data on component mount
-    simAPI.sendMessage({ action: "get_indicators" });
-    simAPI.sendMessage({ action: "get_industry_data" });
+    simAPI.getIndicators();
+    simAPI.getIndustryData();
 
     // Cleanup: remove the listener when the component unmounts
     return () => {

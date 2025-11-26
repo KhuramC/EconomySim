@@ -21,7 +21,7 @@ export default function TimelinePanel({ simAPI }) {
 
     if(isPlaying) {
       const interval = setInterval(() => {
-        simAPI.sendMessage({ action: "step" });
+        simAPI.step();
       }, 1000 / fastForwardRate);
       
       return () => clearInterval(interval);
@@ -37,7 +37,7 @@ export default function TimelinePanel({ simAPI }) {
       {/* Previous */}
       <IconButton
         aria-label="previous"
-        onClick={() => simAPI.sendMessage({ action: "reverse_step" })}
+        onClick={() => simAPI.reverseStep()}
         disabled={!simAPI}
       >
         <SkipPreviousIcon />
@@ -54,7 +54,7 @@ export default function TimelinePanel({ simAPI }) {
       {/* Next */}
       <IconButton
         aria-label="next"
-        onClick={() => simAPI.sendMessage({ action: "step" })}
+        onClick={() => simAPI.step()}
         disabled={!simAPI}
       >
         <SkipNextIcon />
