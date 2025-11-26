@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { MenuItem, Grid } from "@mui/material";
+import { MenuItem } from "@mui/material";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
 import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
+import SpendingBehavior from "./SpendingBehavior.jsx";
 import { Demographic } from "../../types/Demographic.js";
 import { IndustryType } from "../../types/IndustryType.js";
 
@@ -51,14 +52,6 @@ export default function DemographicAccordion({
   const hasSdSavingsError =
     !!nestedErr.sdSavings ||
     !!formErrors[`demo_sdSavings_${selectedDemographic}`];
-
-  // Spending row: mark all cells red ONLY when:
-  // - nested flags per cell exist, OR
-  // - the specific flat spending-row error key exists.
-  // NOTE: Do NOT use `formErrors[selected]` as a fallback (it over-highlights unrelated errors).
-  const spendingRowInvalid =
-    industryEntries.some(([k]) => !!nestedErr[k]) ||
-    !!formErrors[`demo_spending_${selectedDemographic}`];
 
   // Handler for demographic selector dropdown
   const handleSelectedDemographicChange = (event) => {
@@ -133,18 +126,13 @@ export default function DemographicAccordion({
 
   const advancedContent = (
     <>
-      {industryEntries.map((industry) => (
-        <ParameterSliderInput
-          key={`spendingBehavior-${industry}`}
-          label={industry + " Spending (%)"}
-          value={selectedDemo?.[industry] ?? ""}
-          onChange={handleDemographicChange(selectedDemographic, industry)}
-          readOnly={readOnly}
-          // Mark each cell red if the row is invalid OR that cell is flagged.
-          error={spendingRowInvalid || !!nestedErr[industry]}
-          helpText={`Share of this group's income allocated to ${industry.toLowerCase()}. Row should total 100%.`}
-        />
-      ))}
+      <SpendingBehavior
+        selectedDemographic={selectedDemographic}
+        selectedDemo={selectedDemo}
+        handleDemographicChange={handleDemographicChange}
+        formErrors={formErrors}
+        readOnly={readOnly}
+      />
     </>
   );
 
