@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Any
+import logging
 
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
@@ -9,6 +10,10 @@ from .dependencies import get_controller, get_router
 
 controller = get_controller()
 router = get_router()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("REST API")
 
 
 class ModelCreateRequest(BaseModel):
@@ -52,7 +57,7 @@ async def get_city_template_config(template: CityTemplate) -> dict[str, Any]:
     Returns:
         config (dict): A dictionary of the number of people, the demographics, the starting policies, and the inflation rate.
     """
-
+    logger.info(f"Getting city template config for template: {template.value}")
     config = template.config
     return config
 
@@ -75,6 +80,7 @@ async def create_model(
     Returns:
         model_id(int): The id associated with the created model.
     """
+    logger.info("Creating a new model.")
     try:
         model_id = controller.create_model(
             max_simulation_length=model_parameters.max_simulation_length,
@@ -84,8 +90,10 @@ async def create_model(
             industries=model_parameters.industries,
             starting_policies=model_parameters.policies,
         )
+        logger.info(f"Successfully created model with id: {model_id}")
         return model_id
     except ValueError as e:
+        logger.error(f"Error creating model: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
@@ -101,9 +109,12 @@ async def delete_model(model_id: int):
     Raises:
         HTTPException(404): if the model could not be found.
     """
+    logger.info(f"Deleting model with id: {model_id}")
     try:
         controller.delete_model(model_id)
+        logger.info(f"Successfully deleted model with id: {model_id}")
     except ValueError:
+        logger.warning(f"Model with id {model_id} not found for deletion.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with id {model_id} not found.",

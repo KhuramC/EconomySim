@@ -1,5 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import Callable
+import logging
 
 from .dependencies import get_controller, get_router, get_app
 
@@ -7,22 +8,30 @@ app = get_app()
 router = get_router()
 controller = get_controller()
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("WebSocket")
+
 
 def handle_step(model_id: int) -> dict:
+    logger.info(f"Stepping through model {model_id}.")
     controller.step_model(model_id)
     return {"status": "success", "action": "step"}
 
 
 def handle_reverse_step(model_id: int) -> dict:
+    logger.info(f"Reverse stepping through model {model_id}.")
     controller.step_model(model_id, time=-1)
     return {"status": "success", "action": "reverse_step"}
 
 
 def handle_get_current_week(model_id: int) -> dict:
+    current_week = controller.get_current_week(model_id)
+    logger.info(f"Retrieving current week({current_week}) for model {model_id}.")
     return {
         "status": "success",
         "action": "get_current_week",
-        "data": {"week": controller.get_current_week(model_id)},
+        "data": {"week": current_week},
     }
 
 
@@ -30,7 +39,7 @@ def handle_get_industry_data(model_id: int) -> dict:
     """
     Creates a json of each industry variable across the whole simulation to be able to plot easily.
     """
-
+    logger.info(f"Retrieving industry data for model {model_id}.")
     industries_df = controller.get_industry_data(model_id)
 
     industries_dict = {}
@@ -50,6 +59,7 @@ def handle_get_current_industry_data(model_id: int) -> dict:
     """
     Creates a dictionary of the latest industry variables for each industry.
     """
+    logger.info(f"Retrieving current industry data for model {model_id}.")
     current_week = controller.get_current_week(model_id)
     # Get data only for the current week
     industries_df = controller.get_industry_data(
@@ -78,6 +88,7 @@ def handle_get_current_industry_data(model_id: int) -> dict:
 
 
 def handle_get_indicators(model_id: int) -> dict:
+    logger.info(f"Retrieving indicators for model {model_id}.")
     indicators_df = controller.get_indicators(model_id)
     return {
         "status": "success",
@@ -87,6 +98,7 @@ def handle_get_indicators(model_id: int) -> dict:
 
 
 def handle_get_policies(model_id: int) -> dict:
+    logger.info(f"Retrieving policies for model {model_id}.")
     policies = controller.get_policies(model_id)
     return {
         "status": "success",
@@ -98,6 +110,7 @@ def handle_get_policies(model_id: int) -> dict:
 def handle_set_policies(model_id: int, policies: dict) -> dict:
     if policies == None:
         raise ValueError("Policies cannot be None.")
+    logger.info(f"Setting policies for model {model_id}.")
     controller.set_policies(model_id, policies)
     return {
         "status": "success",
@@ -155,6 +168,7 @@ async def model_websocket(websocket: WebSocket, model_id: int):
                     else:
                         response = handler(model_id)
                 else:
+                    logger.error(f"Unknown action: {action} selected.")
                     response = {
                         "status": "error",
                         "message": f"Unknown action: {action}",
@@ -164,11 +178,13 @@ async def model_websocket(websocket: WebSocket, model_id: int):
             except ValueError as e:
                 # Catch errors from handlers (e.g., bad policy data) and report them
                 # without disconnecting the client.
+                logger.error(str(e))
                 await websocket.send_json({"status": "error", "message": str(e)})
             except WebSocketDisconnect:
-                print(f"Client for model {model_id} disconnected.")
+                logger.info(f"Client for model {model_id} disconnected.")
                 break
 
     except ValueError:  # Catches if model_id is not found
+        logger.error(f"Model with id {model_id} not found. WebSocket will be closed...")
         await websocket.send_json({"error": f"Model with id {model_id} not found."})
         await websocket.close()
