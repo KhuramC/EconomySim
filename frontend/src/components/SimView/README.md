@@ -8,3 +8,4 @@ Here is a brief description of the available components:
 - [`UnchangeableParameters`](./UnchangeableParameters.jsx): A note describing that the parameters cannot be changed.
 - [`TimelinePanel`](./TimelinePanel.jsx): A panel for stepping through the simulation.
 - [`SidebarNav`](./SidebarNav.jsx): A navigation bar for the side for simulation specific pages.
+- [`GraphSlot`](./GraphSlot.jsx): A panel for graphing data.

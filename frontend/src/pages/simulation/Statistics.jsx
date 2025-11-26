@@ -15,8 +15,8 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { SimulationContext } from "./BaseSimView.jsx";
-import GraphSlot from "../../components/GraphSlot";
-import { Indicators } from "../../types/Indicators";
+import GraphSlot from "../../components/SimView/GraphSlot.jsx";
+import { Indicators } from "../../types/Indicators.js";
 import { IndustryMetrics } from "../../types/IndustryMetrics.js";
 
 export default function Statistics() {
