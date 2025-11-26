@@ -1,4 +1,3 @@
-from engine.types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from engine.types.industry_type import IndustryType
 from engine.agents.demand import demand_func, custom_round
 from pytest import approx, mark, param
