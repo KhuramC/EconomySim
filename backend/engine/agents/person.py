@@ -159,18 +159,19 @@ class PersonAgent(Agent):
         # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
 
-        # sales tax will now be incorporated into price calculation
-        prices = {
+        # sales tax logic; incorporate into person facing prices
+        effective_prices = {
             agent.industry_type: (
                 agent.price
                 * (1 + self.model.policies["sales_tax"][agent.industry_type])
             )
             for agent in industry_agents
         }
-
         # Calculate desired purchases
         desired_quantities = self.demand_func(
-            budget=self.determine_budget(), prefs=self.preferences, prices=prices
+            budget=self.determine_budget(),
+            prefs=self.preferences,
+            prices=effective_prices,
         )
 
         # Attempt to purchase goods
@@ -191,11 +192,8 @@ class PersonAgent(Agent):
             available_quantity = industry.inventory_available_this_step
             quantity_to_buy = min(desired_quantity, available_quantity)
 
-            # sales tax logic
-            cost = quantity_to_buy * industry.price
-            sales_tax = self.model.policies["sales_tax"][industry.industry_type]
-            if sales_tax is not None:
-                cost += cost * sales_tax
+            # prices already have sales tax applied
+            cost = quantity_to_buy * effective_prices[industry_type]
 
             if self.balance >= cost:
                 # Execute transaction
