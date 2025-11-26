@@ -84,6 +84,7 @@ class PersonAgent(Agent):
 
     def demand_func(
         self,
+        sigma: float,
         budget: float,
         prefs: dict[IndustryType, float],
         prices: dict[IndustryType, float],
@@ -92,9 +93,10 @@ class PersonAgent(Agent):
         Calculates the quantity of each good to purchase based on the Marshallian demand function.
 
         Args:
-            budget: The total money available to spend.
-            prefs: The preference weights for the available goods/industries.
-            prices: The prices of the available goods.
+            sigma (float): The elasticity of substitution.
+            budget (float): The total money available to spend.
+            prefs (dict): The preference weights for the available goods/industries.
+            prices (dict): The prices of the available goods.
         Returns:
             A dictionary mapping each good/industry to the desired quantity.
         """
@@ -102,7 +104,7 @@ class PersonAgent(Agent):
         valid_goods = [industry for industry in prefs if industry in prices]
 
         denominator = sum(
-            (prefs[industry] ** self.sigma) * (prices[industry] ** (1 - self.sigma))
+            (prefs[industry] ** sigma) * (prices[industry] ** (1 - sigma))
             for industry in valid_goods
         )
 
@@ -111,9 +113,7 @@ class PersonAgent(Agent):
 
         demands = {}
         for industry in valid_goods:
-            numerator = (prefs[industry] ** self.sigma) * (
-                prices[industry] ** -self.sigma
-            )
+            numerator = (prefs[industry] ** sigma) * (prices[industry] ** -sigma)
 
             quantity_unrounded = (numerator / denominator) * budget
             quantity = self.custom_round(quantity_unrounded)
@@ -169,6 +169,7 @@ class PersonAgent(Agent):
         }
         # Calculate desired purchases
         desired_quantities = self.demand_func(
+            sigma=self.sigma,
             budget=self.determine_budget(),
             prefs=self.preferences,
             prices=effective_prices,
