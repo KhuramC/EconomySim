@@ -42,7 +42,7 @@ A standard normal distribution (bell curve) is a poor fit for income. Real-world
 
 Functions like `numpy.random.lognormal(mean, sd)` require parameters for the underlying logarithm of the variable.
 
-- `mean` ($\mu$): This is the mean of the log of the income. The median of the final distribution is $e^\mu$. We can solve for $\mu$ using $\mu = \ln(\text{median{\_}income})$. This is more robust than using the arithmetic mean, which is skewed by outliers.
+- `mean` ($\mu$): This is the mean of the log of the income. The median of the final distribution is $e^\mu$. We can solve for $\mu$ using $\mu = \ln(\text{median\_income})$. This is more robust than using the arithmetic mean, which is skewed by outliers.
 
 - `sd` ($\sigma$): This is the standard deviation of the log of the income. It directly controls the inequality or spread of the distribution. A higher $\sigma$ means a wider, more unequal class.
 
