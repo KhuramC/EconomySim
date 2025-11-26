@@ -3,6 +3,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
 
+/**
+ * A component to add tax brackets at specific thresholds with specific rates.
+ */
 export default function PersonalIncomeTaxBracket({
   personalIncomeTax,
   formErrors = {},
