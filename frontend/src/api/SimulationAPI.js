@@ -99,56 +99,6 @@ export class SimulationAPI {
   // --- Instance Methods (require a model instance) ---
 
   /**
-   * Gets the model policies for a given model ID.
-   * @param {*} modelId - The ID of the model to fetch policies for.
-   * @returns {Promise<object>} policies - The policies associated with the specified model, in a frontend format.
-   * @throws {Error} If the fetch fails or the response is not OK.
-   */
-  async getModelPolicies(modelId = this.modelId) {
-    const response = await fetch(`${BASE_HTTP_URL}/models/${modelId}/policies`);
-
-    if (response.status === HTTP_STATUS.OK) {
-      const policies = await response.json();
-      console.log("Policies received:", policies);
-      return receivePoliciesPayload(policies);
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to fetch policies for model ID ${modelId}`
-      );
-    }
-  }
-
-  /**
-   * Sets the model policies for a given model ID.
-   * @param {Object} policyParams - The policies to set for the model.
-   * @param {string} [modelId=this.modelId] - The ID of the model.
-   * @throws {Error} If the policies could not be set because the response is not NO_CONTENT.
-   */
-  async setModelPolicies(policyParams, modelId = this.modelId) {
-    const policies = buildPoliciesPayload(policyParams);
-    const response = await fetch(
-      `${BASE_HTTP_URL}/models/${modelId}/policies`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(policies),
-      }
-    );
-
-    if (response.status === HTTP_STATUS.NO_CONTENT) {
-      return;
-    } else {
-      throw await SimulationAPI.throwReadableError(
-        response,
-        `Failed to set policies for model ID ${modelId}`
-      );
-    }
-  }
-
-  /**
    * Deletes a model for a given model ID.
    * @param {string} [modelId=this.modelId] - The ID of the model.
    * @throws {Error} If the model could not be deleted.
