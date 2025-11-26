@@ -16,6 +16,8 @@ class PersonAgent(Agent):
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
         balance (float): The current amount of money the person has; negative indicating debt.
         preferences (dict): Spending preferences a weight for each industry, summing to 1.
+        sigma (float): The elasticity of substitution for the industries.
+        savings_rate (float): The proportion of income saved on a weekly basis.
     """
 
     demographic: Demographic
@@ -27,7 +29,11 @@ class PersonAgent(Agent):
     balance: float
     """The total dollars held by this person. Negative indicates debt."""
     preferences: dict[IndustryType, float]
-    """Spending preferences, mapping industry name to a weight. Must sum to 1."""
+    """Spending preferences, mapping industry type to a weight. Must sum to 1."""
+    sigma: float
+    """The elasticity of substitution associated with the industries."""
+    savings_rate: float
+    """The proportion of income saved and not used on purchasing goods on a weekly basis."""
 
     def __init__(
         self,
@@ -56,18 +62,18 @@ class PersonAgent(Agent):
         personal_income_tax: list = self.model.policies["personal_income_tax"]
         if not personal_income_tax:
             return
-        
-        previous_threshold = float('inf')
+
+        previous_threshold = float("inf")
         for bracket in personal_income_tax:
+            # it is assumed that the highest threshold is first
             threshold = bracket["threshold"]
             rate = bracket["rate"]
 
             if self.income > threshold:
+                # tax from current threshold to income or previous treshold
                 taxable_income = min(previous_threshold, self.income) - threshold
                 tax = taxable_income * rate
                 self.balance -= tax
-            else:
-                continue
 
             previous_threshold = threshold
 
@@ -83,34 +89,35 @@ class PersonAgent(Agent):
         prices: dict[IndustryType, float],
     ) -> dict[IndustryType, int]:
         """
-        Calculates the quantity of each good to purchase based on the CES demand function.
+        Calculates the quantity of each good to purchase based on the Marshallian demand function.
 
         Args:
             budget: The total money available to spend.
-            prefs: The preference weights for the available goods.
+            prefs: The preference weights for the available goods/industries.
             prices: The prices of the available goods.
         Returns:
-            A dictionary mapping each good's name to the desired quantity.
+            A dictionary mapping each good/industry to the desired quantity.
         """
 
-        valid_goods = [name for name in prefs if name in prices]
+        valid_goods = [industry for industry in prefs if industry in prices]
 
         denominator = sum(
-            (prefs[name] ** self.sigma) * (prices[name] ** (1 - self.sigma))
-            for name in valid_goods
+            (prefs[industry] ** self.sigma) * (prices[industry] ** (1 - self.sigma))
+            for industry in valid_goods
         )
 
         if denominator == 0:
-            return {name: 0 for name in valid_goods}
+            return {industry: 0 for industry in valid_goods}
 
         demands = {}
-        for name in valid_goods:
-            numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            # NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
+        for industry in valid_goods:
+            numerator = (prefs[industry] ** self.sigma) * (
+                prices[industry] ** -self.sigma
+            )
 
             quantity_unrounded = (numerator / denominator) * budget
             quantity = self.custom_round(quantity_unrounded)
-            demands[name] = quantity
+            demands[industry] = quantity
 
         return demands
 
