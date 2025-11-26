@@ -2,9 +2,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 from typing import Callable
 import logging
 
-from .dependencies import get_controller, get_router, get_app
+from .dependencies import get_controller, get_router
 
-app = get_app()
 router = get_router()
 controller = get_controller()
 
