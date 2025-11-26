@@ -25,6 +25,7 @@ class IndustryAgent(Agent):
     debt_allowed: bool
     """Whether this industry is allowed to go into debt."""
 
+    # Dynamic Values
     price: float
     """The price of goods/services in this industry."""
     inventory: int
@@ -115,16 +116,6 @@ class IndustryAgent(Agent):
         self.property_value = property_value
         self.insurance = insurance
         self.goods_produced: int = 0  # Tracker for GDP indicator
-
-    def get_tariffs(self) -> float:
-        """
-        Get the tariff rate for this industry from the model's tax rates.
-
-        Returns:
-            float: The tariff rate for this industry.
-        """
-        tariffs = self.model.policies.get("tariffs", {})
-        return tariffs.get(self.industry_type, 0.0)
 
     def get_employees(self) -> AgentSet:
         """
