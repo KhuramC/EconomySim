@@ -8,6 +8,9 @@ import {
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 
+/**
+ * A side panel that handles navigation between simulation pages.
+ */
 export default function SidebarNav({ basePath = "" }) {
   // Keep the order exactly as requested (no extra items)
   const ITEMS = [

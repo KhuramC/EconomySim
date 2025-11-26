@@ -7,6 +7,9 @@ import {
   SkipNext as SkipNextIcon,
 } from "@mui/icons-material";
 
+/**
+ * A panel that handles stepping through a simulation.
+ */
 export default function TimelinePanel({ simAPI }) {
   const [isPlaying, setIsPlaying] = React.useState(false);
 
