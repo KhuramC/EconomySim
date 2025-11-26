@@ -27,22 +27,39 @@ def test_custom_round(x: float, expected: int):
     assert result == expected
 
 
-def test_demand_func():
+@mark.parametrize(
+    "sigma,budget,preferences,prices,expected",
+    [
+        param(
+            1,
+            1000,
+            {IndustryType.ENTERTAINMENT: 0.6, IndustryType.GROCERIES: 0.4},
+            {IndustryType.ENTERTAINMENT: 10.0, IndustryType.GROCERIES: 25.0},
+            {IndustryType.ENTERTAINMENT: 60.0, IndustryType.GROCERIES: 16.0},
+            # Expected food: (1000 * 0.6) / 10 = 60 units; Expected clothing: (1000 * 0.4) / 25 = 16 units
+            id="Regular",
+        )
+    ],
+)
+def test_demand_func(
+    sigma: float,
+    budget: float,
+    preferences: dict[IndustryType, float],
+    prices: dict[IndustryType, float],
+    expected: dict[IndustryType, float],
+):
     """
-    Tests the `demand_func` with sigma=1, which simplifies to the Cobb-Douglas case.
-    In this case, an agent spends a percentage of their budget on a good
-    equal to their preference weight for it.
+    Tests the `demand_func` with different values.
+
+    Args:
+        sigma (float): The elasticity of substitution
+        budget (float): The total money available to spend.
+        preferences (dict[IndustryType, float]): The preference weights for the available goods/industries.
+        prices (dict[IndustryType, float]): The prices of the available goods.
+        expected (dict[IndustryType, float]): The expected number of goods for each industry
     """
 
-    preferences = {IndustryType.ENTERTAINMENT: 0.6, IndustryType.GROCERIES: 0.4}
-    prices = {IndustryType.ENTERTAINMENT: 10.0, IndustryType.GROCERIES: 25.0}
-    budget = 1000.0
+    demands = demand_func(sigma, budget, preferences, prices)
 
-    demands = demand_func(
-        DEMOGRAPHIC_SIGMAS[Demographic.UPPER_CLASS], budget, preferences, prices
-    )
-
-    # Expected food: (1000 * 0.6) / 10 = 60 units
-    # Expected clothing: (1000 * 0.4) / 25 = 16 units
-    assert demands[IndustryType.ENTERTAINMENT] == approx(60.0)
-    assert demands[IndustryType.GROCERIES] == approx(16.0)
+    for industry, demand in demands.items():
+        assert demand == approx(expected[industry])
