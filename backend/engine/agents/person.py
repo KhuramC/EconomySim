@@ -115,6 +115,9 @@ class PersonAgent(Agent):
             for agent in industry_agents
         }
         # Calculate desired purchases
+
+        # TODO: force some minimum with certain industries, such as HOUSING and UTILITIES
+        # since they are treated as regular industires, they don't have any higher priority, but they def should
         desired_quantities = demand_func(
             sigma=self.sigma,
             budget=self.determine_budget(),
