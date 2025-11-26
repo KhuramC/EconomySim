@@ -1,7 +1,30 @@
 from engine.types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from engine.types.industry_type import IndustryType
 from engine.agents.demand import demand_func, custom_round
-from pytest import approx
+from pytest import approx, mark, param
+
+
+@mark.parametrize(
+    "x,expected",
+    [
+        param(0.0, 0),
+        param(0.1, 0),
+        param(0.949999, 0),
+        param(0.95, 1),
+        param(0.952, 1),
+        param(3 * 2.33, 7),
+    ],
+)
+def test_custom_round(x: float, expected: int):
+    """
+    Tests `custom_round` with various floats.
+
+    Args:
+        x (float): the number to be rounded.
+        expected (int): The expected integer after rounding.
+    """
+    result = custom_round(x)
+    assert result == expected
 
 
 def test_demand_func():
@@ -23,6 +46,3 @@ def test_demand_func():
     # Expected clothing: (1000 * 0.4) / 25 = 16 units
     assert demands[IndustryType.ENTERTAINMENT] == approx(60.0)
     assert demands[IndustryType.GROCERIES] == approx(16.0)
-
-def test_custom_round():
-    pass
