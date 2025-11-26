@@ -42,7 +42,7 @@ A standard normal distribution (bell curve) is a poor fit for income. Real-world
 
 Functions like `numpy.random.lognormal(mean, sd)` require parameters for the underlying logarithm of the variable.
 
-- `mean` ($\mu$): This is the mean of the log of the income. The median of the final distribution is $e^\mu$. We can solve for $\mu$ using $\mu = \ln(\text{median\_income})$. This is more robust than using the arithmetic mean, which is skewed by outliers.
+- `mean` ($\mu$): This is the mean of the log of the income. The median of the final distribution is $e^\mu$. We can solve for $\mu$ using $\mu = \ln(\mathrm{median\_income})$. This is more robust than using the arithmetic mean, which is skewed by outliers.
 
 - `sd` ($\sigma$): This is the standard deviation of the log of the income. It directly controls the inequality or spread of the distribution. A higher $\sigma$ means a wider, more unequal class.
 
@@ -100,7 +100,7 @@ _Note: This values may seem low, but they scale drastically under lognormal dist
 
 - **City-Specific Adjustments:** We use a "crowding out" model. When a mandatory, inelastic cost (like `HOUSING`) increases due to local market conditions, that cost must "crowd out" (i.e., reduce the proportion of) more elastic, discretionary categories like `LUXURY` and `ENTERTAINMENT`.
 
-  - **TODO**: How can we make it so that `PersonAgent`s are making the decisions of how to spend their money in other places due to rising housing costs, etc. Currently, they are spending a percentage of thei budget on housing, but there is no minimum!
+  - **TODO**: How can we make it so that `PersonAgent`s are making the decisions of how to spend their money in other places due to rising housing costs, etc. Currently, they are spending a percentage of their budget on housing, but there is no minimum!
 
 ### Category Mapping
 
