@@ -1,7 +1,7 @@
 import { Button, IconButton, Typography, Grid, Stack } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
-import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
 
 /**
  * A component to add tax brackets at specific thresholds with specific rates.

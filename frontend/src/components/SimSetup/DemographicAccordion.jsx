@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { MenuItem } from "@mui/material";
-import ParameterAccordion from "./ParameterAccordion.jsx";
-import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
-import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
-import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
-import SpendingBehavior from "./SpendingBehavior.jsx";
-import { Demographic } from "../../types/Demographic.js";
-import { IndustryType } from "../../types/IndustryType.js";
+import ParameterAccordion from "./ParameterAccordion";
+import ParameterMenuInput from "../inputs/ParameterMenuInput";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import SpendingBehavior from "./SpendingBehavior";
+import { Demographic } from "../../types/Demographic";
+import { IndustryType } from "../../types/IndustryType";
 
 /**
  * Demographic parameters editor.

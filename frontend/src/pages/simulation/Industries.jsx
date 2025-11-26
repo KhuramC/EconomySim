@@ -1,9 +1,9 @@
 import { useContext, useState, useEffect } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
-import { SimulationContext } from "./BaseSimView.jsx";
-import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
-import UnchangeableParameters from "../../components/SimView/UnchangeableParameters.jsx";
-import { receiveIndustriesPayload } from "../../api/payloadReceiver.js";
+import { SimulationContext } from "./BaseSimView";
+import IndustryAccordion from "../../components/SimSetup/IndustryAccordion";
+import UnchangeableParameters from "../../components/SimView/UnchangeableParameters";
+import { receiveIndustriesPayload } from "../../api/payloadReceiver";
 
 /**
  * Read-only Industries view

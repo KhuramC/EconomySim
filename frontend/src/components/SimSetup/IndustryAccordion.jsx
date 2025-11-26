@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { MenuItem } from "@mui/material";
-import ParameterMenuInput from "../inputs/ParameterMenuInput.jsx";
-import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
-import ParameterToggleInput from "../inputs/ParameterToggleInput.jsx";
-import ParameterAccordion from "./ParameterAccordion.jsx";
-import { IndustryType } from "../../types/IndustryType.js";
+import ParameterMenuInput from "../inputs/ParameterMenuInput";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterToggleInput from "../inputs/ParameterToggleInput";
+import ParameterAccordion from "./ParameterAccordion";
+import { IndustryType } from "../../types/IndustryType";
 
 /**
  * Industry section with tooltips for each field.

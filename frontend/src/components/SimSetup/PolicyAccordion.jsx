@@ -1,8 +1,8 @@
-import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
-import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
-import ToggleableSliderInput from "../inputs/ToggleableSliderInput.jsx";
-import ParameterAccordion from "./ParameterAccordion.jsx";
-import PersonalIncomeTaxBracket from "./PersonalIncomeTaxBracket.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import ToggleableSliderInput from "../inputs/ToggleableSliderInput";
+import ParameterAccordion from "./ParameterAccordion";
+import PersonalIncomeTaxBracket from "./PersonalIncomeTaxBracket";
 
 /**
  * Policy section:

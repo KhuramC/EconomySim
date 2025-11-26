@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
-import { IndustryType } from "../../types/IndustryType.js";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import { IndustryType } from "../../types/IndustryType";
 
 /**
  * Spending Behavior component - displays industry spending sliders for a demographic.
