@@ -28,7 +28,7 @@ $$
 \hat{x_i} = \frac{a_i^{\sigma}p_i^{-\sigma}B}{\sum_{j=1}^n a_j^{\sigma}p_j^{1-\sigma}}
 $$
 
-where $B$ is the total budget, and $\sigma = 1/(1-z)$ is the elasticity of substitution provided that the purchases do not exceed the budget (equivalently such that $\sum_{i=1}^n p_ix_i \le B$).
+where $B$ is the total budget, and $\sigma = 1/(1-z)$ is the elasticity of substitution provided that the purchases do not exceed the budget (equivalently such that $\sum_{i=1}^n p_i\hat{x_i} \le B$).
 
 If $\sigma = 1$ (equivalently $z=0$), the equation simplifies to the Cobb-Douglas demand function, which is defined as
 
