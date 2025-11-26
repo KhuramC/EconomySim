@@ -10,4 +10,4 @@ Here is a brief description of the available components:
 - [`ParameterSliderInput`](./ParameterSliderInput.jsx): A slider for inputting numbers.
 - [`ToggleableSliderInput`](./ToggleableSliderInput.jsx): A `ParameterSliderInput` that can toggled on and off.
 
-There is also [`ParameterInput`](./ParameterInput.jsx), but this is a base class for components that use text fields and is not meant to be used directly.
+There is also [`ParameterInput`](./ParameterInput.jsx), but this is a base class for components that use text fields and should not be used directly.
