@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
-import SidebarNav from "../../components/SidebarNav";
-import { SimulationAPI } from "../../api/SimulationAPI";
-import TimelinePanel from "../../components/TimelinePanel";
+import SidebarNav from "../../components/SidebarNav.jsx";
+import { SimulationAPI } from "../../api/SimulationAPI.js";
+import TimelinePanel from "../../components/SimView/TimelinePanel.jsx";
 
 // Content-only pages (no sidebar or outer Paper inside them)
 import Overview from "./Overview.jsx";
@@ -121,7 +121,9 @@ export default function BaseSimView() {
               <Route path="overview" element={<Overview />} />
               <Route
                 path="industries"
-                element={<Industries oldindustryParams={initialIndustryParams} />}
+                element={
+                  <Industries oldindustryParams={initialIndustryParams} />
+                }
               />
               <Route path="policies" element={<Policies />} />
               <Route path="demographics" element={<Demographics />} />
