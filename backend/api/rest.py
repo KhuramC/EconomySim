@@ -1,7 +1,5 @@
 from fastapi import HTTPException, status
-from fastapi.responses import Response
 from pydantic import BaseModel, Field
-import pandas as pd
 from typing import Any
 
 from engine.types.industry_type import IndustryType
@@ -89,73 +87,6 @@ async def create_model(
         return model_id
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-@router.get("/models/{model_id}/policies", status_code=status.HTTP_200_OK)
-async def get_model_policies(
-    model_id: int,
-) -> dict[str, Any]:
-    """
-    Returns all of the current policies associated with a model.
-    The default status code is 200 upon success.
-
-    Args:
-        model_id (int): the id of the model.
-
-    Raises:
-        HTTPException(404): if the model was not found.
-
-    Returns:
-        policies (dict): A dictionary of all the policies associated with a model.
-    """
-    try:
-        policies = controller.get_policies(model_id)
-        return policies
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with id {model_id} not found.",
-        )
-
-
-@router.post("/models/{model_id}/policies", status_code=status.HTTP_204_NO_CONTENT)
-async def set_model_policies(
-    model_id: int,
-    policies: dict[str, Any],
-):
-    """
-    Sets all of the current policies in a model.
-    The default status code is 204 upon success.
-
-    Args:
-        model_id (int): the id of the model.
-        policies (dict[str, float  |  dict[IndustryType, float]]): the policies to update with.
-
-    Raises:
-        HTTPException(404): if the model could not be found, or the policies were not correctly formatted.
-    """
-    try:
-        controller.set_policies(model_id, policies)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with id {model_id} not found, or policies were not in right format.",
-        )
-
-
-def dataframe_to_json_response(df: pd.DataFrame) -> Response:
-    """
-    Converts a pandas DataFrame to JSON, handling the underlying numpy types.
-
-    Args:
-        df (DataFrame): The dataframe to convert.
-
-    Returns:
-        response (Response): A Response containing a JSON string of the dataframe.
-    """
-
-    json_string = df.to_json(orient="columns")  # dict of columns
-    return Response(content=json_string, media_type="application/json")
 
 
 @router.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)

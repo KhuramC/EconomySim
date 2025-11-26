@@ -7,8 +7,6 @@ from typing import Any
 
 from api.city_template import CityTemplate
 from engine.types.demographic import Demographic
-from engine.types.indicators import Indicators
-import copy
 
 template_test_params = [
     pytest.param(
@@ -91,61 +89,3 @@ def test_create_model_fail(
 
     response = api_client.post("/models/create", json=invalid_config)
     assert response.status_code == status_code
-
-
-def test_get_and_set_policies(
-    api_client: TestClient, created_model: int, valid_config: dict[str, Any]
-):
-    """
-    Test for `get_model_policies` and `set_model_policies`, API endpoints.
-    Tests that it gets the correct initial policies,
-    correctly sets/changes the policies,
-    and then correctly ensures that the policies are not correctly
-
-
-    Args:
-        api_client (TestClient): the test client to connect to the FastAPI server.
-        created_model (int): the id of the model created.
-        valid_config (dict[str, Any]): a valid configuration that the created_model used.
-    """
-
-    # Get initial policies
-    response = api_client.get(f"/models/{created_model}/policies")
-    assert response.status_code == status.HTTP_200_OK
-    initial_policies = response.json()
-    assert (
-        initial_policies["personal_income_tax"]
-        == valid_config["policies"]["personal_income_tax"]
-    )
-
-    # Set new policies
-    new_policies = copy.deepcopy(initial_policies)
-    new_personal_income_tax = [
-        {"threshold": 1000, "rate": 0.01416},
-        {"threshold": 0, "rate": 0.000662},
-    ]
-
-    new_policies["personal_income_tax"] = new_personal_income_tax
-
-    new_property_tax = {"residential": 0.05, "commercial": 0.07}
-    new_policies["property_tax"] = new_property_tax
-
-    response_set = api_client.post(
-        f"/models/{created_model}/policies", json=new_policies
-    )
-    assert response_set.status_code == status.HTTP_204_NO_CONTENT
-
-    # Get new policies, confirm same as what was set.
-    response_get2 = api_client.get(f"/models/{created_model}/policies")
-    assert response_get2.status_code == status.HTTP_200_OK
-    updated_policies = response_get2.json()
-    assert updated_policies["personal_income_tax"] == new_personal_income_tax
-    assert updated_policies["property_tax"] == new_property_tax
-
-    # Try to set policies to an incorrect structure.
-    newer_policies = copy.deepcopy(updated_policies)
-    newer_policies["corporate_income_tax"] = {}  # no keys per demographic; should error
-    response_set_fail = api_client.post(
-        f"/models/{created_model}/policies", json=newer_policies
-    )
-    assert response_set_fail.status_code == status.HTTP_404_NOT_FOUND
