@@ -204,7 +204,11 @@ class IndustryAgent(Agent):
 
         price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
         price_cap_enabled = self.model.policies["price_cap_enabled"][self.industry_type]
-        if price_cap_percentage is not None and skipPriceCap == False and price_cap_enabled:
+        if (
+            price_cap_percentage is not None
+            and skipPriceCap == False
+            and price_cap_enabled
+        ):
             price_cap = oldPrice * (
                 1 + price_cap_percentage
             )  # price cap is set to a percentage amount higher than the price from the previous tick
@@ -298,7 +302,7 @@ class IndustryAgent(Agent):
         How the industry will change their employees, whether it be by hiring more, firing more,
         or changing the wages.
         """
-        logging.info("Changing employment...NOT IMPLEMENTED")
+        # logging.info("Changing employment...NOT IMPLEMENTED")
         # TODO: Implement industry employment logic
         # deals with potentially firing or hiring employees, and wage changes
         # should call determine_wages at some point
@@ -395,7 +399,7 @@ class IndustryAgent(Agent):
         returns:
             naive_fixed_cost (float)
         """
-        
+
         property_tax = self.model.policies["property_tax"]["commercial"]
         if property_tax is not None:
             property_cost = self.fixed_cost * property_tax
