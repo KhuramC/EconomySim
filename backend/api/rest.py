@@ -11,8 +11,6 @@ from .dependencies import get_controller, get_router
 controller = get_controller()
 router = get_router()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("REST API")
 
 

@@ -7,8 +7,6 @@ from .dependencies import get_controller, get_router
 router = get_router()
 controller = get_controller()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WebSocket")
 
 
