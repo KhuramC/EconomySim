@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
-import SidebarNav from "../../components/SidebarNav.jsx";
+import SidebarNav from "../../components/SimView/SidebarNav.jsx";
 import { SimulationAPI } from "../../api/SimulationAPI.js";
 import TimelinePanel from "../../components/SimView/TimelinePanel.jsx";
 
