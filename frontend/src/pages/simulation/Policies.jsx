@@ -4,6 +4,7 @@ import _ from "lodash";
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
 import { SimulationContext } from "./BaseSimView.jsx";
 import ChangeableParameters from "../../components/SimView/ChangeableParameters.jsx";
+import { receivePoliciesPayload } from "../../api/payloadReceiver.js";
 
 export default function Policies() {
   const simAPI = useContext(SimulationContext);
@@ -18,9 +19,7 @@ export default function Policies() {
         return;
       }
       try {
-        const fetchedPolicies = await simAPI.getModelPolicies();
-        console.log("fetched policies:", fetchedPolicies);
-        setPolicies(fetchedPolicies); // Assuming fetchedPolicies is already in frontend format
+        simAPI.getPolicies();
       } catch (err) {
         setError(err.message);
       }
@@ -29,10 +28,8 @@ export default function Policies() {
     fetchPolicies(); // Initial fetch
 
     const handleWebSocketMessage = (message) => {
-      // Refetch policies if a step occurs
-      if (message.action === "step" || message.action === "reverse_step") {
-        console.log("Policies updated via WebSocket, refetching...");
-        fetchPolicies();
+      if (message.action === "get_policies") {
+        setPolicies(receivePoliciesPayload(message.data));
       }
     };
 

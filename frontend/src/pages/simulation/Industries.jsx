@@ -23,7 +23,7 @@ export default function Industries({ oldindustryParams }) {
         setError("Simulation API not available");
         return;
       }
-      simAPI.sendMessage({ action: "get_current_industry_data" });
+      simAPI.getCurrentIndustryData();
     };
 
     // Only fetch if it's not week 0
@@ -57,7 +57,7 @@ export default function Industries({ oldindustryParams }) {
     };
 
     if (simAPI) {
-      simAPI.sendMessage({ action: "get_current_week" }); // Get initial week
+      simAPI.getCurrentWeek(); // Get initial week
       simAPI.addMessageListener(handleWebSocketMessage);
       return () => simAPI.removeMessageListener(handleWebSocketMessage);
     }
