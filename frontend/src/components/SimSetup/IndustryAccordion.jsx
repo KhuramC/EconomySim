@@ -5,6 +5,7 @@ import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
 import ParameterToggleInput from "../inputs/ParameterToggleInput.jsx";
 import ParameterAccordion from "./ParameterAccordion.jsx";
 import { IndustryType } from "../../types/IndustryType.js";
+
 /**
  * Industry section with tooltips for each field.
  * - Highlights invalid fields via `formErrors[selectedIndustry]`.
