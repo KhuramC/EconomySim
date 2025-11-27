@@ -123,15 +123,14 @@ class IndustryAgent(Agent):
         """
         return self.model.get_employees(self.industry_type)
 
-    def determine_price(self):
+    def determine_price(self) -> None:
         """
-        Description:
-            Determines the suggested quantity and price of goods for this tick using pricing strategy
-            associated with the industry type
-            The suggested quantity is used by produce_goods to determine the number of units produced this tick
+        Determines the suggested quantity and price of goods for this tick using pricing strategy
+        associated with the industry type
+        The suggested quantity is used by produce_goods to determine the number of units produced this tick
 
-            Incorperated in the calculation is the production cap, determined by the maximum amount that employees
-            can produce, and the total available funds
+        Incorporated in the calculation is the production cap, determined by the maximum amount that employees
+        can produce, and the total available funds.
 
         Required Inputs: (These Values must be known before running this function)
             self.demand_intercept (float): intercept of demand graph
@@ -216,7 +215,7 @@ class IndustryAgent(Agent):
         # inventory_available_this_step is how many units are expected to be available to sell this step
         self.inventory_available_this_step = round(Suggested_Quantity)
 
-    def produce_goods(self):
+    def produce_goods(self) -> None:
         """
         Description:
             Determines the suggested quantity and price of goods for this tick using pricing strategy
@@ -310,7 +309,7 @@ class IndustryAgent(Agent):
         return self.offered_wage
         # TODO: Implement industry wage logic
 
-    def get_variable_cost(self):
+    def get_variable_cost(self) -> float:
         """
         Description:
             Return variable cost per unit: (wage / efficiency) + raw_material_cost.
@@ -396,7 +395,7 @@ class IndustryAgent(Agent):
             property_cost = self.fixed_cost * property_tax
         return self.fixed_cost + property_cost
 
-    def get_production_capacity(self):
+    def get_production_capacity(self) -> int:
         """
         Get production capacity based on workers and funds available.
 
@@ -468,7 +467,7 @@ class IndustryAgent(Agent):
             # final capacity is the min of worker limit and funds limit
             return min(worker_limit, funds_limit)
 
-    def set_demand_graph_params(self, A: float, B: float):
+    def set_demand_graph_params(self, A: float, B: float) -> None:
         """
             Set the demand graph parameters for the industry.
             Called after demand graph is externally calculated
@@ -482,13 +481,13 @@ class IndustryAgent(Agent):
         self.demand_intercept = A
         self.demand_slope = B
 
-    def get_weekly_pay(self):
+    def get_weekly_pay(self) -> float:
         """
         Helper function for calculating weekly pay for each employee this tick
         """
         return self.hours_worked * self.offered_wage
 
-    def sell_goods(self, quantity: int):
+    def sell_goods(self, quantity: int) -> None:
         """
         Reduces the industry's inventory by the specified quantity.
 
@@ -516,7 +515,7 @@ class IndustryAgent(Agent):
         self.balance += quantity * self.price
         self.total_revenue += quantity * self.price
 
-    def new_tick(self):
+    def new_tick(self) -> None:
         """
         Run this to reset values that are specific to this tick and aren't adjusted anywhere else
         IDEA: incorporate all functions that need to be run every tick into this?
@@ -535,7 +534,7 @@ class IndustryAgent(Agent):
         profit = self.total_revenue - self.total_cost
         return profit
 
-    def deduct_corporate_tax(self):
+    def deduct_corporate_tax(self) -> None:
         """
         Summary: deducts corporate tax from profit generated this turn.  Does not deduct anything if profit was zero
         """
