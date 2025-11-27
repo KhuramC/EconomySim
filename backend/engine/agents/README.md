@@ -74,10 +74,95 @@ TODO: update with how shortage handling is dealt with.
 
 ### Price Determination
 
+Different industries have different priorities. A lot of industries seek to maximize profit, while some just provide a service (like utilities companies). There are two main strategies employed: profit maximization and average cost pricing. Both strategies employ finding the quantity($Q$) and then calculating the price($P$) based on the demand curve.
+
+#### Assumptions
+
+We assume that the demand curve is linear due to its ease of approximation:
+
+$$
+P = A - BQ
+$$
+
+where $A$ and $B$ are estimated using linear regression.
+
+TODO: This estimation does not occur currently.
+
+We also assume that the total cost is a function of fixed costs($F$) and variable costs($V$).
+
+$$
+TC = F + VQ
+$$
+
+Both strategies require that these be defined as a function of $Q$ to function, but that is all.
+
 #### Profit Maximization
+
+Profit maximization tries to find the quantity/price of goods such that marginal revenue is equal to marginal cost. Marginal revenue can be estimated from the demand.
+where $P$ is the price, $Q$ is the quantity, and $A,B$ are the intercept and slope respectively.
+
+Total revenue is quantity sold multiplied by the price it is sold at. It can be expressed a function of quantity:
+
+$$
+TR = QP = Q(A-BQ) = AQ - BQ^2
+$$
+
+Marginal revenue is the rate of change of total revenue, which is the derivative(with respect to $Q$):
+
+$$
+MR = A - 2BQ
+$$
+
+Marginal cost is the change in total cost from producing one more good:
+
+$$
+MC = \frac{\Delta TC}{\Delta Q}
+$$
+
+which is simply the derivative of $TC$ with respect to $Q$:
+
+$$
+MC = V
+$$
+
+We can set these equal to each other and solve for $Q$:
+
+$$
+\begin{align}
+A - 2BQ &= V\\
+A - V &= Q(2B)\\
+\frac{A-V}{2B} &= Q
+\end{align}
+$$
+
+$A,B$ need to be estimated, but $V$ should already be known.
 
 #### Average Cost Pricing
 
-### Goods Production
+Average cost pricing tries to set the price to the average cost:
+
+$$
+P = AC = \frac{TC}{Q} = \frac{F+VQ}{Q}
+$$
+
+However, as noted earlier, the price is approximated as a function of $Q$ as well. We can set these equations equal to each other and solve for $Q$:
+
+$$
+\begin{align}
+A - BQ &= P =\frac{F + VQ}{Q}\\
+AQ - BQ^2 &= F + VQ\\
+0 &= BQ^2 + (V-A)Q + F
+\end{align}
+$$
+
+This is a standard quadratic equation that can be solved with the quadratic formula:
+
+$$
+Q = \frac{(A-V) \pm \sqrt{(V-A)^2 - 4BF}}{2B}
+$$
+
+Quadratic equations can have 0, 1, or 2 real solutions. If 2 solutions are found, the higher quantity will be chosen to incentivize more sales. If 1 solution is found, that quantity will be used. If no solution is found, profit maximization will be used instead to minimize losses.
+
+### Production of Goods
 
 ### Employment
