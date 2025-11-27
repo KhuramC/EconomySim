@@ -163,7 +163,6 @@ class IndustryAgent(Agent):
         # variable cost and marginal cost parameters
         V = float(self.get_variable_cost())  # per-unit variable cost
         m = V  # MC intercept (constant MC here)
-        n = 0.0  # MC slope (zero => constant MC)
 
         # feasible maximum to consider when computing suggested Q:
         # allow selling current inventory plus what production capacity will add this step
@@ -178,7 +177,7 @@ class IndustryAgent(Agent):
         if strategy == PricingType.AVG_COST:
             Suggested_Quantity = avg_cost(A, B, V, float(F))
         elif strategy == PricingType.LINEAR_PROFIT_MAX:
-            Suggested_Quantity = linear_profit_max(A, B, m, n)
+            Suggested_Quantity = linear_profit_max(A, B, m)
 
         # ensure suggested quantity is feasible and non-negative, clamp to [0, Q_max]
         if Suggested_Quantity is None:

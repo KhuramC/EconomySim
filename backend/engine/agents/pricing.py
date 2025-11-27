@@ -1,5 +1,4 @@
 import math
-from typing import Optional
 
 
 def solve_quadratic_choose_higher(
@@ -9,11 +8,10 @@ def solve_quadratic_choose_higher(
     Helper function to solve B\\*Q^2 + (V - A)\\*Q + F = 0. The solution is based on the quadratic formula:
     Q = [ -(V-A) +- sqrt( (V-A)^2) - 4(B\\*F) ) ] / ( 2 \\* B )
 
-
     Args:
-        B (float): slope of the demand Graph.
+        B (float): slope of the demand curve
         V (float): variable cost per unit.
-        A (float): intercept of the demand Graph.
+        A (float): intercept of the demand curve (price at quantity zero).
         F (float): fixed cost.
 
     Returns:
@@ -44,61 +42,45 @@ def solve_quadratic_choose_higher(
         return max(q1, q2)
 
 
-# Nondiagnostic version: only returns price and quantity
-def avg_cost(A: float, B: float, V: float, F: float) -> Optional[int]:
+def avg_cost(A: float, B: float, V: float, F: float) -> int:
     """
-    -Returns a suggested quantity of goods to produce and sell for this tick, assuming the demand graph is linear.
-    -Returned quantity will set generated revenue equal to production cost (Net Profit = 0), as long as all units are sold
-    -Returned quantity is rounded to the nearest whole number, so there is some margin of error that may result in
-    less than perfect results
+    Calculates the quantity to produce using average cost pricing. Assuming all units are sold, the net profit is 0.
+    Due to rounding, exact results may be slightly different.
+    If average cost does not produce a solution, `linear_profit_max` is used instead.
 
-    Equation for calculation:
-    B*Q^2 + (V - A)*Q + F = 0
-    Applying Quadratic Equation =
-    Q = [ -(V-A) +- sqrt( (V-A)^2) - 4(B*F) ) ] / ( 2 * B )
-    If two real roots, return higher root to incentivise more sales.
-    If one real root, return.
-    If no real roots, apply linear_profit_max fallback to get production level with least amount of profit loss.
     Args:
-        A (float): Intercept of the Demand Graph (price at quantity zero)
-        B (float): Slope of the Demand Graph
-        V (float): Variable cost per unit
-        F (float): Fixed cost
-        Q_Max: this is the maximum production quantity that the Industry is capable of producing
+        A (float): intercept of the demand curve (price at quantity zero).
+        B (float): slope of the demand curve.
+        V (float): variable cost per unit.
+        F (float): fixed cost.
     Returns:
-        Q_Rounded (float): Calculated Quantity, rounded to nearest whole number
+        q_rounded (int): Suggested quantity to produce, rounded to nearest whole number.
     """
+
     unrounded_q = 0.0
     q_root = solve_quadratic_choose_higher(B, V, A, F)
-    # if result is infeasible, run adjusted linear profit fallback
-    if q_root is not None:  # real solution
-        if q_root <= 0:  # nonpositive = infeasible
-            q_root = None
-        else:
-            # clip to demand-feasible max (price nonnegative)
-            q_demand_max = A / B if B > 0 else q_root
-            if q_root > q_demand_max:
-                # root beyond demand support -> infeasible
-                q_root = None
+    # clip to demand-feasible max (price nonnegative)
+    q_demand_max = A / B if B > 0 else float("inf")
+
+    # check if result is feasible
+    if q_root is not None and q_root > 0 and q_root <= q_demand_max:
+        # real, positive solution within max
         unrounded_q = q_root
     else:
         # if there are no real roots, there are no profitable production levels
         # instead, minimize loss via linear profit max equation with Marginal Cost = V
-        q_adj = linear_profit_max(A, B, V, 0)
+        q_adj = linear_profit_max(A, B, V)
 
         if q_adj <= 0:
             # If fallback yields zero quantity, average cost is not defined (division by 0).
             q_adj = 0
         unrounded_q = q_adj
 
-    if unrounded_q is not None:
-        return round(unrounded_q)
-    else:
-        return None
+    return round(unrounded_q)
 
 
 # Nondiagnostic version: only returns price and quantity
-def linear_profit_max(A, B, m, n) -> int:
+def linear_profit_max(A: float, B: float, m: float, n: float = 0.0) -> int:
     """
     Description:
     -Returns a suggested quantity of goods to produce and sell for this tick, assuming the demand graph is linear.
