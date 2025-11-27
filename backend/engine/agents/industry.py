@@ -107,6 +107,7 @@ class IndustryAgent(Agent):
         self.num_employees = starting_number_of_employees
         self.worker_efficiency = starting_worker_efficiency
         self.debt_allowed = starting_debt_allowed
+
         self.demand_intercept = starting_demand_intercept
         self.demand_slope = starting_demand_slope
 
@@ -144,94 +145,91 @@ class IndustryAgent(Agent):
         """
         Determines the suggested quantity and price of goods for this tick using pricing strategy
         associated with the industry type
-        The suggested quantity is used by produce_goods to determine the number of units produced this tick
+        The suggested quantity is used by `produce_goods` to determine the number of units produced this tick.
 
         Incorporated in the calculation is the production cap, determined by the maximum amount that employees
-        can produce, and the total available funds.
+        can produce and the total available funds.
 
-        Required Inputs: (These Values must be known before running this function)
-            self.demand_intercept (float): intercept of demand graph
-            self.demand_slope (float): slope of demand graph
+        Required Inputs:
+            self.demand_intercept (float): intercept of demand curve
+            self.demand_slope (float): slope of demand curve
             self.get_variable_cost() requirements:
                 self.offered_wage (float): hourly wage of employees
-                self.worker_efficiency (float): goods produced per employee, per hour
                 self.raw_mat_cost (float): per-unit cost of raw materials
             self.inventory (int): inventory left over from previous tick
             self.get_production_capacity() requirements:
                 self.num_employees (int): number of employees employeed by industry
                 if debt is not allowed,
                     self.balance must be known
-            self.industry_type (IndustryType): defines the pricing strategy
-
 
         Updated Variables:
-            self.tick_sellable_inventory (int): Returns the quantity available for sale this step
-                Note: this is different from the total inventory available, which is the leftovers from the
-                last tick.  In order to maximize profit, the industry may artificially restrict how much they sell
-            self.price (float): Returns the price to sell the suggested quantity
+            self.tick_sellable_inventory (int): the quantity available for sale this step
+            self.price (float): the price to sell the goods at.
         """
+
         self.new_tick()  # reset tick variables
 
-        skipPriceCap = (
+        skip_price_cap = (
             self.price == 0
         )  # if simulation is just starting and price is still zero, skip price cap logic
-        oldPrice = self.price
+
+        old_price = self.price
+        new_price = self.price
+
         A = self.demand_intercept
         B = self.demand_slope
 
         # variable cost and marginal cost parameters
         V = self.get_variable_cost()  # per-unit variable cost
-        m = V  # MC intercept (constant MC here)
+        F = self.get_fixed_cost_naive()
 
         # feasible maximum to consider when computing suggested Q:
         # allow selling current inventory plus what production capacity will add this step
         # production capacity is capped by two variables: the number of employees and the total available funds
-        Q_max = int(max(0, self.inventory + self.get_production_capacity()))
+        max_quantity = max(0, self.inventory + self.get_production_capacity())
 
-        Price = self.price
-        Suggested_Quantity = self.inventory
-        F = self.get_fixed_cost_naive()
+        suggested_quantity = self.inventory
+
         # Determine pricing strategy
         strategy = INDUSTRY_PRICING[self.industry_type]
         if strategy == PricingType.AVG_COST:
-            Suggested_Quantity = average_cost(A, B, V, float(F))
-        elif strategy == PricingType.LINEAR_PROFIT_MAX:
-            Suggested_Quantity = linear_profit_max(A, B, m)
+            suggested_quantity = average_cost(A, B, V, F)
+        else:
+            suggested_quantity = linear_profit_max(A, B, V)
 
-        # ensure suggested quantity is feasible and non-negative, clamp to [0, Q_max]
-        if Suggested_Quantity is None:
-            Suggested_Quantity = 0
-
-        Suggested_Quantity = float(max(0, min(Suggested_Quantity, Q_max)))
+        suggested_quantity = max(0, min(suggested_quantity, max_quantity))
         # TODO: Implement Logic here to hire more employees if the max_production_capacity is too small to accomodate suggested quantity
         # Note: don't just look at Q_max here, as this number also takes into account if there's insufficient funds to produce at the suggested quantity
         # Instead, just factor in max capacity based on a 40 hour work week with all current employees
 
         # Set price based on suggested quantity
-        Price = linear_price(A, B, Suggested_Quantity)
+        new_price = linear_price(A, B, suggested_quantity)
 
-        price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
-        price_cap_enabled = self.model.policies["price_cap_enabled"][self.industry_type]
+        price_cap_percentage: float = self.model.policies["price_cap"][
+            self.industry_type
+        ]
+        price_cap_enabled: bool = self.model.policies["price_cap_enabled"][
+            self.industry_type
+        ]
         if (
             price_cap_percentage is not None
-            and skipPriceCap == False
+            and skip_price_cap == False
             and price_cap_enabled
         ):
-            price_cap = oldPrice * (
-                1 + price_cap_percentage
-            )  # price cap is set to a percentage amount higher than the price from the previous tick
-            if price_cap < Price:
-                Price = price_cap
-                if (
-                    price_cap <= V
-                ):  # price cap is less than variable cost, meaning producing anything would result in a net loss
-                    Suggested_Quantity = 0
+            price_cap = old_price * (1 + price_cap_percentage)
+            # price cap is set to a percentage amount higher than the price from the previous tick
+            if price_cap < new_price:
+                new_price = price_cap
+                if price_cap <= V:
+                    # price cap is less than variable cost, meaning producing anything would result in a net loss
+                    suggested_quantity = 0
                 else:
-                    Suggested_Quantity = quantity_from_price(A, B, Price)
+                    suggested_quantity = quantity_from_price(A, B, new_price)
+
         # set results on the instance
-        self.price = float(Price)
+        self.price = new_price
         # how many units to be available to sell this step
-        self.tick_sellable_inventory = round(Suggested_Quantity)
+        self.tick_sellable_inventory = round(suggested_quantity)
 
     def produce_goods(self) -> None:
         """
@@ -479,7 +477,7 @@ class IndustryAgent(Agent):
 
     def set_demand_curve_params(self, A: float, B: float) -> None:
         """
-        Set the demand graph parameters for the industry.
+        Set the demand curve parameters for the industry.
 
         Args:
             A (float): demand intercept (P at Q=0).
