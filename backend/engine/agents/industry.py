@@ -2,7 +2,7 @@ from mesa import Agent, Model
 from mesa.agent import AgentSet
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.pricing_type import PricingType
-from .pricing import avg_cost, linear_profit_max, linear_price, quantity_from_price
+from .pricing import average_cost, linear_profit_max, linear_price, quantity_from_price
 import logging
 import math
 
@@ -175,7 +175,7 @@ class IndustryAgent(Agent):
         # Determine pricing strategy
         strategy = INDUSTRY_PRICING[self.industry_type]
         if strategy == PricingType.AVG_COST:
-            Suggested_Quantity = avg_cost(A, B, V, float(F))
+            Suggested_Quantity = average_cost(A, B, V, float(F))
         elif strategy == PricingType.LINEAR_PROFIT_MAX:
             Suggested_Quantity = linear_profit_max(A, B, m)
 

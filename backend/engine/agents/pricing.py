@@ -42,7 +42,7 @@ def solve_quadratic_choose_higher(
         return max(q1, q2)
 
 
-def avg_cost(A: float, B: float, V: float, F: float) -> int:
+def average_cost(A: float, B: float, V: float, F: float) -> int:
     """
     Calculates the quantity to produce using average cost pricing. Assuming all units are sold, the net profit is 0.
     Due to rounding, exact results may be slightly different.
@@ -54,7 +54,7 @@ def avg_cost(A: float, B: float, V: float, F: float) -> int:
         V (float): variable cost per unit.
         F (float): fixed cost.
     Returns:
-        q_rounded (int): Suggested quantity to produce, rounded to nearest whole number.
+        q_rounded (int): suggested quantity to produce, rounded to nearest whole number.
     """
 
     unrounded_q = 0.0
@@ -79,36 +79,37 @@ def avg_cost(A: float, B: float, V: float, F: float) -> int:
     return round(unrounded_q)
 
 
-# Nondiagnostic version: only returns price and quantity
 def linear_profit_max(A: float, B: float, m: float, n: float = 0.0) -> int:
     """
-    Description:
-    -Returns a suggested quantity of goods to produce and sell for this tick, assuming the demand graph is linear.
-    -Returned quantity will maximize profit for the industry, as long as all units are sold
-    -Returned quantity is rounded to the nearest whole number, so there is some margin of error that may result in
-    less than perfect results
+    Calculates the quantity to produce using linear profit maximization.
+    Assuming all units are sold, the net profit is maximized.
+    Due to rounding, exact results may be slightly different.
+    If variable cost scales linearly with quantity produced, then m = variable cost per unit and n = 0.
 
     Equation for calculation:
     Q = (A - m) / (2B + n)
 
     Args:
-        A (float): Intercept of the Demand Graph (price at quantity zero)
-        B (float): Slope of the Demand Graph
-        m (float): Marginal Cost graph intercept
-        n (float): Marginal Cost graph slope
-        Note: if Variable cost scales linearly with quantity produced,
-            m = Variable Cost Per Unit
-            n = 0
+        A (float): intercept of the demand curve (price at quantity zero).
+        B (float): slope of the demand curve.
+        m (float): intercept of the marginal cost curve.
+        n (float): slope of the marginal cost curve.
+
     Returns:
-        Q_Rounded (float): Calculated Quantity, rounded to nearest whole number
+        q_rounded (float): suggested quantity to produce, rounded to nearest whole number.
+
+    Raises:
+        ValueError: if the denominator is 0.
     """
-    denom = 2 * B + n
-    if denom == 0:
-        raise ValueError("Denominator 2B + n is zero — examine boundaries.")
-    Q_star = (A - m) / denom
-    Q_feas = max(Q_star, 0.0)
-    Q_Rounded = round(Q_feas)
-    return Q_Rounded
+
+    denominator = 2 * B + n
+    if denominator == 0:
+        raise ValueError(
+            f"Denominator 2B + n is zero where B = {B} and n = {n} — examine boundaries."
+        )
+    q_star = (A - m) / denominator
+    q_feas = max(q_star, 0.0)
+    return round(q_feas)
 
 
 def linear_price(A, B, Q) -> float:
