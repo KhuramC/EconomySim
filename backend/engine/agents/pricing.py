@@ -4,34 +4,41 @@ from typing import Optional
 
 def solve_quadratic_choose_higher(
     B: float, V: float, A: float, F: float
-) -> Optional[float]:
+) -> float | None:
     """
-    Description:
-    Helper funtion for avg_cost, performing the quadratic calculations. Full explanation in avg_cost.
+    Helper function to solve B\\*Q^2 + (V - A)\\*Q + F = 0. The solution is based on the quadratic formula:
+    Q = [ -(V-A) +- sqrt( (V-A)^2) - 4(B\\*F) ) ] / ( 2 \\* B )
 
-    Solve B*Q^2 + (V - A)*Q + F = 0
-    Q = [ -(V-A) += sqrt( (V-A)^2) - 4(B*F) ) ] / ( 2 * B )
-    If two real roots, return the higher root, unless we don't have the inventory, then choose lower.
-    If one real root (discriminant == 0), return that root.
-    If no real roots, return None.
+
+    Args:
+        B (float): slope of the demand Graph.
+        V (float): variable cost per unit.
+        A (float): intercept of the demand Graph.
+        F (float): fixed cost.
+
+    Returns:
+        root(float|None): the greatest real root of the equation. If there is no real root, returns None.
     """
+
+    # quadratic coefficients
     a = B
     b = V - A
     c = F
+
     if abs(a) < 1e-12:
         # Degenerate: linear equation b*Q + c = 0 -> Q = -c/b
         if abs(b) < 1e-12:
             return None
         return -c / b
 
-    disc = b * b - 4 * a * c
-    if disc < 0:  # imaginary roots, disregard
+    discriminant = b * b - 4 * a * c
+    if discriminant < 0:  # imaginary roots, disregard
         return None
-    elif abs(disc) < 1e-12:  # value under sqrt is zero -> one real root
+    elif abs(discriminant) < 1e-12:  # value under sqrt is zero -> one real root
         q = -b / (2 * a)
         return q
     else:  # two real roots
-        sqrt_disc = math.sqrt(disc)
+        sqrt_disc = math.sqrt(discriminant)
         q1 = (-b + sqrt_disc) / (2 * a)
         q2 = (-b - sqrt_disc) / (2 * a)
         return max(q1, q2)
