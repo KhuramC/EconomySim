@@ -1,6 +1,6 @@
-import ParameterNumInput from "../inputs/ParameterNumInput.jsx";
-import ParameterSliderInput from "../inputs/ParameterSliderInput.jsx";
-import ParameterAccordion from "./ParameterAccordion.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import ParameterAccordion from "./ParameterAccordion";
 
 /**
  * Environmental section:

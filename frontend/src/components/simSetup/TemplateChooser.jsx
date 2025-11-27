@@ -7,7 +7,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { CityTemplate } from "../../types/CityTemplate.js";
+import { CityTemplate } from "../../types/CityTemplate";
 
 /**
  * A component to select a pre-defined city template.

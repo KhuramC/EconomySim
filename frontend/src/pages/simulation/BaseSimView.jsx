@@ -1,16 +1,16 @@
 import { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
-import SidebarNav from "../../components/SidebarNav";
+import SidebarNav from "../../components/SimView/SidebarNav";
 import { SimulationAPI } from "../../api/SimulationAPI";
-import TimelinePanel from "../../components/TimelinePanel";
+import TimelinePanel from "../../components/SimView/TimelinePanel";
 
 // Content-only pages (no sidebar or outer Paper inside them)
-import Overview from "./Overview.jsx";
-import Industries from "./Industries.jsx";
-import Policies from "./Policies.jsx";
-import Demographics from "./Demographics.jsx";
-import Statistics from "./Statistics.jsx";
+import Overview from "./Overview";
+import Industries from "./Industries";
+import Policies from "./Policies";
+import Demographics from "./Demographics";
+import Statistics from "./Statistics";
 
 export const SimulationContext = createContext(null);
 
@@ -121,7 +121,9 @@ export default function BaseSimView() {
               <Route path="overview" element={<Overview />} />
               <Route
                 path="industries"
-                element={<Industries oldindustryParams={initialIndustryParams} />}
+                element={
+                  <Industries oldindustryParams={initialIndustryParams} />
+                }
               />
               <Route path="policies" element={<Policies />} />
               <Route path="demographics" element={<Demographics />} />

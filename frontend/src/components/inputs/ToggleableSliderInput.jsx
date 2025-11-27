@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Grid, Stack } from "@mui/material";
 import ParameterSliderInput from "./ParameterSliderInput";
 import ParameterToggleInput from "./ParameterToggleInput";
@@ -24,7 +23,6 @@ const ToggleableSliderInput = ({
   xs = 6,
   unit = "%",
 }) => {
-
   const handleToggle = (event) => {
     setIsEnabled(event.target.checked);
   };

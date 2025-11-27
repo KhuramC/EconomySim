@@ -1,5 +1,8 @@
 import { Grid, Typography, Paper } from "@mui/material";
 
+/**
+ * A panel noting that the asssociated parameters can be changed.
+ */
 const ChangeableParameters = () => {
   return (
     <Grid

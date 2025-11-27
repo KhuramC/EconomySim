@@ -2,16 +2,16 @@ import { useState, useEffect } from "react";
 import { Typography, Alert, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import EnvironmentalAccordion from "../../components/SimSetup/EnvironmentalAccordion.jsx";
-import DemographicAccordion from "../../components/SimSetup/DemographicAccordion.jsx";
-import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
-import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
+import EnvironmentalAccordion from "../../components/SimSetup/EnvironmentalAccordion";
+import DemographicAccordion from "../../components/SimSetup/DemographicAccordion";
+import IndustryAccordion from "../../components/SimSetup/IndustryAccordion";
+import PolicyAccordion from "../../components/SimSetup/PolicyAccordion";
 
-import TemplateChooser from "../../components/SimSetup/TemplateChooser.jsx";
+import TemplateChooser from "../../components/SimSetup/TemplateChooser";
 
-import { Demographic } from "../../types/Demographic.js";
-import { IndustryType } from "../../types/IndustryType.js";
-import { SimulationAPI } from "../../api/SimulationAPI.js";
+import { Demographic } from "../../types/Demographic";
+import { IndustryType } from "../../types/IndustryType";
+import { SimulationAPI } from "../../api/SimulationAPI";
 
 // Function to generate default parameters for one demographic
 const getDefaultDemographicParams = () => {
