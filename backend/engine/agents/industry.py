@@ -122,6 +122,18 @@ class IndustryAgent(Agent):
         self.tick_goods_produced = 0
         self.tick_hours_worked = 0
 
+    def new_tick(self) -> None:
+        """
+        Ensures tick values are reset at the start of each tick.
+        IDEA: incorporate all functions that need to be run every tick into this?
+        """
+
+        self.tick_cost = 0.0
+        self.tick_revenue = 0.0
+        self.tick_sellable_inventory = 0
+        self.tick_goods_produced = 0
+        self.tick_hours_worked = 0
+
     def get_employees(self) -> AgentSet:
         """
         Gets all employees that are employed to this industry.
@@ -516,18 +528,6 @@ class IndustryAgent(Agent):
         self.tick_sellable_inventory -= quantity
         self.balance += quantity * self.price
         self.tick_revenue += quantity * self.price
-
-    def new_tick(self) -> None:
-        """
-        Ensures tick values are reset at the start of each tick.
-        IDEA: incorporate all functions that need to be run every tick into this?
-        """
-
-        self.tick_cost = 0.0
-        self.tick_revenue = 0.0
-        self.tick_sellable_inventory = 0
-        self.tick_goods_produced = 0
-        self.tick_hours_worked = 0
 
     def get_profit(self) -> float:
         """
