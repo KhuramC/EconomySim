@@ -54,7 +54,7 @@ def average_cost(A: float, B: float, V: float, F: float) -> int:
         V (float): variable cost per unit.
         F (float): fixed cost.
     Returns:
-        q_rounded (int): suggested quantity to produce, rounded to nearest whole number.
+        quantity_rounded (int): suggested quantity to produce, rounded to nearest whole number.
     """
 
     unrounded_q = 0.0
@@ -96,7 +96,7 @@ def linear_profit_max(A: float, B: float, m: float, n: float = 0.0) -> int:
         n (float): slope of the marginal cost curve.
 
     Returns:
-        q_rounded (float): suggested quantity to produce, rounded to nearest whole number.
+        quantity_rounded (float): suggested quantity to produce, rounded to nearest whole number.
 
     Raises:
         ValueError: if the denominator is 0.
@@ -112,37 +112,46 @@ def linear_profit_max(A: float, B: float, m: float, n: float = 0.0) -> int:
     return round(q_feas)
 
 
-def linear_price(A, B, Q) -> float:
+def linear_price(A: float, B: float, Q: int) -> float:
     """
-    Returns a suggested price to sell goods, assuming the demand graph is linear and there is no competition
+    Calculates a suggested price to sell goods, assuming the demand curve is linear and there is no competition.
 
-    Equation for Calculation:
+    Equation for calculation:
     P = A - (B*Q)
 
     Args:
-        A (float): Intercept of the Demand Graph (price at quantity zero)
-        B (float): Slope of the Demand Graph
+        A (float): intercept of the demand curve (price at quantity zero).
+        B (float): slope of the demand curve.
+        Q (int): the quantity to produce.
+
     Returns:
-        Price_Rounded (float): Calculated Price, rounded to two decimal places ($X.XX)
+        price_rounded (float): calculated price, rounded to two decimal places ($X.XX).
     """
     P_at_Q = A - B * Q
-    Price_Rounded = round(P_at_Q, 2)  # round to two decimal places
-    return Price_Rounded
+    return round(P_at_Q, 2)  # round to two decimal places
 
 
-def quantity_from_price(A, B, P) -> int:
+def quantity_from_price(A: float, B: float, P: float) -> int:
     """
-        Finds Quantity from price equation
-        Flip price equation.
-        (A - P) / B = Q
+    Calculates a suggested quantity of goods to sell, assuming the demand curve is linear and there is no competition.
+
+    Equation for calculation:
+    (A - P) / B = Q
+
     Args:
-        A (float): intercept of the demand graph
-        B (float): slope of the demand graph
-        P (float): Price that good is to be sold at
+        A (float): intercept of the demand curve.
+        B (float): slope of the demand curve.
+        P (float): price that good is to be sold at.
 
     Returns:
-        int: quantity that industry will produce at this price
+        quantity_rounded (int): quantity that industry will produce at this price, rounded to nearest whole number.
+
+    Raises:
+        ValueError: if B is 0.
     """
+
     if B != 0:
         Q_at_P = (A - P) / B
         return round(Q_at_P)  # round to whole number
+    else:
+        raise ValueError("B cannot be 0!")
