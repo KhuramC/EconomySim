@@ -1,46 +1,76 @@
 import { useContext, useState, useEffect, useMemo } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
 import _ from "lodash";
+
 import PolicyAccordion from "../../components/SimSetup/PolicyAccordion";
 import { SimulationContext } from "./BaseSimView";
 import ChangeableParameters from "../../components/SimView/ChangeableParameters";
 import { receivePoliciesPayload } from "../../api/payloadReceiver";
 
+/**
+ * Policies view for a running simulation.
+ *
+ * - Uses SimulationContext to talk to the backend over WebSocket.
+ * - Requests the current policies once on mount.
+ * - Listens for "get_policies" messages and maps backend payloads into
+ *   the frontend `policyParams` shape via `receivePoliciesPayload`.
+ * - Renders `PolicyAccordion` in "runtime" mode (`starting = false`).
+ * - Sends debounced policy updates back to the backend so that each
+ *   keystroke does not immediately produce a WebSocket message.
+ */
 export default function Policies() {
   const simAPI = useContext(SimulationContext);
   const [error, setError] = useState(null);
   const [policies, setPolicies] = useState(null);
 
+  /**
+   * On mount:
+   * 1. Ensure `simAPI` exists (if not, show a user-visible error).
+   * 2. Ask the backend for the current policies via `getPolicies()`.
+   * 3. Register a WebSocket listener for "get_policies" responses and
+   *    convert them to the frontend shape.
+   */
   useEffect(() => {
     const fetchPolicies = async () => {
       if (!simAPI) {
-        // ideally, this never happens unless a reload occurs
+        // This typically only happens on a hard reload or if the context failed to initialize.
         setError("Simulation API not available");
         return;
       }
       try {
+        // Triggers a WebSocket request; the actual data will arrive
+        // through the message listener below (handleWebSocketMessage).
         simAPI.getPolicies();
       } catch (err) {
         setError(err.message);
       }
     };
 
-    fetchPolicies(); // Initial fetch
+    fetchPolicies(); // Initial fetch when the component mounts
 
     const handleWebSocketMessage = (message) => {
       if (message.action === "get_policies") {
+        // Map the backend payload into the frontend `policyParams` shape.
         setPolicies(receivePoliciesPayload(message.data));
       }
     };
 
     if (simAPI) {
       simAPI.addMessageListener(handleWebSocketMessage);
+
+      // Cleanup: remove the listener when the component unmounts
+      // or when simAPI changes.
       return () => simAPI.removeMessageListener(handleWebSocketMessage);
     }
-  }, [simAPI]); // Re-run effect if simAPI changes
+  }, [simAPI]);
 
-  // Debounce the function that sends policy updates via WebSocket.
-  // This prevents sending a message on every keystroke.
+  /**
+   * Debounced function that sends policy updates to the backend.
+   *
+   * - Called whenever the user edits policies in the UI.
+   * - Debouncing prevents sending a WebSocket message on every keystroke.
+   * - The debounce is tied to the current `simAPI` instance.
+   */
   const debouncedSetPolicies = useMemo(
     () =>
       _.debounce((newPolicies) => {
@@ -52,15 +82,25 @@ export default function Policies() {
     [simAPI]
   );
 
-  // Cleanup the debounced function on component unmount
+  /**
+   * Cleanup for the debounced function:
+   * - When the component unmounts, flush any pending debounced call.
+   * - This ensures the last user change is not lost if they navigate away
+   *   before the debounce delay completes.
+   */
   useEffect(() => {
     return () => {
-      // Flush any pending updates when the component unmounts.
-      // This ensures the last change is saved.
       debouncedSetPolicies.flush();
     };
   }, [debouncedSetPolicies]);
 
+  /**
+   * Handler for scalar policy fields (e.g., salesTax, corporateTax, etc.).
+   * - Updates local `policies` state.
+   * - Triggers a debounced push to the backend.
+   *
+   * @param {string} field - Top-level field name in `policies`.
+   */
   const handlePolicyChange = (field) => (event) => {
     const { value } = event.target;
     setPolicies((prevPolicies) => {
@@ -73,7 +113,10 @@ export default function Policies() {
     });
   };
 
-  const handlePriceCapToggle = (event) => {
+  /**
+   * Handler for toggling the global price cap enabled/disabled state.
+   */
+  const handlePriceCapToggle = () => {
     setPolicies((prevPolicies) => {
       const newPolicies = {
         ...prevPolicies,
@@ -85,38 +128,58 @@ export default function Policies() {
     });
   };
 
+  /**
+   * Handler for editing a single personal income tax bracket
+   * (global PIT, not demographic-specific) while the simulation is running.
+   *
+   * @param {number} index - Index of the bracket in the PIT array.
+   * @param {string} field - "threshold" or "rate".
+   */
   const handlePersonalIncomeTaxChange = (index, field) => (event) => {
     const { value } = event.target;
     setPolicies((prevPolicies) => {
       const newPolicies = _.cloneDeep(prevPolicies);
       const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
+
       newTaxBrackets[index] = {
         ...newTaxBrackets[index],
         [field]: parseFloat(value) || 0,
       };
+
       newPolicies.personalIncomeTax = newTaxBrackets;
       debouncedSetPolicies(newPolicies);
       return newPolicies;
     });
   };
 
+  /**
+   * Adds a new global personal income tax bracket at the end of the list.
+   */
   const addPersonalIncomeTaxBracket = () => {
     setPolicies((prevPolicies) => {
       const newPolicies = _.cloneDeep(prevPolicies);
       const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
+
       newTaxBrackets.push({ threshold: 0, rate: 0 });
       newPolicies.personalIncomeTax = newTaxBrackets;
+
       debouncedSetPolicies(newPolicies);
       return newPolicies;
     });
   };
 
+  /**
+   * Removes a global personal income tax bracket by index.
+   *
+   * @param {number} index - Index of the bracket to remove.
+   */
   const removePersonalIncomeTaxBracket = (index) => {
     setPolicies((prevPolicies) => {
       const newPolicies = _.cloneDeep(prevPolicies);
       const newTaxBrackets = (newPolicies.personalIncomeTax || []).filter(
         (_, i) => i !== index
       );
+
       newPolicies.personalIncomeTax = newTaxBrackets;
       debouncedSetPolicies(newPolicies);
       return newPolicies;
@@ -136,13 +199,13 @@ export default function Policies() {
       )}
 
       <Grid container spacing={3}>
-        {/* LEFT column: main content (editable) */}
+        {/* LEFT column: main editable content */}
         <Grid size={{ xs: 12 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Policies
           </Typography>
 
-          {/* Only render the accordion when policies data is available */}
+          {/* Only render the accordion when policies data has been loaded */}
           {policies ? (
             <PolicyAccordion
               policyParams={policies}
@@ -156,6 +219,7 @@ export default function Policies() {
           ) : null}
         </Grid>
 
+        {/* RIGHT column: other changeable parameters (if any) */}
         <ChangeableParameters />
       </Grid>
     </Box>

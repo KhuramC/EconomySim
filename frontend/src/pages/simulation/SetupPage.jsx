@@ -47,6 +47,21 @@ const getDefaultIndustryParams = () => ({
   startingDebtAllowed: true,
 });
 
+// Helper: This creates a dictionary of { [IndustryType.*]: defaultValue }
+const makeIndustryDict = (defaultValue) =>
+  Object.fromEntries(
+    Object.values(IndustryType).map((industry) => [industry, defaultValue])
+  );
+
+// Helper: default PIT brackets per demographic
+const makePersonalIncomeTaxByDemographicDefault = () =>
+  Object.fromEntries(
+    Object.values(Demographic).map((demo) => [
+      demo,
+      [{ threshold: 0, rate: 0 }],
+    ])
+  );
+
 export default function SetupPage() {
   const navigate = useNavigate();
 
@@ -84,16 +99,27 @@ export default function SetupPage() {
     ),
 
     policyParams: {
-      // TODO: update to be industry and demographic specific
+      // Global values
       salesTax: 7,
       corporateTax: 21,
       personalIncomeTax: [{ threshold: 0, rate: 0.0 }],
       propertyTax: 10,
       tariffs: 5,
       subsidies: 20,
-      priceCap: 20, // $ > 0
+      priceCap: 20, // % > 0
       priceCapEnabled: false,
       minimumWage: 7.25, // $/hr > 0
+
+      // Per-industry overrides
+      salesTaxByIndustry: makeIndustryDict(7),
+      corporateTaxByIndustry: makeIndustryDict(21),
+      tariffsByIndustry: makeIndustryDict(5),
+      subsidiesByIndustry: makeIndustryDict(20),
+      priceCapByIndustry: makeIndustryDict(20),
+      priceCapEnabledByIndustry: makeIndustryDict(false),
+
+      // Per-demographic Personal Income Tax
+      personalIncomeTaxByDemographic: makePersonalIncomeTaxByDemographicDefault(),
     },
   });
 
@@ -214,7 +240,7 @@ export default function SetupPage() {
       const ind = params.industryParams[ik];
 
       // Non-negative checks (> 0)
-      const nonNegativeFields = [
+      const greaterThanZeroFields = [
         ["startingInventory", "Starting inventory"],
         ["startingPrice", "Starting price"],
         ["industrySavings", "Industry savings"],
@@ -222,7 +248,7 @@ export default function SetupPage() {
         ["startingEmpEfficiency", "Worker efficiency"],
       ];
 
-      nonNegativeFields.forEach(([key, label]) => {
+      greaterThanZeroFields.forEach(([key, label]) => {
         if (isBlank(ind?.[key]) || Number(ind?.[key]) <= 0) {
           msgs[
             `industry_${key}_${ik}`
@@ -269,6 +295,7 @@ export default function SetupPage() {
         "Policies: Minimum wage must be greater than 0.";
       flags.policy.minimumWage = true;
     }
+
     p.personalIncomeTax.forEach((bracket, index) => {
       const setFlag = (field) => {
         if (!flags.policy.personalIncomeTax)
@@ -302,8 +329,6 @@ export default function SetupPage() {
   }, [params]);
 
   // ---------- Handlers (typing-friendly) ----------
-  // NOTE: Do NOT coerce to number on every keystroke.
-  // We keep raw strings so users can type freely (e.g., "-", "1.", "", etc.).
   const handleEnvChange = (key) => (event) => {
     const value =
       event.target.type === "checkbox"
@@ -354,7 +379,22 @@ export default function SetupPage() {
     }));
   };
 
-  const handlePriceCapToggle = (event) => {
+  // Per-industry overrides
+  const handleIndustryPolicyChange = (fieldName, industryKey) => (event) => {
+    const { value } = event.target;
+    setParams((prev) => ({
+      ...prev,
+      policyParams: {
+        ...prev.policyParams,
+        [fieldName]: {
+          ...(prev.policyParams[fieldName] || {}),
+          [industryKey]: Number(value),
+        },
+      },
+    }));
+  };
+
+  const handlePriceCapToggle = () => {
     setParams((prev) => ({
       ...prev,
       policyParams: {
@@ -364,6 +404,7 @@ export default function SetupPage() {
     }));
   };
 
+  // Global PIT
   const handlePersonalIncomeTaxChange = (index, field) => (event) => {
     const { value } = event.target;
     setParams((prev) => {
@@ -407,13 +448,81 @@ export default function SetupPage() {
     }));
   };
 
+  // Per-demographic PIT
+  const handlePersonalIncomeTaxByDemoChange =
+    (demographicValue, index, field) => (event) => {
+      const { value } = event.target;
+      setParams((prev) => {
+        const prevDict =
+          prev.policyParams.personalIncomeTaxByDemographic || {};
+        const prevList = prevDict[demographicValue] || [];
+        const newList = [...prevList];
+
+        newList[index] = {
+          ...newList[index],
+          [field]: Number(value),
+        };
+
+        return {
+          ...prev,
+          policyParams: {
+            ...prev.policyParams,
+            personalIncomeTaxByDemographic: {
+              ...prevDict,
+              [demographicValue]: newList,
+            },
+          },
+        };
+      });
+    };
+
+  const addPersonalIncomeTaxBracketForDemo = (demographicValue) => {
+    setParams((prev) => {
+      const prevDict =
+        prev.policyParams.personalIncomeTaxByDemographic || {};
+      const prevList = prevDict[demographicValue] || [];
+
+      return {
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          personalIncomeTaxByDemographic: {
+            ...prevDict,
+            [demographicValue]: [
+              ...prevList,
+              { threshold: 0, rate: 0 },
+            ],
+          },
+        },
+      };
+    });
+  };
+
+  const removePersonalIncomeTaxBracketForDemo = (demographicValue, index) => {
+    setParams((prev) => {
+      const prevDict =
+        prev.policyParams.personalIncomeTaxByDemographic || {};
+      const prevList = prevDict[demographicValue] || [];
+
+      return {
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          personalIncomeTaxByDemographic: {
+            ...prevDict,
+            [demographicValue]: prevList.filter((_, i) => i !== index),
+          },
+        },
+      };
+    });
+  };
+
   // Send parameters to backend and navigate to simulation view
   const handleBegin = async () => {
     setBackendError(null);
     try {
       const modelId = await SimulationAPI.createModel(params);
       console.log("Model created with ID:", modelId);
-      // Navigate to simulation view with the new model ID
       navigate(`/BaseSimView`, {
         state: { modelId: modelId, industryParams: params.industryParams },
       });
@@ -441,11 +550,13 @@ export default function SetupPage() {
         onTemplateSelect={async (template) => {
           console.log("Selected template:", template);
           const config = await SimulationAPI.getTemplateConfig(template);
-          config.envParams.maxSimulationLength = // not in templates
+          // maxSimulationLength is local-only
+          config.envParams.maxSimulationLength =
             params.envParams.maxSimulationLength;
           setParams(config);
         }}
       />
+
       <EnvironmentalAccordion
         envParams={params.envParams}
         handleEnvChange={handleEnvChange}
@@ -472,6 +583,12 @@ export default function SetupPage() {
         handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
         addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
         removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
+        handleIndustryPolicyChange={handleIndustryPolicyChange}
+        handlePersonalIncomeTaxByDemoChange={handlePersonalIncomeTaxByDemoChange}
+        addPersonalIncomeTaxBracketForDemo={addPersonalIncomeTaxBracketForDemo}
+        removePersonalIncomeTaxBracketForDemo={
+          removePersonalIncomeTaxBracketForDemo
+        }
       />
 
       {backendError && (
@@ -516,7 +633,7 @@ export default function SetupPage() {
                 margin: "0.5rem 0 0 1rem",
                 padding: 0,
                 textAlign: "left",
-              }}
+              }}å
             >
               {Object.values(formErrors).map((text) => (
                 <li key={text}>{text}</li>
