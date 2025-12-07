@@ -1,9 +1,9 @@
 import { useContext, useState, useEffect, useMemo } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
 import _ from "lodash";
-import PolicyAccordion from "../../components/SimSetup/PolicyAccordion";
+import PolicyAccordion from "../../components/simSetup/PolicyAccordion";
 import { SimulationContext } from "./BaseSimView";
-import ChangeableParameters from "../../components/SimView/ChangeableParameters";
+import ChangeableParameters from "../../components/simView/ChangeableParameters";
 import { receivePoliciesPayload } from "../../api/payloadReceiver";
 
 export default function Policies() {

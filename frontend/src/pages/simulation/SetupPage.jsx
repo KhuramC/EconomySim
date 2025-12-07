@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Typography, Alert, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import EnvironmentalAccordion from "../../components/SimSetup/EnvironmentalAccordion";
-import DemographicAccordion from "../../components/SimSetup/DemographicAccordion";
-import IndustryAccordion from "../../components/SimSetup/IndustryAccordion";
-import PolicyAccordion from "../../components/SimSetup/PolicyAccordion";
+import EnvironmentalAccordion from "../../components/simSetup/EnvironmentalAccordion";
+import DemographicAccordion from "../../components/simSetup/DemographicAccordion";
+import IndustryAccordion from "../../components/simSetup/IndustryAccordion";
+import PolicyAccordion from "../../components/simSetup/PolicyAccordion";
 
-import TemplateChooser from "../../components/SimSetup/TemplateChooser";
+import TemplateChooser from "../../components/simSetup/TemplateChooser";
 
 import { Demographic } from "../../types/Demographic";
 import { IndustryType } from "../../types/IndustryType";

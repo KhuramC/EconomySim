@@ -11,7 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import UnchangeableParameters from "../../components/SimView/UnchangeableParameters";
+import UnchangeableParameters from "../../components/simView/UnchangeableParameters";
 import { Demographic } from "../../types/Demographic";
 import { IndustryType } from "../../types/IndustryType";
 /**
