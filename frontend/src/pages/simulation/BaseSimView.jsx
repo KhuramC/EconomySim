@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
-import SidebarNav from "../../components/SimView/SidebarNav";
+import SidebarNav from "../../components/simView/SidebarNav";
+import TimelinePanel from "../../components/simView/TimelinePanel";
 import { SimulationAPI } from "../../api/SimulationAPI";
-import TimelinePanel from "../../components/SimView/TimelinePanel";
 
 // Content-only pages (no sidebar or outer Paper inside them)
 import Overview from "./Overview";
@@ -91,6 +91,7 @@ export default function BaseSimView() {
             bgcolor: "background.paper",
             p: 2,
             overflowY: "auto", // Scroll inside sidebar if it gets tall
+            overflowX: "hidden", // Prevent horizontal scroll
           }}
         >
           <SidebarNav basePath={basePath} />

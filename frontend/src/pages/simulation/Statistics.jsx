@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { SimulationContext } from "./BaseSimView";
-import GraphSlot from "../../components/SimView/GraphSlot";
+import GraphSlot from "../../components/simView/GraphSlot";
 import { Indicators } from "../../types/Indicators";
 import { IndustryMetrics } from "../../types/IndustryMetrics";
 
