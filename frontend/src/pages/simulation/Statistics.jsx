@@ -14,10 +14,10 @@ import {
   ToggleButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { SimulationContext } from "./BaseSimView.jsx";
-import GraphSlot from "../../components/GraphSlot";
+import { SimulationContext } from "./BaseSimView";
+import GraphSlot from "../../components/SimView/GraphSlot";
 import { Indicators } from "../../types/Indicators";
-import { IndustryMetrics } from "../../types/IndustryMetrics.js";
+import { IndustryMetrics } from "../../types/IndustryMetrics";
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
@@ -40,8 +40,8 @@ export default function Statistics() {
     const handleWebSocketMessage = (message) => {
       // When a step happens, request the latest indicators/
       if (message.action === "step" || message.action === "reverse_step") {
-        simAPI.sendMessage({ action: "get_indicators" });
-        simAPI.sendMessage({ action: "get_industry_data" });
+        simAPI.getIndicators();
+        simAPI.getIndustryData();
       }
       // When indicator data arrives, update our state
       if (message.action === "get_indicators" && message.data) {
@@ -58,8 +58,8 @@ export default function Statistics() {
     // Add the listener
     simAPI.addMessageListener(handleWebSocketMessage);
     // Fetch initial data on component mount
-    simAPI.sendMessage({ action: "get_indicators" });
-    simAPI.sendMessage({ action: "get_industry_data" });
+    simAPI.getIndicators();
+    simAPI.getIndustryData();
 
     // Cleanup: remove the listener when the component unmounts
     return () => {
@@ -75,9 +75,7 @@ export default function Statistics() {
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={8}
+          size={{ xs: 12, md: 8 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
@@ -139,9 +137,7 @@ export default function Statistics() {
 
         {/* RIGHT COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={4}
+          size={{ xs: 12, md: 4 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           {/* Add New Graph panel */}

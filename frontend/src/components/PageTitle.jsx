@@ -1,4 +1,3 @@
-// src/components/PageTitle.jsx
 import { Typography } from "@mui/material";
 import { useAppSettings } from "../context/AppSettingsContext";
 import { useState, useEffect } from "react";

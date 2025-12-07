@@ -203,7 +203,8 @@ class IndustryAgent(Agent):
         Price = linear_price(A, B, Suggested_Quantity)
 
         price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
-        if price_cap_percentage is not None and skipPriceCap == False:
+        price_cap_enabled = self.model.policies["price_cap_enabled"][self.industry_type]
+        if price_cap_percentage is not None and skipPriceCap == False and price_cap_enabled:
             price_cap = oldPrice * (
                 1 + price_cap_percentage
             )  # price cap is set to a percentage amount higher than the price from the previous tick

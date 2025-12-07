@@ -1,8 +1,14 @@
 import { Grid, Typography, Paper } from "@mui/material";
 
+/**
+ * A panel noting that the asssociated parameters cannot be changed.
+ */
 const UnchangeableParameters = () => {
   return (
-    <Grid item xs={12} md={4} sx={{ display: "flex", flexDirection: "column" }}>
+    <Grid
+      size={{ xs: 12, md: 4 }}
+      sx={{ display: "flex", flexDirection: "column" }}
+    >
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
           Notes

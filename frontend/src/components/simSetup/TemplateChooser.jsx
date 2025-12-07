@@ -7,7 +7,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { CityTemplate } from "../../types/CityTemplate.js";
+import { CityTemplate } from "../../types/CityTemplate";
 
 /**
  * A component to select a pre-defined city template.
@@ -27,7 +27,7 @@ export default function TemplateChooser({ onTemplateSelect }) {
   return (
     <Paper elevation={2} sx={{ padding: 2, mb: 2 }}>
       <Grid container spacing={2} justifyContent="center">
-        <Grid item xs={12} sx={{ textAlign: "center" }}>
+        <Grid size={{ xs: 12 }} sx={{ textAlign: "center" }}>
           <Typography variant="h6" gutterBottom>
             City Templates
           </Typography>
@@ -37,7 +37,7 @@ export default function TemplateChooser({ onTemplateSelect }) {
         </Grid>
       </Grid>
       <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
-        <Grid item>
+        <Grid>
           <ToggleButtonGroup
             value={selectedTemplate}
             exclusive

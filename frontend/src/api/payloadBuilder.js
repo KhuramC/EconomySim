@@ -70,6 +70,12 @@ export function buildPoliciesPayload(policyParams) {
         annualPercentToWeeklyDecimal(policyParams.priceCap),
       ])
     ),
+    price_cap_enabled: Object.fromEntries(
+      Object.values(IndustryType).map((value) => [
+        value,
+        policyParams.priceCapEnabled,
+      ])
+    ),
     minimum_wage: hourlyWageToWeekly(policyParams.minimumWage),
   };
   return policies;
