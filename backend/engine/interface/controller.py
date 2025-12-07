@@ -285,7 +285,11 @@ class ModelController:
         if indicators:
             # Always include the "week" column along with the requested indicators
             columns_to_keep = ["week"] + list(indicators)
-            indicators_df = indicators_df[columns_to_keep]
+        else:
+            # otherwise just get all the indicator types
+            columns_to_keep = ["week"] + list(Indicators)
+
+        indicators_df = indicators_df[columns_to_keep]
 
         return indicators_df
 
