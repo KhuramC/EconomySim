@@ -280,18 +280,16 @@ class ModelController:
         ]
 
         # filter by demo metrics
-        columns_to_keep = ["week"]  # Always include the "week" column
-        if demo_metrics:
-            # requested metrics
-            columns_to_keep = columns_to_keep + list(demo_metrics)
-        else:
-            # otherwise just get all the demographic metrics
-            columns_to_keep = columns_to_keep + list(DemoMetrics)
+        # Always include the "week" column
+        columns_to_keep = ["week"] + list(demo_metrics if demo_metrics else DemoMetrics)
+
         metrics_df = metrics_df[columns_to_keep]
 
         # Turn metrics from dicts to values with demo column
         metrics_df = (
-            metrics_df.set_index("week")[list(DemoMetrics)]
+            metrics_df.set_index("week")[
+                list(demo_metrics if demo_metrics else DemoMetrics)
+            ]
             .apply(lambda x: x.apply(pd.Series).stack())
             .reset_index()
         )
