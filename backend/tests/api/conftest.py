@@ -13,12 +13,10 @@ VALID_CONFIG = {
     "max_simulation_length": 52,
     "num_people": 100,
     "inflation_rate": 0.001,
-    "random_events": False,
     "demographics": {
         demo: {
             "income": {"mean": 300 + (i * 500), "sd": 100},
             "proportion": 1 / len(Demographic),
-            "unemployment_rate": 0.1 - (i * 0.02),
             "spending_behavior": {
                 itype.value: 1 / len(IndustryType) for itype in IndustryType
             },
@@ -44,12 +42,23 @@ VALID_CONFIG = {
     },
     "policies": {
         "corporate_income_tax": {itype.value: 0.2 for itype in IndustryType},
-        "personal_income_tax": {demo.value: 0.04 for demo in Demographic},
+        "personal_income_tax": [
+            {"threshold": 13871.42, "rate": 0.002235},  # Annual: ($721,314, 12.3%)
+            {"threshold": 8322.83, "rate": 0.002061},  # Annual: ($432,787, 11.3%)
+            {"threshold": 6935.75, "rate": 0.001886},  # Annual: ($360,659, 10.3%)
+            {"threshold": 1357.81, "rate": 0.001713},  # Annual: ($70,606, 9.3%)
+            {"threshold": 1074.35, "rate": 0.001479},  # Annual: ($55,866, 8.0%)
+            {"threshold": 773.94, "rate": 0.001121},  # Annual: ($40,245, 6.0%)
+            {"threshold": 490.37, "rate": 0.000754},  # Annual: ($25,499, 4.0%)
+            {"threshold": 206.85, "rate": 0.000381},  # Annual: ($10,756, 2.0%)
+            {"threshold": 0, "rate": 0.000191},  # Annual: ($0, 1.0%)
+        ],
         "sales_tax": {itype.value: 0.05 for itype in IndustryType},
-        "property_tax": 0.02,
+        "property_tax": {"residential": 0.01, "commercial": 0.02},
         "tariffs": {itype.value: 0.03 for itype in IndustryType},
         "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
+        "price_cap_enabled": {itype.value: False for itype in IndustryType},
         "minimum_wage": 15.0,
     },
 }

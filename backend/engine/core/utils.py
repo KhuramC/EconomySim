@@ -7,7 +7,6 @@ DEMOGRAPHICS_SCHEMA = {
     demo.value: {
         "income": {"mean": None, "sd": None},
         "proportion": None,
-        "unemployment_rate": None,
         "spending_behavior": {itype.value: None for itype in IndustryType},
         "balance": {"mean": None, "sd": None},
     }
@@ -35,12 +34,13 @@ INDUSTRIES_SCHEMA = {
 
 POLICIES_SCHEMA = {
     "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": {demo.value: None for demo in Demographic},
+    "personal_income_tax": None,
     "sales_tax": {itype.value: None for itype in IndustryType},
-    "property_tax": None,
+    "property_tax": {"residential": None, "commercial": None},
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
     "price_cap": {itype.value: None for itype in IndustryType},
+    "price_cap_enabled": {itype.value: None for itype in IndustryType},
     "minimum_wage": None,
 }
 """Schema for validating the policies dictionary."""
@@ -59,8 +59,10 @@ def validate_schema(data: dict, schema: dict, path: str):
     Raises:
         ValueError: if the `data` does not match schema, or is None.
     """
-    if data is None:
-        raise ValueError(f"Data is None at {path}, expecting a dictionary.")
+    if data is None or not isinstance(data, dict):
+        raise ValueError(
+            f"Data is not a dictionary at {path} even though it was expected."
+        )
 
     missing = set(schema.keys()) - set(data.keys())
     if missing:
@@ -76,7 +78,7 @@ def num_prop(ratio: list[int | float], total: int):
     Calculates the whole number in each category based on the proportion of the total.
 
     Args:
-        ratio (Iterable): the proportion associated with category.
+        ratio (list): the proportion associated with category.
         total (int): the total number of items.
     """
     if total == 0:

@@ -11,7 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import UnchangeableParameters from "../../components/SimView/UnchangeableParameters";
+import UnchangeableParameters from "../../components/simView/UnchangeableParameters";
 import { Demographic } from "../../types/Demographic";
 import { IndustryType } from "../../types/IndustryType";
 /**
@@ -27,7 +27,6 @@ export default function Demographics() {
       share: 40,
       income: 30000,
       savingsRate: 5,
-      unemployment: 9,
       // Optional per-class spending behavior map (percent-of-income per industry)
       spending: {
         Groceries: 25,
@@ -43,9 +42,8 @@ export default function Demographics() {
       share: 55,
       income: 80000,
       savingsRate: 12,
-      unemployment: 4,
       spending: {
-         Groceries: 25,
+        Groceries: 25,
         Utilities: 18,
         Automobiles: 8,
         Housing: 35,
@@ -58,9 +56,8 @@ export default function Demographics() {
       share: 5,
       income: 500000,
       savingsRate: 25,
-      unemployment: 1,
       spending: {
-         Groceries: 25,
+        Groceries: 25,
         Utilities: 18,
         Automobiles: 8,
         Housing: 35,
@@ -79,19 +76,13 @@ export default function Demographics() {
     spendingBehaviorPct: 70, // if no per-class map, use this % uniformly per industry (demo fallback)
     meanSavings: 10000,
     savingsStd: 5000,
-    startingUnemploymentRate: 0.05,
   });
-
-  const formattedUnemp = useMemo(
-    () => (globalParams.startingUnemploymentRate * 100).toFixed(2),
-    [globalParams.startingUnemploymentRate]
-  );
 
   return (
     <Box>
       <Grid container spacing={3}>
         {/* LEFT column: accordions for three classes + global parameters */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Demographics
           </Typography>
@@ -123,14 +114,14 @@ export default function Demographics() {
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ReadOnlyField
                     label="Mean Income ($)"
                     value={formatCurrency(globalParams.meanIncome)}
                     adornStart="$"
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ReadOnlyField
                     label="Income Std. Deviation ($)"
                     value={formatCurrency(globalParams.incomeStd)}
@@ -138,14 +129,14 @@ export default function Demographics() {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ReadOnlyField
                     label="Population Distribution (%)"
                     value={String(globalParams.populationDistribution)}
                     adornEnd="%"
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ReadOnlyField
                     label="Spending Behavior (% Income, default)"
                     value={String(globalParams.spendingBehaviorPct)}
@@ -153,26 +144,18 @@ export default function Demographics() {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ReadOnlyField
                     label="Mean Savings ($)"
                     value={formatCurrency(globalParams.meanSavings)}
                     adornStart="$"
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ReadOnlyField
                     label="Savings Std. Deviation ($)"
                     value={formatCurrency(globalParams.savingsStd)}
                     adornStart="$"
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <ReadOnlyField
-                    label="Starting Unemployment Rate"
-                    value={formattedUnemp}
-                    adornEnd="%"
                   />
                 </Grid>
               </Grid>
@@ -223,28 +206,28 @@ function ClassAccordion({
       <AccordionDetails>
         {/* Class metrics */}
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ReadOnlyField
               label="Population Share (%)"
               value={String(data.share)}
               adornEnd="%"
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ReadOnlyField
               label="Average Household Income ($)"
               value={formatCurrency(data.income)}
               adornStart="$"
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ReadOnlyField
               label="Savings Rate (% of income)"
               value={String(data.savingsRate)}
               adornEnd="%"
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ReadOnlyField
               label="Unemployment Rate (%)"
               value={String(data.unemployment)}
@@ -261,7 +244,7 @@ function ClassAccordion({
         </Typography>
         <Grid container spacing={1}>
           {spendingMap.map((row) => (
-            <Grid key={row.label} item xs={12} sm={6} md={4}>
+            <Grid key={row.label} size={{ xs: 12, sm: 6, md: 4 }}>
               <ReadOnlyField
                 label={row.label}
                 value={String(row.value)}

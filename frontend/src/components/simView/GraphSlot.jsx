@@ -22,7 +22,10 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-// Simple placeholder area to drop/choose a graph later
+
+/**
+ * A component to graph data using ChartJS.
+ */
 export default function GraphSlot({
   title = "Untitled Graph",
   labels = [],

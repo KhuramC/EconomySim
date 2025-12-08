@@ -41,7 +41,7 @@ function Home({ onStart }) {
             onClick={onStart}
             sx={{ mt: 3, borderRadius: 2 }}
           >
-            Begin Simulation
+            Setup Simulation
           </Button>
         </Stack>
       </Container>

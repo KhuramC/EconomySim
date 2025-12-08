@@ -15,8 +15,6 @@ DEMOGRAPHICS = {
         },
         # Proportions that roughly add up to 1.0
         "proportion": [0.45, 0.40, 0.15][i],
-        # Unemployment rate, decreases with class
-        "unemployment_rate": 0.08 - (i * 0.02),
         "spending_behavior": {
             itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
         },
@@ -50,12 +48,13 @@ INDUSTRIES = {
 
 POLICIES = {
     "corporate_income_tax": {itype.value: i for i, itype in enumerate(IndustryType)},
-    "personal_income_tax": {demo.value: i * 2 for i, demo in enumerate(Demographic)},
-    "sales_tax": {itype.value: i ^ 2 for i, itype in enumerate(IndustryType)},
-    "property_tax": 4.0,
-    "tariffs": {itype.value: i * 2.5 for i, itype in enumerate(IndustryType)},
-    "subsidies": {itype.value: i * -2 for i, itype in enumerate(IndustryType)},
+    "personal_income_tax": [{"threshold": 0.0, "rate": 0.0}],
+    "sales_tax": {itype.value: i * 0.00 for i, itype in enumerate(IndustryType)},
+    "property_tax": {"residential": 0.0, "commercial": 0.0},
+    "tariffs": {itype.value: i * 0.0 for i, itype in enumerate(IndustryType)},
+    "subsidies": {itype.value: i * 0.0 for i, itype in enumerate(IndustryType)},
     "price_cap": {itype.value: None for itype in IndustryType},
+    "price_cap_enabled": {itype.value: False for itype in IndustryType},
     "minimum_wage": 7.25,
 }
 """A sample policies variable that should pass a validate_schema call by an EconomyModel."""

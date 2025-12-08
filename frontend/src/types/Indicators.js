@@ -4,7 +4,7 @@ export const Indicators = {
   INCOME_PER_CAPITA: "Income Per Capita",
   MEDIAN_INCOME: "Median Income",
   HOOVER_INDEX: "Hoover Index",
-  LORENZ_CURVE: "Lorenz Curve",
+  // LORENZ_CURVE: "Lorenz Curve",
   GINI_COEFFICIENT: "Gini Coefficient",
 };
 

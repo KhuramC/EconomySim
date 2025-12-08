@@ -1,4 +1,3 @@
-// src/hooks/usePopEffect.js
 import { useEffect, useRef } from "react";
 import popSound from "../assets/sharp-pop.mp3";
 

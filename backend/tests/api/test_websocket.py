@@ -186,9 +186,12 @@ def test_websocket_get_and_set_policies(
 
         # 2. Set new policies
         new_policies = copy.deepcopy(initial_policies)
-        new_policies["personal_income_tax"] = {
-            demo: i * 3 for i, demo in enumerate(Demographic)
-        }
+        new_personal_income_tax = [
+            {"threshold": 1000, "rate": 0.01416},
+            {"threshold": 0, "rate": 0.000662},
+        ]
+
+        new_policies["personal_income_tax"] = new_personal_income_tax
         websocket.send_json({"action": "set_policies", "data": new_policies})
         response_set = websocket.receive_json()
         assert response_set == {"status": "success", "action": "set_policies"}
@@ -197,9 +200,7 @@ def test_websocket_get_and_set_policies(
         websocket.send_json({"action": "get_policies"})
         response_get2 = websocket.receive_json()
         updated_policies = response_get2["data"]
-        assert updated_policies["personal_income_tax"] == {
-            demo: i * 3 for i, demo in enumerate(Demographic)
-        }
+        assert updated_policies["personal_income_tax"] == new_personal_income_tax
 
         # 4. Try to set blank policies, and get error
         websocket.send_json({"action": "set_policies", "data": None})
