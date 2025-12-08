@@ -124,7 +124,7 @@ export default function DemographicAccordion({
     </>
   );
 
-  const advancedContent = (
+  const advancedContent = readOnly ? undefined : (
     <>
       <SpendingBehavior
         selectedDemographic={selectedDemographic}
