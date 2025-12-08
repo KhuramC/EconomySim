@@ -295,6 +295,7 @@ def test_price_cap(
     Test 6: Already at ideal price, reset price cap to None for later tests
     """
     mock_economy_model.policies["price_cap"][IndustryType.LUXURY] = price_cap_percentage
+    mock_economy_model.policies["price_cap_enabled"][IndustryType.LUXURY] = True
     ind = IndustryAgent(
         mock_economy_model,
         industry_type=IndustryType.LUXURY,

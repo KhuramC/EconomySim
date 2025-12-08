@@ -54,6 +54,7 @@ POLICIES = {
     "tariffs": {itype.value: i * 0.0 for i, itype in enumerate(IndustryType)},
     "subsidies": {itype.value: i * 0.0 for i, itype in enumerate(IndustryType)},
     "price_cap": {itype.value: None for itype in IndustryType},
+    "price_cap_enabled": {itype.value: False for itype in IndustryType},
     "minimum_wage": 7.25,
 }
 """A sample policies variable that should pass a validate_schema call by an EconomyModel."""

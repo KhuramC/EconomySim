@@ -58,6 +58,7 @@ VALID_CONFIG = {
         "tariffs": {itype.value: 0.03 for itype in IndustryType},
         "subsidies": {itype.value: 0.0 for itype in IndustryType},
         "price_cap": {itype.value: None for itype in IndustryType},
+        "price_cap_enabled": {itype.value: False for itype in IndustryType},
         "minimum_wage": 15.0,
     },
 }

@@ -5,9 +5,10 @@ This directory will contain the logic for the FastAPI server and API endpoints.
 ## Structure
 
 - [city_template](./city_template.py): the templates for a simulation.
-- [main.py](./main.py): the REST API endpoints for the frontend to connect to.
-- [websocket.py](./websocket.py): the websocket endpoints for the frontend to connect to.
-- [dependencies.py](./dependencies.py): the dependencies for the FastAPI server (a ModelController).
+- [main.py](./main.py): the middleware for what can connect to the server.
+- [rest.py](./rest.py): the REST API endpoints for the frontend to connect to.
+- [websocket.py](./websocket.py): the WebSocket endpoints for the frontend to connect to.
+- [dependencies.py](./dependencies.py): the dependencies for the FastAPI server.
 - [run.py](./run.py): what actually runs the FastAPI server.
 
 ## Important Commands
@@ -99,7 +100,7 @@ _Note: This values may seem low, but they scale drastically under lognormal dist
 
 - **City-Specific Adjustments:** We use a "crowding out" model. When a mandatory, inelastic cost (like `HOUSING`) increases due to local market conditions, that cost must "crowd out" (i.e., reduce the proportion of) more elastic, discretionary categories like `LUXURY` and `ENTERTAINMENT`.
 
-  - **TODO**: How can we make it so that `PersonAgent`s are making the decisions of how to spend their money in other places due to rising housing costs, etc. Currently, they are spending a percentage of thei budget on housing, but there is no minimum!
+  - **TODO**: How can we make it so that `PersonAgent`s are making the decisions of how to spend their money in other places due to rising housing costs, etc. Currently, they are spending a percentage of their budget on housing, but there is no minimum!
 
 ### Category Mapping
 

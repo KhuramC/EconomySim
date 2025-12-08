@@ -79,6 +79,9 @@ export function receivePoliciesPayload(backendPolicies) {
   frontendPolicies.priceCap = weeklyDecimaltoAnnualPercent(
     getUniformIndustryPolicyValue(backendPolicies.price_cap)
   ).toFixed(2);
+
+  frontendPolicies.priceCapEnabled = getUniformIndustryPolicyValue(backendPolicies.price_cap_enabled);
+
   frontendPolicies.minimumWage = weeklyWageToHourly(
     backendPolicies.minimum_wage
   ).toFixed(2);

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Routes } from './Routes.jsx';
-import getTheme from './components/Theme.jsx';
+import { useState, useEffect } from "react";
+import { Routes } from "./Routes.jsx";
+import getTheme from "./components/Theme.jsx";
 import AppSettingsContext from "./context/AppSettingsContext.jsx";
-import './App.css';
-import { ThemeProvider } from '@mui/material';
+import "./App.css";
+import { ThemeProvider } from "@mui/material";
 
 function App() {
   const [textSize, setTextSize] = useState(18);
@@ -13,7 +13,10 @@ function App() {
 
   // Update CSS variable for font size globally
   useEffect(() => {
-    document.documentElement.style.setProperty("--app-font-size", `${textSize}px`);
+    document.documentElement.style.setProperty(
+      "--app-font-size",
+      `${textSize}px`
+    );
   }, [textSize]);
 
   // Animate background and text color
@@ -25,7 +28,9 @@ function App() {
   }, [theme]);
 
   return (
-    <AppSettingsContext.Provider value={{ textSize, setTextSize, volume, setVolume, mode, setMode }}>
+    <AppSettingsContext.Provider
+      value={{ textSize, setTextSize, volume, setVolume, mode, setMode }}
+    >
       <ThemeProvider theme={theme}>
         <Routes />
       </ThemeProvider>
@@ -34,4 +39,3 @@ function App() {
 }
 
 export default App;
-

@@ -1,5 +1,5 @@
 import { createTheme } from "@mui/material";
-import { deepOrange, yellow, lightBlue, lightGreen } from "@mui/material/colors";
+import { lightBlue } from "@mui/material/colors";
 
 // Function that returns a theme based on mode ("light" or "dark")
 const getTheme = (mode = "light") =>
@@ -71,4 +71,3 @@ const getTheme = (mode = "light") =>
   });
 
 export default getTheme;
-

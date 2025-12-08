@@ -17,9 +17,7 @@ export default function Overview() {
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={8}
+          size={{ xs: 12, md: 8 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           {/* Page title */}
@@ -30,7 +28,7 @@ export default function Overview() {
           {/* KPI row (GDP + Unemployment) */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {/* GDP */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Card sx={{ height: "100%" }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -50,7 +48,7 @@ export default function Overview() {
             </Grid>
 
             {/* Unemployment */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Card sx={{ height: "100%" }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -88,9 +86,7 @@ export default function Overview() {
 
         {/* RIGHT COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={4}
+          size={{ xs: 12, md: 4 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           {/* Policies summary */}

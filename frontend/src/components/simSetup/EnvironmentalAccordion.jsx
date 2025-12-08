@@ -1,6 +1,6 @@
-import { Grid, Switch, FormControlLabel, Tooltip } from "@mui/material";
-import ParameterNumInput from "./ParameterNumInput.jsx";
-import ParameterAccordion from "./ParameterAccordion.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import ParameterAccordion from "./ParameterAccordion";
 
 /**
  * Environmental section:
@@ -35,7 +35,7 @@ export default function EnvironmentalAccordion({
 
   const advancedFields = (
     <>
-      <ParameterNumInput
+      <ParameterSliderInput
         label="National Inflation Rate (%/year)"
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}

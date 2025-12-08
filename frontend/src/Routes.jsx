@@ -1,21 +1,24 @@
-// src/Routes.jsx
-import { BrowserRouter as Router, Routes as Switch, Route } from 'react-router-dom';
-import { useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes as Switch,
+  Route,
+} from "react-router-dom";
+import { useState } from "react";
 
-import HomePage from './pages/Home';
-import AboutPage from './pages/About';
-import SettingsPage from './pages/Settings';
-import TutorialPage from './pages/Tutorial';
-import Navbar from './components/Navbar';
-import SimulationHandler from './pages/simulation/simulation_handler';
-import BaseSimView from './pages/simulation/BaseSimView';
+import HomePage from "./pages/Home";
+import AboutPage from "./pages/About";
+import SettingsPage from "./pages/Settings";
+import TutorialPage from "./pages/Tutorial";
+import Navbar from "./components/Navbar";
+import SimulationHandler from "./pages/simulation/simulation_handler";
+import BaseSimView from "./pages/simulation/BaseSimView";
 
 export const Routes = () => {
   // App-level state to control whether the simulation is started
   const [isSimulationStarted, setSimulationStarted] = useState(false);
 
   // Simulation lifecycle / config kept at this level
-  const [stage, setStage] = useState('setup');
+  const [stage, setStage] = useState("setup");
   const [simulationConfig, setSimulationConfig] = useState(null);
 
   // When user chooses to start from HomePage
@@ -25,7 +28,7 @@ export const Routes = () => {
   const handleSetupComplete = (configData) => {
     console.log("Configuration received from setup:", configData);
     setSimulationConfig(configData);
-    setStage('running'); // move to the next stage after setup
+    setStage("running"); // move to the next stage after setup
   };
 
   return (

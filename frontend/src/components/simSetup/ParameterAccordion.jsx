@@ -24,8 +24,8 @@ const ParameterAccordion = ({
   title,
   defaultExpanded = false,
   selector = null, // a component for some selector in the header
-  children, // Core settings -> typically <Grid item>
-  advancedContent = null, // Advanced settings -> typically <Grid item>
+  children, // Core settings -> typically <Grid>
+  advancedContent = null, // Advanced settings -> typically <Grid>
   defaultAdvancedOpen = false,
   advancedTitle = "Advanced Settings",
   advancedTitleProps = {},
@@ -87,7 +87,7 @@ const ParameterAccordion = ({
 
             {/* Title row */}
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography
                   variant="subtitle1"
                   sx={{ fontWeight: 600, color: "text.secondary", mb: 1 }}

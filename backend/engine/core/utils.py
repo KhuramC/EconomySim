@@ -40,6 +40,7 @@ POLICIES_SCHEMA = {
     "tariffs": {itype.value: None for itype in IndustryType},
     "subsidies": {itype.value: None for itype in IndustryType},
     "price_cap": {itype.value: None for itype in IndustryType},
+    "price_cap_enabled": {itype.value: None for itype in IndustryType},
     "minimum_wage": None,
 }
 """Schema for validating the policies dictionary."""
@@ -58,8 +59,10 @@ def validate_schema(data: dict, schema: dict, path: str):
     Raises:
         ValueError: if the `data` does not match schema, or is None.
     """
-    if data is None:
-        raise ValueError(f"Data is None at {path}, expecting a dictionary.")
+    if data is None or not isinstance(data, dict):
+        raise ValueError(
+            f"Data is not a dictionary at {path} even though it was expected."
+        )
 
     missing = set(schema.keys()) - set(data.keys())
     if missing:
