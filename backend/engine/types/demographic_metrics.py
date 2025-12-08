@@ -8,9 +8,9 @@ class DemoMetrics(StrEnum):
 
     PROPORTION = "Proportion"
     AVERAGE_BALANCE = "Average Balance"
-    STD_BALANCE = "Balance STD"
+    STD_BALANCE = "Balance Std"
     AVERAGE_WAGE = "Average Wage"
-    STD_WAGE = "Wage STD"
+    STD_WAGE = "Wage Std"
 
     @classmethod
     def values(cls) -> list[str]:
