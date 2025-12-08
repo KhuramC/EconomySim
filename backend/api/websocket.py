@@ -11,18 +11,27 @@ logger = logging.getLogger("WebSocket")
 
 
 def handle_step(model_id: int) -> dict:
+    """
+    Steps through the model once.
+    """
     logger.info(f"Stepping through model {model_id}.")
     controller.step_model(model_id)
     return {"status": "success", "action": "step"}
 
 
 def handle_reverse_step(model_id: int) -> dict:
+    """
+    Reverse steps through the model once.
+    """
     logger.info(f"Reverse stepping through model {model_id}.")
     controller.step_model(model_id, time=-1)
     return {"status": "success", "action": "reverse_step"}
 
 
 def handle_get_current_week(model_id: int) -> dict:
+    """
+    Returns the current week.
+    """
     current_week = controller.get_current_week(model_id)
     logger.info(f"Retrieving current week({current_week}) for model {model_id}.")
     return {
@@ -34,7 +43,7 @@ def handle_get_current_week(model_id: int) -> dict:
 
 def handle_get_industry_data(model_id: int) -> dict:
     """
-    Creates a json of each industry variable across the whole simulation to be able to plot easily.
+    Creates a dictionary of each industry variable across the whole simulation to be able to plot easily.
     """
     logger.info(f"Retrieving industry data for model {model_id}.")
     industries_df = controller.get_industry_data(model_id)
@@ -85,6 +94,9 @@ def handle_get_current_industry_data(model_id: int) -> dict:
 
 
 def handle_get_demo_metrics(model_id: int) -> dict:
+    """
+    Creates a dictionary of each demographic metric across the whole simulation to be able to plot easily.
+    """
     logger.info(f"Retrieving demographic metrics for model {model_id}.")
     metrics_df = controller.get_demo_metrics(model_id)
 
@@ -102,6 +114,9 @@ def handle_get_demo_metrics(model_id: int) -> dict:
 
 
 def handle_get_current_demo_metrics(model_id: int) -> dict:
+    """
+    Creates a dictionary of the latest demographic metrics for each industry.
+    """
     logger.info(f"Retrieving current demographic metrics for model {model_id}.")
 
     current_week = controller.get_current_week(model_id)
@@ -132,6 +147,9 @@ def handle_get_current_demo_metrics(model_id: int) -> dict:
 
 
 def handle_get_indicators(model_id: int) -> dict:
+    """
+    Creates a dictionary of each indicator across the whole simulation to be able to plot easily.
+    """
     logger.info(f"Retrieving indicators for model {model_id}.")
     indicators_df = controller.get_indicators(model_id)
     return {
@@ -142,6 +160,9 @@ def handle_get_indicators(model_id: int) -> dict:
 
 
 def handle_get_policies(model_id: int) -> dict:
+    """
+    Returns the policies associated with the model.
+    """
     logger.info(f"Retrieving policies for model {model_id}.")
     policies = controller.get_policies(model_id)
     return {
@@ -152,6 +173,9 @@ def handle_get_policies(model_id: int) -> dict:
 
 
 def handle_set_policies(model_id: int, policies: dict) -> dict:
+    """
+    Sets the policies associated with the model.
+    """
     if policies == None:
         raise ValueError("Policies cannot be None.")
     logger.info(f"Setting policies for model {model_id}.")
