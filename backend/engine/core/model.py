@@ -51,7 +51,7 @@ class EconomyModel(Model):
     week: int
     """The current week in the simulation."""
     
-    model_demand_parameters: Dict[str, Tuple[float, Optional[float]]]
+    model_demand_parameters: dict[str, tuple[float, Optional[float]]]
     """Stores the slope and price at quantity zero of the model's demand for each industry"""
 
     def __init__(
@@ -283,8 +283,11 @@ class EconomyModel(Model):
 
         self.inflation()
 
+        self.aggregate_person_demand_tangents() 
+        
         # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]
+        industryAgents.shuffle_do("get_demand_graph_params")
         industryAgents.shuffle_do("determine_price")
         industryAgents.shuffle_do("produce_goods")
         industryAgents.shuffle_do("change_employment")
@@ -317,9 +320,7 @@ class EconomyModel(Model):
         return self.week
 
 
-    def aggregate_person_demand_tangents(
-        self,
-    ) -> Dict[str, Tuple[float, Optional[float]]]:
+    def aggregate_person_demand_tangents(self):
         """
         Query every PersonAgent for their demand_tangent_tuple and aggregate results.
 

@@ -135,7 +135,6 @@ class IndustryAgent(Agent):
                 last tick.  In order to maximize profit, the industry may artificially restrict how much they sell
             self.price (float): Returns the price to sell the suggested quantity
         """
-
         A = float(self.demand_intercept)
         B = float(self.demand_slope)
 
@@ -386,8 +385,8 @@ class IndustryAgent(Agent):
             self.demand_intercept
             self.demand_slope
         """
-        self.demand_slope = self.Model.model_demand_parameters[self.industry_type][0]
-        self.demand_intercept = self.Model.model_demand_parameters[self.industry_type][1]
+        self.demand_slope = self.model.model_demand_parameters[self.industry_type][0]
+        self.demand_intercept = self.model.model_demand_parameters[self.industry_type][1]
 
     def get_weekly_pay(self):
         """
