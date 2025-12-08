@@ -84,6 +84,53 @@ def handle_get_current_industry_data(model_id: int) -> dict:
     }
 
 
+def handle_get_demo_metrics(model_id: int) -> dict:
+    logger.info(f"Retrieving demographic metrics for model {model_id}.")
+    metrics_df = controller.get_demo_metrics(model_id)
+
+    metrics_dict = {}
+    # make each demographics its own column, with the other stuff being the value as a dict.
+    for demo_name, group in metrics_df.groupby("Demographics"):
+        metrics_dict[str(demo_name)] = group.drop(columns=["Demographics"]).to_dict(
+            orient="list"
+        )
+    return {
+        "status": "success",
+        "action": "get_demo_metrics",
+        "data": metrics_dict,
+    }
+
+
+def handle_get_current_demo_metrics(model_id: int) -> dict:
+    logger.info(f"Retrieving current demographic metrics for model {model_id}.")
+
+    current_week = controller.get_current_week(model_id)
+    # Get data only for the current week
+    metrics_df = controller.get_demo_metrics(
+        model_id, start_time=current_week, end_time=current_week
+    )
+
+    metrics_dict = {}
+    # make each demographic its own column, with the other stuff being the value as a dict.
+    for demo_name, group in metrics_df.groupby("Demographics"):
+        metrics_dict[str(demo_name)] = group.drop(columns=["Demographics"]).to_dict(
+            orient="list"
+        )
+
+    current_data = {}
+    for demographic, data in metrics_dict.items():
+        # Extract the last (and only) value for each metric
+        current_data[demographic] = {
+            metric: values[0] for metric, values in data.items() if metric != "week"
+        }
+
+    return {
+        "status": "success",
+        "action": "get_current_demo_metrics",
+        "data": current_data,
+    }
+
+
 def handle_get_indicators(model_id: int) -> dict:
     logger.info(f"Retrieving indicators for model {model_id}.")
     indicators_df = controller.get_indicators(model_id)
@@ -121,6 +168,8 @@ ACTION_HANDLERS: dict[str, Callable] = {
     "get_current_week": handle_get_current_week,
     "get_industry_data": handle_get_industry_data,
     "get_current_industry_data": handle_get_current_industry_data,
+    "get_demo_metrics": handle_get_demo_metrics,
+    "get_current_demo_metrics": handle_get_current_demo_metrics,
     "get_indicators": handle_get_indicators,
     "get_policies": handle_get_policies,
     "set_policies": handle_set_policies,
@@ -139,6 +188,8 @@ async def model_websocket(websocket: WebSocket, model_id: int):
     - {"action": "get_current_week"}: Returns the current week.}
     - {"action": "get_industry_data"}: Returns all industries' information.
     - {"action": "get_current_industry_data"}: Returns the current week's industries' information.
+    - {"action": "get_demo_metrics"}: Returns all demographics' metrics.
+    - {"action": "get_current_demo_metrics"}: Returns the current week's demographics' metrics.
     - {"action": "get_indicators"}: Returns all model indicators.
     - {"action": "get_policies"}: Returns the current model policies.
     - {"action": "set_policies", "payload": {...}}: Sets the model policies.

@@ -7,6 +7,7 @@ from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 from ..types.indicators import Indicators
+from ..types.demographic_metrics import DemoMetrics
 
 
 class ModelController:
@@ -232,6 +233,83 @@ class ModelController:
             industries_df = industries_df[industries_df["industry"].isin(industries)]
 
         return industries_df
+
+    def get_demo_metrics(
+        self,
+        model_id: int,
+        start_time: int = 0,
+        end_time: int = 0,
+        demo_metrics: Iterable[DemoMetrics] | None = None,
+    ) -> pd.DataFrame:
+        """
+        Retrieves industries information from the specified model.
+        Columns include "week", "Demographics", "Proportion", "Average Balance", "Balance STD", "Average Wage", "Wage STD".
+
+        Args:
+            model_id (int): The unique identifier for the model to retrieve industry information from.
+            start_time (int): The starting time period for the industries.
+            end_time (int): The ending time period for the industries. An end_time of 0 goes to the current time.
+            demo_metrics (Iterable, optional): An iterable of the specific metrics to retrieve. If None, retrieves all metrics.
+        
+        Returns:
+            dataframe (DataFrame): A DataFrame containing the requested demographic metrics.
+
+        Raises:
+            ValueError: If the model associated with the model_id does not exist or \\
+                if the start_time or end_time are invalid.
+        """
+
+        # parameter validation
+        if start_time < 0 or end_time < 0 or (end_time != 0 and end_time < start_time):
+            raise ValueError("Invalid start_time or end_time values.")
+        if demo_metrics is not None and not all(
+            ind in DemoMetrics.values() for ind in demo_metrics
+        ):
+            raise ValueError(
+                f"One or more requested metrics are not available. Available metrics: {list(DemoMetrics)}"
+            )
+
+        model = self.get_model(model_id)
+        metrics_df: pd.DataFrame = model.datacollector.get_model_vars_dataframe()
+
+        # filter by time
+        current_week = model.get_week()
+        effective_end_time = current_week if end_time == 0 else end_time
+        metrics_df = metrics_df[
+            metrics_df["week"].between(start_time, effective_end_time, inclusive="both")
+        ]
+
+        # filter by demo metrics
+        columns_to_keep = ["week"]  # Always include the "week" column
+        if demo_metrics:
+            # requested metrics
+            columns_to_keep = columns_to_keep + list(demo_metrics)
+        else:
+            # otherwise just get all the demographic metrics
+            columns_to_keep = columns_to_keep + list(DemoMetrics)
+        metrics_df = metrics_df[columns_to_keep]
+
+        # Turn metrics from dicts to values with demo column
+        metrics_df = (
+            metrics_df.set_index("week")[list(DemoMetrics)]
+            .apply(lambda x: x.apply(pd.Series).stack())
+            .reset_index()
+        )
+
+        metrics_df.rename(
+            columns={
+                "level_1": "Demographics",
+            },
+            inplace=True,
+        )
+
+        # metrics_df = metrics_df.pivot(
+        #     index=['week', 'Demographics'],
+        #     columns='Metric',
+        #     values='Value'
+        # ).reset_index()
+
+        return metrics_df
 
     def get_indicators(
         self,
