@@ -1,9 +1,6 @@
 import { HTTP_STATUS } from "./httpCodes";
 import { buildPoliciesPayload, buildCreatePayload } from "./payloadBuilder";
-import {
-  receivePoliciesPayload,
-  receiveTemplatePayload,
-} from "./payloadReceiver";
+import { receiveTemplatePayload } from "./payloadReceiver";
 const BASE_HTTP_URL = "http://localhost:8000";
 const BASE_WS_URL = "ws://localhost:8000";
 
@@ -237,6 +234,20 @@ export class SimulationAPI {
    */
   getCurrentIndustryData() {
     this.sendMessage({ action: "get_current_industry_data" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the demographic metrics.
+   */
+  getDemoMetrics() {
+    this.sendMessage({ action: "get_demo_metrics" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the demographic metrics for the current week.
+   */
+  getCurrentDemoMetrics() {
+    this.sendMessage({ action: "get_current_demo_metrics" });
   }
 
   /**
