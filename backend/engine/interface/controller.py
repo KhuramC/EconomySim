@@ -303,12 +303,6 @@ class ModelController:
             inplace=True,
         )
 
-        # metrics_df = metrics_df.pivot(
-        #     index=['week', 'Demographics'],
-        #     columns='Metric',
-        #     values='Value'
-        # ).reset_index()
-
         return metrics_df
 
     def get_indicators(
