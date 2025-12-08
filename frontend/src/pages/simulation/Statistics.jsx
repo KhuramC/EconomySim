@@ -14,10 +14,10 @@ import {
   ToggleButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { SimulationContext } from "./BaseSimView.jsx";
-import GraphSlot from "../../components/GraphSlot";
+import { SimulationContext } from "./BaseSimView";
+import GraphSlot from "../../components/simView/GraphSlot";
 import { Indicators } from "../../types/Indicators";
-import { IndustryMetrics } from "../../types/IndustryMetrics.js";
+import { IndustryMetrics } from "../../types/IndustryMetrics";
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
