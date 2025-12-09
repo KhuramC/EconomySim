@@ -17,7 +17,8 @@ router = get_router()
 origins = [
     "http://localhost:5173",  # React dev server
     "http://127.0.0.1:5173",  # React dev server pt.2
-    # May want to add Heroku URL here later
+    "https://ratracesim.com", # Production URL
+    "https://www.ratracesim.com" # Subdomain
 ]
 
 # Middleware for standard HTTP requests
