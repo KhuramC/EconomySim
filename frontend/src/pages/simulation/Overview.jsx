@@ -5,20 +5,17 @@ import {
   Typography,
   Button,
   Card,
-  CardContent,
-  Paper,
+  CardContent
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
-import { Add as AddIcon } from "@mui/icons-material";
 import { SimulationContext } from "./BaseSimView.jsx";
 import GraphSlot from "../../components/simView/GraphSlot";
+
 
 export default function Overview() {
   const simAPI = useContext(SimulationContext); // Get API from context
 
   const [indicatorData, setIndicatorData] = useState(null);
-  // State for industry-specific data (price, etc.)
-  const [industryData, setIndustryData] = useState(null);
   const [policiesData, setPoliciesData] = useState(null);
    const [week, setWeek] = useState(0);
   useEffect(() => {
@@ -36,10 +33,6 @@ export default function Overview() {
         setIndicatorData(message.data);
       }
       // When industry data arrives, update our state
-      if (message.action === "get_industry_data" && message.data) {
-        console.log("Received industry data:", message.data);
-        setIndustryData(message.data);
-      }
       if (message.action === "get_policies" && message.data) {
         console.log("Received policies data:", message.data);
         setPoliciesData(message.data);
@@ -64,8 +57,6 @@ export default function Overview() {
   const title = "GDP";
   const title2 = "Gini Coefficient"
 
-  const { pathname } = useLocation();
-  const isSelected = (to) => pathname === to || pathname.startsWith(`${to}/`);
   return (
     // NOTE: No outer Paper or sidebar here.
     // This component is rendered inside BaseSimView's shared Paper and layout.
@@ -83,7 +74,6 @@ export default function Overview() {
           sx={{ display: "flex", flexDirection: "row" }}
         >
 
-          {/* KPI row (GDP + Unemployment) */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {/* GDP */}
             <Grid item xs={12} sm={6}>
@@ -117,9 +107,6 @@ export default function Overview() {
                 </Typography>
               </React.Fragment>
             </Grid>
-
-            {/* Unemployment */}
-            
           </Grid>
 
         </Grid>
@@ -164,9 +151,6 @@ export default function Overview() {
                 </Typography>
               </React.Fragment>
             </Grid>
-
-            {/* Unemployment */}
-            
           </Grid>
           
         </Grid>
@@ -184,17 +168,17 @@ export default function Overview() {
               {policiesData && (
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
                   Residential Property Tax:{" "}
-                  {policiesData.property_tax.residential.toFixed(4)}
+                  {policiesData.property_tax.residential.toFixed(4)*100}%
                 </Typography>
               )}
               {policiesData&& (
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  Grocery Sales Tax: {policiesData.sales_tax.Groceries.toFixed(4)}
+                  Grocery Sales Tax: {policiesData.sales_tax.Groceries.toFixed(4) * 100}%
                 </Typography>
               )}
               {policiesData && (
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  Grocery Tariffs: {policiesData.tariffs.Groceries.toFixed(4)}
+                  Grocery Tariffs: {policiesData.tariffs.Groceries.toFixed(4)*100}%
                 </Typography>
               )}
               <Button
