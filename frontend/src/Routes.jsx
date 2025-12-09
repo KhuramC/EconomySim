@@ -63,7 +63,10 @@ export const Routes = () => {
         {/* Other standalone top-level pages */}
         <Route path="/about" element={<AboutPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/tutorial" element={<TutorialPage />} />
+        <Route
+          path="/tutorial"
+          element={<TutorialPage onStart={handleStartSimulation} />}
+        />
       </Switch>
     </Router>
   );
