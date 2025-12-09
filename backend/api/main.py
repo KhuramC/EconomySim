@@ -39,13 +39,16 @@ frontend_dist = os.path.join(current_dir, "../../frontend/dist")
 if os.path.isdir(frontend_dist): # Doesn't exist locally, but exists in Docker
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
     
+    # Serve Index HTML on root "/"
+    @app.get("/")
+    async def serve_root():
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+    
     # Catch-all route
     @app.get("/{full_path:path}")
     async def serve_react_app(full_path: str):
-        
         if full_path.startswith("api"):
             return {"error": "API route not found", "status_code": 404}
-        
         return FileResponse(os.path.join(frontend_dist, "index.html"))
     
 else:
