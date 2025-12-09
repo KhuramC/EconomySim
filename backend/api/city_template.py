@@ -56,7 +56,7 @@ _SMALL_CONFIG = {
     "industries": {
         IndustryType.GROCERIES: {
             "starting_price": 62.47,
-            "starting_inventory": 504000,
+            "starting_inventory": 504,
             "starting_balance": 199992.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 7692.00,
@@ -69,7 +69,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.UTILITIES: {
             "starting_price": 50.08,
-            "starting_inventory": 201600,
+            "starting_inventory": 201,
             "starting_balance": 51843584.00,
             "starting_offered_wage": 1354.60,
             "starting_fixed_cost": 1993984.00,
@@ -82,7 +82,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.AUTOMOBILES: {
             "starting_price": 25000.00,
-            "starting_inventory": 484,
+            "starting_inventory": 4,
             "starting_balance": 39988.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 1538.00,
@@ -95,7 +95,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.HOUSING: {
             "starting_price": 230.77,
-            "starting_inventory": 120960,
+            "starting_inventory": 120,
             "starting_balance": 154183146.00,
             "starting_offered_wage": 1188.40,
             "starting_fixed_cost": 5930121.00,
@@ -108,7 +108,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.HOUSEHOLD_GOODS: {
             "starting_price": 75.00,
-            "starting_inventory": 40320,
+            "starting_inventory": 403,
             "starting_balance": 99996.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 3846.00,
@@ -121,7 +121,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.ENTERTAINMENT: {
             "starting_price": 18.00,
-            "starting_inventory": 126000,
+            "starting_inventory": 126,
             "starting_balance": 80002.00,
             "starting_offered_wage": 991.60,
             "starting_fixed_cost": 3077.00,
@@ -134,7 +134,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.LUXURY: {
             "starting_price": 1500.00,
-            "starting_inventory": 504,
+            "starting_inventory": 50,
             "starting_balance": 10010.00,
             "starting_offered_wage": 1234.80,
             "starting_fixed_cost": 385.00,
