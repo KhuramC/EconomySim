@@ -33,7 +33,6 @@ export default function Overview() {
         console.log("Received indicator data:", message.data);
         setIndicatorData(message.data);
       }
-      // When industry data arrives, update our state
       if (message.action === "get_policies" && message.data) {
         console.log("Received policies data:", message.data);
         setPoliciesData(message.data);
