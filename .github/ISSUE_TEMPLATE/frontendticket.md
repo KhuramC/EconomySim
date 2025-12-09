@@ -22,6 +22,7 @@ projects:
 
 ### Definition of done
 
-- Code is written and functions as described.
 - Code is committed to a feature branch.
+- Code is written and functions as described.
+- Documentation is added/updated accordingly.
 - A pull request has been created and successfully reviewed, passing all pipelines.
