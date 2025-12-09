@@ -18,6 +18,7 @@ import { SimulationContext } from "./BaseSimView";
 import GraphSlot from "../../components/simView/GraphSlot";
 import { Indicators } from "../../types/Indicators";
 import { IndustryMetrics } from "../../types/IndustryMetrics";
+import { DemoMetrics } from "../../types/DemographicMetrics";
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
@@ -26,6 +27,8 @@ export default function Statistics() {
   const [indicatorData, setIndicatorData] = useState(null);
   // State for industry-specific data (price, etc.)
   const [industryData, setIndustryData] = useState(null);
+  // State for demographic-specific data (proportion, etc.)
+  const [demoData, setDemoData] = useState(null);
 
   // Controls for adding new graphs
   const [metric, setMetric] = useState(Indicators.GDP);
@@ -38,20 +41,26 @@ export default function Statistics() {
     if (!simAPI) return;
 
     const handleWebSocketMessage = (message) => {
-      // When a step happens, request the latest indicators/
+      // When a step happens, request the latest data
       if (message.action === "step" || message.action === "reverse_step") {
         simAPI.getIndicators();
         simAPI.getIndustryData();
+        simAPI.getDemoMetrics();
       }
-      // When indicator data arrives, update our state
+      // When indicator data arrives, update state
       if (message.action === "get_indicators" && message.data) {
         console.log("Received indicator data:", message.data);
         setIndicatorData(message.data);
       }
-      // When industry data arrives, update our state
+      // When industry data arrives, update state
       if (message.action === "get_industry_data" && message.data) {
         console.log("Received industry data:", message.data);
         setIndustryData(message.data);
+      }
+      // When demographic data arrives, update state
+      if (message.action === "get_demo_metrics" && message.data) {
+        console.log("Received demographic metrics:", message.data);
+        setDemoData(message.data);
       }
     };
 
@@ -60,6 +69,7 @@ export default function Statistics() {
     // Fetch initial data on component mount
     simAPI.getIndicators();
     simAPI.getIndustryData();
+    simAPI.getDemoMetrics();
 
     // Cleanup: remove the listener when the component unmounts
     return () => {
@@ -86,6 +96,7 @@ export default function Statistics() {
             const isIndicator = Object.values(Indicators).includes(title);
             const isIndustryMetric =
               Object.values(IndustryMetrics).includes(title);
+            const isDemoMetric = Object.values(DemoMetrics).includes(title);
 
             return (
               <React.Fragment key={index}>
@@ -106,14 +117,24 @@ export default function Statistics() {
                   )}
                   {isIndustryMetric && industryData && (
                     <GraphSlot
-                      title={`${
-                        title.charAt(0).toUpperCase() + title.slice(1)
-                      } by Industry`}
+                      title={`${title} by Industry`}
                       labels={indicatorData?.week || []}
                       datasets={Object.entries(industryData || {}).map(
                         ([industryName, industryDetails]) => ({
                           label: industryName,
                           data: industryDetails[title] || [],
+                        })
+                      )}
+                    />
+                  )}
+                  {isDemoMetric && demoData && (
+                    <GraphSlot
+                      title={`${title} by Demographic`}
+                      labels={indicatorData?.week || []}
+                      datasets={Object.entries(demoData || {}).map(
+                        ([demoName, demoDetails]) => ({
+                          label: demoName,
+                          data: demoDetails[title] || [],
                         })
                       )}
                     />
@@ -163,10 +184,16 @@ export default function Statistics() {
                 ))}
                 <Divider />
                 {Object.values(IndustryMetrics).map((value) => (
+                  // Create a MenuItem for each IndustryMetric
                   <MenuItem key={value} value={value}>
-                    <span style={{ textTransform: "capitalize" }}>
-                      {value} (by Industry)
-                    </span>
+                    <span>{value} (by Industry)</span>
+                  </MenuItem>
+                ))}
+                <Divider />
+                {Object.values(DemoMetrics).map((value) => (
+                  // Create a MenuItem for each IndustryMetric
+                  <MenuItem key={value} value={value}>
+                    <span>{value} (by Demographic)</span>
                   </MenuItem>
                 ))}
               </Select>
