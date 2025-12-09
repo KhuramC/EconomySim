@@ -38,3 +38,35 @@ Although it does not need to be used, it is highly recommended, as issues could 
     ![image](./pictures/folderToOpenDevContainerIn.png)
 1.  The container will take some time to build for the first time, but it should build just fine.
 1.  Everything necessary should be already within the dev container to start developing either the frontend or backend.
+
+## Rebuilding the Image For Heroku
+
+After a PR is made and merged into main, we will want to update the image that Heroku uses.
+
+**If any dependenices are changed in the backend**, update the requirements.txt file using:
+
+```bash
+poetry export --without-hashes --format=requirements.txt > requirements.txt
+```
+
+### Update Workflow
+
+In /EconomySim on Windows:
+
+1. **Rebuild Image**
+
+```bash
+docker buildx build --platform linux/amd64 --provenance=false -t registry.heroku.com/jellybean/web . --load
+```
+
+2. **Push New Image**
+
+```bash
+docker push registry.heroku.com/jellybean/web
+```
+
+3. **Release the Update**
+
+```bash
+heroku container:release web -a jellybean
+```
