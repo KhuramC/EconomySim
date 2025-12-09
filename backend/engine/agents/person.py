@@ -20,7 +20,7 @@ class PersonAgent(Agent):
 
     demographic: Demographic
     """Economic class of the person."""
-    income: int
+    income: float
     """Weekly income of the person."""
     employer: IndustryAgent | None
     """The employer of this person, or None if unemployed."""
@@ -35,7 +35,7 @@ class PersonAgent(Agent):
         demographic: Demographic,
         preferences: dict[IndustryType, float],
         savings_rate: float = 0.10,
-        income: int = 0,
+        income: float = 0,
         employer: IndustryAgent | None = None,
         starting_balance: float = 0.0,
     ):

@@ -415,7 +415,11 @@ export default function SetupPage() {
       console.log("Model created with ID:", modelId);
       // Navigate to simulation view with the new model ID
       navigate(`/BaseSimView`, {
-        state: { modelId: modelId, industryParams: params.industryParams },
+        state: {
+          modelId: modelId,
+          industryParams: params.industryParams,
+          demoParams: params.demoParams,
+        },
       });
     } catch (error) {
       console.error("Error creating model:", error.message);

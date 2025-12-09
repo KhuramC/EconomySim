@@ -21,6 +21,7 @@ export default function BaseSimView() {
   // This ensures it persists across navigations within this view.
   const [modelId] = useState(location.state?.modelId);
   const [initialIndustryParams] = useState(location.state?.industryParams);
+  const [initialDemoParams] = useState(location.state?.demoParams);
   const [week, setWeek] = useState(0);
 
   // useMemo ensures the API instance is created only once for a given modelId.
@@ -127,7 +128,10 @@ export default function BaseSimView() {
                 }
               />
               <Route path="policies" element={<Policies />} />
-              <Route path="demographics" element={<Demographics />} />
+              <Route
+                path="demographics"
+                element={<Demographics oldDemoParams={initialDemoParams} />}
+              />
               <Route path="statistics" element={<Statistics />} />
               <Route
                 path="*"

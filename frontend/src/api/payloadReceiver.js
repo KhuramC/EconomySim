@@ -1,6 +1,7 @@
 import { IndustryType } from "../types/IndustryType.js";
 import { Demographic } from "../types/Demographic.js";
 import { IndustryMetrics } from "../types/IndustryMetrics.js";
+import { DemoMetrics } from "../types/DemographicMetrics.js";
 
 function decimalToPercent(decimal) {
   return decimal * 100;
@@ -80,7 +81,9 @@ export function receivePoliciesPayload(backendPolicies) {
     getUniformIndustryPolicyValue(backendPolicies.price_cap)
   ).toFixed(2);
 
-  frontendPolicies.priceCapEnabled = getUniformIndustryPolicyValue(backendPolicies.price_cap_enabled);
+  frontendPolicies.priceCapEnabled = getUniformIndustryPolicyValue(
+    backendPolicies.price_cap_enabled
+  );
 
   frontendPolicies.minimumWage = weeklyWageToHourly(
     backendPolicies.minimum_wage
@@ -112,31 +115,50 @@ export function receiveEnvironmentPayload(backendConfig) {
  * expected by the frontend's demoParams state.
  *
  * @param {object} backendDemographics - The demographics object from the backend config.
+ * @param {boolean} isSetup - whether this is for setting up, or for something else.
  * @returns {object} The demoParams object for the frontend.
  */
-export function receiveDemographicsPayload(backendDemographics) {
+export function receiveDemographicsPayload(
+  backendDemographics,
+  isSetup = true
+) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
       const backendDemo = backendDemographics[demoValue];
       if (!backendDemo) return [demoValue, {}]; // Should not happen with valid templates
 
-      const frontendDemo = {
-        meanIncome: backendDemo.income.mean,
-        sdIncome: backendDemo.income.sd,
-        proportion: decimalToPercent(backendDemo.proportion).toFixed(2),
-        meanSavings: backendDemo.balance.mean,
-        sdSavings: backendDemo.balance.sd,
+      let frontendDemo = {};
 
-        ...Object.fromEntries(
-          //spread spending as individual properties (e.g., GROCERIES: 25)
-          Object.entries(backendDemo.spending_behavior).map(
-            ([industryKey, value]) => [
-              industryKey,
-              decimalToPercent(value).toFixed(2),
-            ]
-          )
-        ),
-      };
+      if (isSetup) {
+        frontendDemo = {
+          meanIncome: backendDemo.income.mean,
+          sdIncome: backendDemo.income.sd,
+          proportion: decimalToPercent(backendDemo.proportion).toFixed(2),
+          meanSavings: backendDemo.balance.mean,
+          sdSavings: backendDemo.balance.sd,
+
+          ...Object.fromEntries(
+            //spread spending as individual properties (e.g., GROCERIES: 25)
+            Object.entries(backendDemo.spending_behavior).map(
+              ([industryKey, value]) => [
+                industryKey,
+                decimalToPercent(value).toFixed(2),
+              ]
+            )
+          ),
+        };
+      } else {
+        frontendDemo = {
+          meanIncome: backendDemo[DemoMetrics.AVERAGE_WAGE].toFixed(2),
+          sdIncome: backendDemo[DemoMetrics.STD_WAGE].toFixed(2),
+          proportion: decimalToPercent(
+            backendDemo[DemoMetrics.PROPORTION]
+          ).toFixed(2),
+          meanSavings: backendDemo[DemoMetrics.AVERAGE_BALANCE].toFixed(2),
+          sdSavings: backendDemo[DemoMetrics.STD_BALANCE].toFixed(2),
+        };
+      }
+
       return [demoValue, frontendDemo];
     })
   );

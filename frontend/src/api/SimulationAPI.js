@@ -250,6 +250,20 @@ export class SimulationAPI {
   }
 
   /**
+   * Sends a message through the WebSocket to get the demographic metrics.
+   */
+  getDemoMetrics() {
+    this.sendMessage({ action: "get_demo_metrics" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the demographic metrics for the current week.
+   */
+  getCurrentDemoMetrics() {
+    this.sendMessage({ action: "get_current_demo_metrics" });
+  }
+
+  /**
    * Sends a message through the WebSocket to get the economic indicators.
    */
   getIndicators() {
