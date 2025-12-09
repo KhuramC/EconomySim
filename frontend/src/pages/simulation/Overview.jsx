@@ -10,6 +10,7 @@ import {
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { SimulationContext } from "./BaseSimView.jsx";
 import GraphSlot from "../../components/simView/GraphSlot";
+import {Indicators} from "../../types/Indicators.js"
 
 
 export default function Overview() {
@@ -54,8 +55,8 @@ export default function Overview() {
     };
   }, [simAPI]); // Rerun if simAPI instance changes
 
-  const title = "GDP";
-  const title2 = "Gini Coefficient"
+  const title = Indicators.GDP;
+  const title2 = Indicators.GINI_COEFFICIENT;
 
   return (
     // NOTE: No outer Paper or sidebar here.
@@ -78,7 +79,7 @@ export default function Overview() {
             {/* GDP */}
             <Grid item xs={12} sm={6}>
               <React.Fragment key={"display-graph"}>
-                <Box width="25vw" sx={{ mb: 2 }}>
+                <Box sx={{ mb: 2 }}>
                   {indicatorData && (
                     <GraphSlot
                       title={`${title} Graph`}
@@ -122,7 +123,7 @@ export default function Overview() {
             {/* GDP */}
             <Grid item xs={12} sm={6}>
               <React.Fragment key={"display-graph"}>
-                <Box  width="25vw" sx={{ mb: 2 }}>
+                <Box sx={{ mb: 2 }}>
                   {indicatorData && (
                     <GraphSlot
                       title={`${title2} Graph`}
