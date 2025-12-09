@@ -13,7 +13,7 @@ DEMOGRAPHICS = {
             "mean": 300 + (i * 500),
             "sd": 100 + (i * 150),
         },
-        # Proportions that roughly add up to 1.0
+        # Proportions that add up to 1.0
         "proportion": [0.45, 0.40, 0.15][i],
         "spending_behavior": {
             itype.value: 1 / len(list(IndustryType)) for itype in IndustryType

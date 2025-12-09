@@ -29,10 +29,10 @@ def model(num_agents, demographics, industries, policies) -> EconomyModel:
 
 
 @pytest.fixture()
-def indicator_test_model_factory(demographics, industries, policies):
+def indicator_test_model_factory_balance(demographics, industries, policies):
     """
     A factory fixture to create a minimal EconomyModel with a specific list
-    of agent incomes, perfect for testing economic indicators.
+    of agent balances, perfect for testing economic indicators.
     """
 
     def _create_model(balances: list[float]) -> EconomyModel:
@@ -46,12 +46,45 @@ def indicator_test_model_factory(demographics, industries, policies):
 
         model.agents_by_type[PersonAgent].clear()
 
-        for i, balance_val in enumerate(balances):
+        for balance_val in balances:
             person = PersonAgent(
                 model=model,
                 demographic=Demographic.MIDDLE_CLASS,
                 income=0,
                 starting_balance=balance_val,
+                preferences={},
+            )
+            model.agents_by_type[PersonAgent].add(person)
+
+        return model
+
+    return _create_model
+
+
+@pytest.fixture()
+def indicator_test_model_factory_income(demographics, industries, policies):
+    """
+    A factory fixture to create a minimal EconomyModel with a specific list
+    of agent incomes, perfect for testing economic indicators.
+    """
+
+    def _create_model(incomes: list[float]) -> EconomyModel:
+        model = EconomyModel(
+            max_simulation_length=1,
+            num_people=len(incomes),
+            demographics=demographics,
+            industries=industries,
+            starting_policies=policies,
+        )
+
+        model.agents_by_type[PersonAgent].clear()
+
+        for income_val in incomes:
+            person = PersonAgent(
+                model=model,
+                demographic=Demographic.MIDDLE_CLASS,
+                income=income_val,
+                starting_balance=0,
                 preferences={},
             )
             model.agents_by_type[PersonAgent].add(person)
