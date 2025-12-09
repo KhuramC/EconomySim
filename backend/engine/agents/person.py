@@ -121,13 +121,20 @@ class PersonAgent(Agent):
         epsilon: float = 1e-12,
     ) -> dict[str, tuple[float, float | None]]:
         """
-        For each industry, return ONLY:
-            ( slope_of_tangent, price_at_zero_quantity )
-    
-        - slope = dq/dp at the current price
-        - price_at_zero = price where tangent line hits quantity = 0
-            p_zero = p0 - q0 / slope
-        Returns None if slope = 0 or result is not positive/finite.
+        Produces a tuple representing the tangent line (slope and y-intercept) to the CES demand curve at the current price point.
+        
+        Args:
+            budget: The total money available to spend.
+            prefs: The preference weights for the available goods.
+            prices: The prices of the available goods.
+            epsilon: small value to avoid division by zero
+        Returns:
+            A dictionary mapping each good's name (its industry) to a tuple
+            Tuple contains: ( slope_of_tangent, price_at_zero_quantity )
+            - slope = dq/dp at the current price
+            - price_at_zero = price where tangent line hits quantity = 0
+              p_zero = p0 - q0 / slope
+              Returns None if slope = 0 or result is not positive/finite.
         """
 
         valid_goods = [g for g in prefs if g in prices]

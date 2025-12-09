@@ -339,7 +339,7 @@ class EconomyModel(Model):
 
         # Build prices dict keyed by IndustryType (as PersonAgent expects)
         prices: dict[IndustryType, float] = {
-            ia.industry_type: ia.price for ia in industry_agents
+            ia.industry_type: ia.price * (1 + self.policies["sales_tax"][ia.industry_type]) for ia in industry_agents
         }
 
         # accumulators keyed by industry name (PersonAgent returns keys as strings)
