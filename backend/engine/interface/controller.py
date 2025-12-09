@@ -242,7 +242,7 @@ class ModelController:
         demo_metrics: Iterable[DemoMetrics] | None = None,
     ) -> pd.DataFrame:
         """
-        Retrieves industries information from the specified model.
+        Retrieves demographic metrics from the specified model.
         Columns include "week", "Demographics", "Proportion", "Average Balance", "Balance STD", "Average Wage", "Wage STD".
 
         Args:
