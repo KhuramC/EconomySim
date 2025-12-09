@@ -34,7 +34,7 @@ class ModelCreateRequest(BaseModel):
 # API REST Endpoints
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get("/api/health", status_code=status.HTTP_200_OK)
 async def root():
     """Sanity check for the API."""
     return {"message": "EconomySim API is running."}
