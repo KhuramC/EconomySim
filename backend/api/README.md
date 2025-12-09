@@ -46,6 +46,20 @@ Functions like `numpy.random.lognormal(mean, sd)` require parameters for the und
 
 - `sd` ($\sigma$): This is the standard deviation of the log of the income. It directly controls the inequality or spread of the distribution. A higher $\sigma$ means a wider, more unequal class.
 
+#### Caveat
+
+For the sake of readability, we end up noting down the mean and standard deviation of the lognormal distribution itself.
+
+Given $(\mu,\sigma)$, we can find the lognormal ones with the following formulas:
+
+$$
+\mu_l = e^{\mu +\sigma^2/2}
+$$
+
+$$
+\sigma_l = \mu_l + \sqrt{e^{\sigma^2}-1}
+$$
+
 ### Parameter Derivation by City
 
 **Proportion**
