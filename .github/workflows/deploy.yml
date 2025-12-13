@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11" # Adjust to your Python version
+          python-version: "3.11" # same as container version
 
       - name: Poetry Install/Export
         run: |
