@@ -42,6 +42,7 @@ Although it does not need to be used, it is highly recommended, as issues could 
 ## Rebuilding the Image For Heroku
 
 After a PR is made and merged into main, we will want to update the image that Heroku uses.
+Although there is a GitHub Action to do this, the steps to do this manually are noted below.
 
 **If any dependenices are changed in the backend**, update the requirements.txt file using:
 
