@@ -1,5 +1,5 @@
 # Build Frontend (Vite/NPM) ---
-FROM node:18 as build-step
+FROM node:18 AS build-step
 
 WORKDIR /app/frontend
 
