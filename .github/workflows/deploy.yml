@@ -19,6 +19,7 @@ jobs:
           poetry self add poetry-plugin-export
           cd backend
           poetry export --without-hashes --format=requirements.txt > requirements.txt
+          cd ..
 
       - name: Install Heroku CLI
         run: |
