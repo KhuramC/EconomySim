@@ -8,9 +8,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    container: python:3.11 # same as dev container
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Poetry Install/Export
+        run: |
+          pip install poetry==2.1.4
+          poetry export --without-hashes --format=requirements.txt > requirements.txt
 
       - name: Install Heroku CLI
         run: |
