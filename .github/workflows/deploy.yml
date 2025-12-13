@@ -16,6 +16,7 @@ jobs:
       - name: Poetry Install/Export
         run: |
           pip install poetry==2.1.4
+          poetry self add poetry-plugin-export
           cd backend
           poetry export --without-hashes --format=requirements.txt > requirements.txt
 
