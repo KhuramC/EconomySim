@@ -35,14 +35,14 @@ export default function TimelinePanel({ simAPI }) {
 
   return (
     <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-      {/* Previous */}
-      <IconButton
+      {/* Reverse Step. Allow on TimelinePanel if reverseStep is implemented on backend */}
+      {/* <IconButton
         aria-label="previous"
         onClick={() => simAPI.reverseStep()}
         disabled={!simAPI}
       >
         <SkipPreviousIcon />
-      </IconButton>
+      </IconButton> */}
       {/* Play/Pause Toggle Button */}
       <IconButton
         aria-label={isPlaying ? "pause" : "play"}
