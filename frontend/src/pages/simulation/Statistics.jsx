@@ -10,8 +10,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  ToggleButtonGroup,
-  ToggleButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { SimulationContext } from "./BaseSimView";
@@ -206,43 +204,6 @@ export default function Statistics() {
             >
               Select Start Date
             </Typography>
-
-            {/* More visible & translucent toggle buttons */}
-            <ToggleButtonGroup
-              exclusive
-              value={startUnit}
-              onChange={(_, v) => v && setStartUnit(v)}
-              sx={{
-                mb: 2,
-                "& .MuiToggleButton-root": {
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  color: "rgba(0,0,0,0.75)",
-                  backgroundColor: "rgba(0,0,0,0.05)",
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    backgroundColor: "rgba(0,0,0,0.08)",
-                  },
-                  "&.Mui-selected": {
-                    backgroundColor: "rgba(25, 118, 210, 0.2)", // soft primary tint
-                    color: "#1976d2",
-                    borderColor: "rgba(25,118,210,0.3)",
-                    "&:hover": {
-                      backgroundColor: "rgba(25,118,210,0.3)",
-                    },
-                  },
-                },
-              }}
-            >
-              <ToggleButton value="year" size="small">
-                Year
-              </ToggleButton>
-              <ToggleButton value="week" size="small">
-                Week
-              </ToggleButton>
-            </ToggleButtonGroup>
-
             <Button
               fullWidth
               variant="contained"
