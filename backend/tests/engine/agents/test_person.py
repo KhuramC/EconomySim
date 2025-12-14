@@ -107,33 +107,6 @@ def test_determine_budget(mock_economy_model, income, savings_rate, expected_bud
     assert budget == expected_budget
 
 
-def test_demand_func(mock_economy_model):
-    """
-    Tests the `demand_func` with sigma=1, which simplifies to the Cobb-Douglas case.
-    In this case, an agent spends a percentage of their budget on a good
-    equal to their preference weight for it.
-
-    Args:
-        mock_economy_model: a mock model
-    """
-
-    person = PersonAgent(
-        mock_economy_model,
-        demographic=Demographic.UPPER_CLASS,
-        preferences={IndustryType.ENTERTAINMENT: 0.6, IndustryType.GROCERIES: 0.4},
-    )
-
-    prices = {IndustryType.ENTERTAINMENT: 10.0, IndustryType.GROCERIES: 25.0}
-    budget = 1000.0
-
-    demands = person.demand_func(budget, person.preferences, prices)
-
-    # Expected food: (1000 * 0.6) / 10 = 60 units
-    # Expected clothing: (1000 * 0.4) / 25 = 16 units
-    assert demands[IndustryType.ENTERTAINMENT] == approx(60.0)
-    assert demands[IndustryType.GROCERIES] == approx(16.0)
-
-
 @mark.parametrize(
     "food_sales_tax, entertainment_sales_tax, purchased_food_inventory, purchased_entertainment_inventory, total_spent",
     [

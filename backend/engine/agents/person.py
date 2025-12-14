@@ -1,9 +1,9 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
+from .demand import demand_func
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
-import math
 
 
 class PersonAgent(Agent):
@@ -56,8 +56,8 @@ class PersonAgent(Agent):
         personal_income_tax: list = self.model.policies["personal_income_tax"]
         if not personal_income_tax:
             return
-        
-        previous_threshold = float('inf')
+
+        previous_threshold = float("inf")
         for bracket in personal_income_tax:
             threshold = bracket["threshold"]
             rate = bracket["rate"]
@@ -75,58 +75,6 @@ class PersonAgent(Agent):
         """Weekly payday(after tax) for the agent based on their income."""
         self.balance += self.income
         self.deduct_income_tax()
-
-    def demand_func(
-        self,
-        budget: float,
-        prefs: dict[IndustryType, float],
-        prices: dict[IndustryType, float],
-    ) -> dict[str, int]:
-        """
-        Calculates the quantity of each good to purchase based on the CES demand function.
-
-        Args:
-            budget: The total money available to spend.
-            prefs: The preference weights for the available goods.
-            prices: The prices of the available goods.
-        Returns:
-            A dictionary mapping each good's name to the desired quantity.
-        """
-
-        valid_goods = [name for name in prefs if name in prices]
-
-        denominator = sum(
-            (prefs[name] ** self.sigma) * (prices[name] ** (1 - self.sigma))
-            for name in valid_goods
-        )
-
-        if denominator == 0:
-            return {name: 0 for name in valid_goods}
-
-        demands = {}
-        for name in valid_goods:
-            numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            # NOTE Should this be math.round instead?  this would return a value closer to the desired savings rate
-
-            quantity_unrounded = (numerator / denominator) * budget
-            quantity = self.custom_round(quantity_unrounded)
-            demands[name] = quantity
-
-        return demands
-
-    def custom_round(self, x: float) -> int:
-        """
-        Round up if x is within 0.05 of the next whole number,
-        otherwise round down.
-        """
-        lower = math.floor(x)
-        upper = lower + 1
-
-        # If x is within 0.05 of the upper integer, round up
-        if upper - x <= 0.05:
-            return upper
-        else:
-            return lower
 
     def determine_budget(self) -> float:
         """
@@ -162,8 +110,11 @@ class PersonAgent(Agent):
         }
 
         # Calculate desired purchases
-        desired_quantities = self.demand_func(
-            budget=self.determine_budget(), prefs=self.preferences, prices=prices
+        desired_quantities = demand_func(
+            sigma=self.sigma,
+            budget=self.determine_budget(),
+            prefs=self.preferences,
+            prices=prices,
         )
 
         # Attempt to purchase goods
