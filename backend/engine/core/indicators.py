@@ -75,6 +75,9 @@ def calculate_hoover_index(model: Model):
         return 0.0
 
     total_income = incomes.sum()
+    if total_income == 0:
+        return 0.0
+    
     total_people = incomes.size
     income_shares = incomes / total_income
     population_shares = 1.0 / total_people
