@@ -84,7 +84,7 @@ $$
 P = A - BQ
 $$
 
-where $A$ and $B$ are [estimated](#approximating-the-demand-curve).
+where $A$ and $B$ are [estimated](#approximating-the-demand-curve). Conceptually, $A$ is intercept, or the price whenever $q=0$, and $B$ is the slope.
 
 TODO: This estimation does not occur currently.
 
