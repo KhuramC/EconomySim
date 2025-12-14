@@ -1,5 +1,5 @@
 import { useLocation, Link as RouterLink } from "react-router-dom";
-import logoImage from "../assets/cplusplus_rat.jpeg";
+import logoImage from "../assets/business_rat.png";
 
 import {
   AppBar,

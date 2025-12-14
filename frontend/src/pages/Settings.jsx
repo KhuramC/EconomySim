@@ -33,7 +33,7 @@ function Settings() {
 
       {/* Dark/Light Mode Toggle */}
       <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
-        <Grid size={{ xs: 3 }}>
+        <Grid xs={3}>
           <Typography
             style={{
               width: "130px",
@@ -45,7 +45,7 @@ function Settings() {
             Theme:
           </Typography>
         </Grid>
-        <Grid size={{ xs: 6 }}>
+        <Grid xs={6}>
           <FormControlLabel
             control={
               <Switch checked={mode === "dark"} onChange={handleModeToggle} />
@@ -57,7 +57,7 @@ function Settings() {
 
       {/* Volume Slider */}
       <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
-        <Grid size={{ xs: 3 }}>
+        <Grid xs={3}>
           <Typography
             style={{
               width: "130px",
@@ -69,7 +69,7 @@ function Settings() {
             Volume Control:
           </Typography>
         </Grid>
-        <Grid size={{ xs: 6 }}>
+        <Grid xs={6}>
           <input
             type="range"
             min={0}
@@ -83,7 +83,7 @@ function Settings() {
             }}
           />
         </Grid>
-        <Grid size={{ xs: 3 }}>
+        <Grid xs={3}>
           <Typography
             style={{
               width: "60px",
@@ -99,7 +99,7 @@ function Settings() {
 
       {/* Text Size Slider */}
       <Grid container spacing={2} alignItems="center" sx={{ mt: 1 }}>
-        <Grid size={{ xs: 3 }}>
+        <Grid xs={3}>
           <Typography
             style={{
               width: "130px",
@@ -111,7 +111,7 @@ function Settings() {
             Text Size:
           </Typography>
         </Grid>
-        <Grid size={{ xs: 6 }}>
+        <Grid xs={6}>
           <input
             type="range"
             min={10}
@@ -125,7 +125,7 @@ function Settings() {
             }}
           />
         </Grid>
-        <Grid size={{ xs: 3 }}>
+        <Grid xs={3}>
           <Typography
             style={{
               width: "60px",

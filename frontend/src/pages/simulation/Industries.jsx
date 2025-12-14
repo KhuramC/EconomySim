@@ -76,7 +76,6 @@ export default function Industries({ oldindustryParams }) {
       )}
 
       <Grid container spacing={3}>
-        {/* LEFT column: main content */}
         <Grid size={{ xs: 12 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Industries
@@ -86,7 +85,7 @@ export default function Industries({ oldindustryParams }) {
           {industryParams ? (
             <IndustryAccordion
               industryParams={industryParams}
-              // If you don’t support editing here, pass a no-op HOF to avoid errors:
+              // don't want to support editing, so pass a no-op HOF to avoid errors:
               // IndustryAccordion expects a higher-order handler: (k, f) => (e) => {}
               handleIndustryChange={() => () => {}}
               starting={false}
