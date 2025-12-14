@@ -259,6 +259,7 @@ class IndustryAgent(Agent):
                 Fixed  # fixed cost is still factored into losses this tick
             )
             self.balance -= Fixed
+            self.goods_produced = 0
             return
 
         variable_cost_per_unit = self.get_variable_cost()
