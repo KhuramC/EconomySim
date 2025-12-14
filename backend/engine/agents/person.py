@@ -16,6 +16,8 @@ class PersonAgent(Agent):
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
         balance (float): The current amount of money the person has; negative indicating debt.
         preferences (dict): Spending preferences a weight for each industry, summing to 1.
+        sigma (float): The elasticity of substitution for the industries.
+        savings_rate (float): The proportion of income saved on a weekly basis.
     """
 
     demographic: Demographic
@@ -27,7 +29,11 @@ class PersonAgent(Agent):
     balance: float
     """The total dollars held by this person. Negative indicates debt."""
     preferences: dict[IndustryType, float]
-    """Spending preferences, mapping industry name to a weight. Must sum to 1."""
+    """Spending preferences, mapping industry type to a weight. Must sum to 1."""
+    sigma: float
+    """The elasticity of substitution associated with the industries."""
+    savings_rate: float
+    """The proportion of income saved and not used on purchasing goods on a weekly basis."""
 
     def __init__(
         self,
@@ -59,10 +65,12 @@ class PersonAgent(Agent):
 
         previous_threshold = float("inf")
         for bracket in personal_income_tax:
+            # it is assumed that the highest threshold is first
             threshold = bracket["threshold"]
             rate = bracket["rate"]
 
             if self.income > threshold:
+                # tax from current threshold to income or previous treshold
                 taxable_income = min(previous_threshold, self.income) - threshold
                 tax = taxable_income * rate
                 self.balance -= tax
@@ -100,8 +108,8 @@ class PersonAgent(Agent):
         # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
 
-        # sales tax will now be incorporated into price calculation
-        prices = {
+        # sales tax logic; incorporate into person facing prices
+        effective_prices = {
             agent.industry_type: (
                 agent.price
                 * (1 + self.model.policies["sales_tax"][agent.industry_type])
@@ -114,7 +122,7 @@ class PersonAgent(Agent):
             sigma=self.sigma,
             budget=self.determine_budget(),
             prefs=self.preferences,
-            prices=prices,
+            prices=effective_prices,
         )
 
         # Attempt to purchase goods
@@ -135,11 +143,8 @@ class PersonAgent(Agent):
             available_quantity = industry.inventory_available_this_step
             quantity_to_buy = min(desired_quantity, available_quantity)
 
-            # sales tax logic
-            cost = quantity_to_buy * industry.price
-            sales_tax = self.model.policies["sales_tax"][industry.industry_type]
-            if sales_tax is not None:
-                cost += cost * sales_tax
+            # prices already have sales tax applied
+            cost = quantity_to_buy * effective_prices[industry_type]
 
             if self.balance >= cost:
                 # Execute transaction
