@@ -4,13 +4,10 @@ from ..types.demographic import Demographic
 
 
 DEMOGRAPHICS_SCHEMA = {
-    demo.value: {
-        "income": {"mean": None, "sd": None},
-        "proportion": None,
-        "spending_behavior": {itype.value: None for itype in IndustryType},
-        "balance": {"mean": None, "sd": None},
-    }
-    for demo in Demographic
+    "num_people": None,
+    "inflation_rate": None,
+    "population": {"income_mean": None, "income_std": None},
+    "spending_behavior": {dtype.value: None for dtype in Demographic},
 }
 """Schema for validating the demographics dictionary."""
 
