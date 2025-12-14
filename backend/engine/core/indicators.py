@@ -68,12 +68,19 @@ def calculate_hoover_index(model: Model):
     Returns:
         hoover_index(float): squared income proportions from 0-1
     """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    incomes = np.array(peopleAgents.get("income"))
 
-    # TODO: Implement calculation of the Hoover Index
-    # see https://www.wallstreetoasis.com/resources/skills/economics/hoover-index
-    # for the formula. It's from the project documentation back in the spring
+    if incomes.size == 0:
+        return 0.0
 
-    return 0
+    total_income = incomes.sum()
+    total_people = incomes.size
+    income_shares = incomes / total_income
+    population_shares = 1.0 / total_people
+
+    hoover_index = 0.5 * np.sum(np.abs(income_shares - population_shares))
+    return hoover_index
 
 
 def calculate_lorenz_curve(model: Model) -> dict[str, list[float]]:
