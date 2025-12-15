@@ -22,9 +22,9 @@ class ModelCreateRequest(BaseModel):
     )
     num_people: int = Field(..., gt=0, description="Number of person agents to create.")
     inflation_rate: float = Field(..., ge=0.0, description="Weekly inflation rate.")
-    demographics: dict[
-        Demographic, dict[str, float | dict[str | IndustryType, float]]
-    ] = Field(..., description="Demographic distribution for the population.")
+    population: dict[
+        str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]
+    ] = Field(..., description="Information about the people.")
     industries: dict[IndustryType, dict[str, float | int]] = Field(
         ..., description="Information about every industry."
     )
@@ -84,7 +84,7 @@ async def create_model(
             max_simulation_length=model_parameters.max_simulation_length,
             num_people=model_parameters.num_people,
             inflation_rate=model_parameters.inflation_rate,
-            demographics=model_parameters.demographics,
+            population=model_parameters.population,
             industries=model_parameters.industries,
             starting_policies=model_parameters.policies,
         )

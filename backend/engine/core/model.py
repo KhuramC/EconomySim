@@ -56,7 +56,9 @@ class EconomyModel(Model):
         self,
         max_simulation_length: int,
         num_people: int,
-        population: dict[str, int | float | dict[str, float] | dict[str, float]],
+        population: dict[
+            str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]
+        ],
         industries: dict[IndustryType, dict[str, float | int]],
         starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
         inflation_rate: float = 0.001,
@@ -118,17 +120,17 @@ class EconomyModel(Model):
     def setup_person_agents(
         self,
         total_people: int,
-        demographics: dict[
-            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        population: dict[
+            str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]
         ],
         preference_concentration: float = 20.0,
     ) -> None:
         """
-        Creates the PersonAgents based on the demographics dictionary.
+        Creates the PersonAgents based on the populations dictionary.
 
         Args:
             total_people (int): the total number of PersonAgents to create.
-            demographics (dict): the information about each demographics to create.
+            population (dict): the information about personAgents to create.
             preference_concentration (float): A parameter to control preference variance.
                 Higher values mean agents will have preferences closer to the demographic's
                 average (low variance). Lower values create more diverse preferences.
@@ -136,77 +138,54 @@ class EconomyModel(Model):
         Raises:
             ValueError: if the demographics dictionary is invalid.
         """
-
-        # get number of people per demographic
-        demo_people = num_prop(
-            [
-                demographics[demographic]["proportion"] * 100
-                for demographic in demographics.keys()
-            ],
-            total_people,
+        agent_demographics = []
+        agent_preferences = []
+        agent_incomes = generate_lognormal(
+            population.get("income_mean"), population.get("income_std"), total_people
         )
-        demo_people = {
-            demographic: demo_people[i]
-            for i, demographic in enumerate(demographics.keys())
-        }
+        agent_balances = generate_lognormal(
+            population.get("balance_mean"), population.get("balance_std"), total_people
+        )
 
-        # for each demographic...
-        for demographic, demo_info in demographics.items():
+        # Demographics (derived from income)
+        median_income = np.median(agent_incomes)
+        low_threshold = 0.67 * median_income
+        high_threshold = 2.0 * median_income
 
-            num_demo_people = demo_people[demographic]
-            if num_demo_people == 0:
-                continue
+        for income in agent_incomes:  # Iterate over every agent
 
-            income_info = demo_info.get("income", {})
-            starting_balance_info = demo_info.get("balance", {})
-            spending_behavior_info = demo_info.get("spending_behavior")
+            if income < low_threshold:
+                assigned_demo = Demographic.LOWER_CLASS
+            elif income > high_threshold:
+                assigned_demo = Demographic.UPPER_CLASS
+            else:
+                assigned_demo = Demographic.MIDDLE_CLASS
 
-            # TODO: set savings_rate per demographic
-            # Does this also get randomized?
-            savings_rate = demo_info.get("savings_rate", 0.10)
-
-            # Generate distributed parameters for N agents
-            # Incomes from lognormal distribution
-            incomes = generate_lognormal(
-                log_mean=income_info.get("mean", 0),
-                log_std=income_info.get("sd", 0),
-                size=num_demo_people,
-            )
-            # Account balances from lognormal distribution
-            starting_balances = generate_lognormal(
-                log_mean=starting_balance_info.get("mean", 0),
-                log_std=starting_balance_info.get("sd", 0),
-                size=num_demo_people,
-            )
+            agent_demographics.append(assigned_demo)
 
             # Generate unique preferences from dirichlet distribution
-            industries = list(spending_behavior_info.keys())
-            alphas = list(spending_behavior_info.values())
-            concentrated_alpha = [
-                val * preference_concentration for val in alphas
-            ]  # Scale alphas to control variance
-            generated_preferences = np.random.dirichlet(
-                concentrated_alpha, size=num_demo_people
-            )
+            spending_behavior = population.get("spending_behavior").get(assigned_demo)
+            industries_list = list(spending_behavior.keys())
+            alphas = list(spending_behavior.values())
+            concentrated_alphas = [val * preference_concentration for val in alphas]
+            pref_vector = np.random.dirichlet(concentrated_alphas)
+            pref_dict = {
+                industries_list[i]: pref_vector[i] for i in range(len(industries_list))
+            }
+            agent_preferences.append(pref_dict)
 
-            pref_list = []  # holds preference dict for all N agents in demographic
-            for pref_vector in generated_preferences:
-                pref_dict = {
-                    industries[i]: pref_vector[i] for i in range(len(industries))
-                }
-                pref_list.append(pref_dict)
-
-            PersonAgent.create_agents(
-                model=self,
-                n=num_demo_people,
-                demographic=demographic,
-                income=incomes,
-                starting_balance=starting_balances,
-                preferences=pref_list,
-                # TODO:
-                # savings_rate=savings_rate,
-                # employer=None,
-            )
+        # Create Agents
+        PersonAgent.create_agents(
+            model=self,
+            n=total_people,
+            demographic=agent_demographics,
+            income=agent_incomes,
+            starting_balance=agent_balances,
+            preferences=agent_preferences,
+            # TODO:
+            # savings_rate=savings_rate,
+            # employer=None,
+        )
 
     def setup_industry_agents(
         self,
