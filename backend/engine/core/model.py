@@ -13,7 +13,7 @@ from ..types.demographic_metrics import DemoMetrics
 from .indicators import *
 from .utils import (
     validate_schema,
-    DEMOGRAPHICS_SCHEMA,
+    POPULATION_SCHEMA,
     INDUSTRIES_SCHEMA,
     POLICIES_SCHEMA,
     num_prop,
@@ -56,9 +56,7 @@ class EconomyModel(Model):
         self,
         max_simulation_length: int,
         num_people: int,
-        demographics: dict[
-            Demographic, dict[str, float | dict[str | IndustryType, float]]
-        ],
+        population: dict[str, int | float | dict[str, float] | dict[str, float]],
         industries: dict[IndustryType, dict[str, float | int]],
         starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
         inflation_rate: float = 0.001,
@@ -71,7 +69,7 @@ class EconomyModel(Model):
         if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
-        validate_schema(demographics, DEMOGRAPHICS_SCHEMA, path="demographics")
+        validate_schema(population, POPULATION_SCHEMA, path="demographics")
         validate_schema(industries, INDUSTRIES_SCHEMA, path="industries")
         validate_schema(starting_policies, POLICIES_SCHEMA, path="policies")
 
@@ -108,7 +106,7 @@ class EconomyModel(Model):
             },
         )
 
-        self.setup_person_agents(num_people, demographics)
+        self.setup_person_agents(num_people, population)
         self.setup_industry_agents(industries)
 
         # Ensure AgentSets exists, even if empty

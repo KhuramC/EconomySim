@@ -3,7 +3,7 @@ from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
 
-DEMOGRAPHICS_SCHEMA = {
+POPULATION_SCHEMA = {
     "num_people": None,
     "inflation_rate": None,
     "population": {"income_mean": None, "income_std": None},
