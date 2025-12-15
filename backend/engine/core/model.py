@@ -272,6 +272,10 @@ class EconomyModel(Model):
 
         # people agents do their tasks
         peopleAgents = self.agents_by_type[PersonAgent]
+        indicators_df = self.datacollector.get_model_vars_dataframe()
+        median_income = indicators_df['Median Income'].iloc[-1]
+        
+        peopleAgents.do("update_class", median_income)
         peopleAgents.shuffle_do("purchase_goods")
         peopleAgents.shuffle_do("change_employment")
 
