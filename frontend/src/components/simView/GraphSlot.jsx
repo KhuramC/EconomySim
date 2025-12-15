@@ -51,7 +51,6 @@ export default function GraphSlot({
       "rgb(255, 159, 64)",
       "rgb(199, 199, 199)",
     ];
-    console.log("GRAPH SLOT NORMAL",title,datasets)
     return {
       labels: labels,
       datasets: datasets.map((dataset, index) => ({
@@ -74,11 +73,9 @@ export default function GraphSlot({
       "rgb(199, 199, 199)",
     ];
 
-    console.log("GRAPHSLOT DATA S",title, datasets);
     let lorenzData = []
     let newData = []
     if(datasets[0].data.x){
-      console.log("setting has data to true")
       setDataLorenz(true);
       lorenzData = datasets[0].data
       for(let i=0; i<lorenzData.x.length;i++){

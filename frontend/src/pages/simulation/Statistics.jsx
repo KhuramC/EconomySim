@@ -95,7 +95,6 @@ export default function Statistics() {
             const isIndustryMetric =
               Object.values(IndustryMetrics).includes(title);
             const isDemoMetric = Object.values(DemoMetrics).includes(title);
-            console.log(title,indicatorData)
 
 
             let isLorenzCurve= false
@@ -103,7 +102,6 @@ export default function Statistics() {
 
               if (title == "Lorenz Curve" && indicatorData[title][indicatorData?.week.length-1].x){
                 isLorenzCurve=true;
-                console.log("THIS IS LORENZ",indicatorData[title][indicatorData?.week.length-1])
               }
             } catch {
               console.log("womp")
