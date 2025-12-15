@@ -95,7 +95,19 @@ export default function Statistics() {
             const isIndustryMetric =
               Object.values(IndustryMetrics).includes(title);
             const isDemoMetric = Object.values(DemoMetrics).includes(title);
+            console.log(title,indicatorData)
 
+
+            let isLorenzCurve= false
+            try {
+
+              if (title == "Lorenz Curve" && indicatorData[title][indicatorData?.week.length-1].x){
+                isLorenzCurve=true;
+                console.log("THIS IS LORENZ",indicatorData[title][indicatorData?.week.length-1])
+              }
+            } catch {
+              console.log("womp")
+            }
             return (
               <React.Fragment key={index}>
                 <Box sx={{ mb: 2 }}>
@@ -106,9 +118,9 @@ export default function Statistics() {
                       datasets={[
                         {
                           label: title,
-                          data: indicatorData?.[title]
-                            ? indicatorData[title]
-                            : [],
+                          data: isLorenzCurve && indicatorData[title][indicatorData?.week.length-1] || 
+                             indicatorData[title] ||
+                             [],
                         },
                       ]}
                     />
