@@ -100,7 +100,13 @@ export default function GraphSlot({
           })),
           showLine:true,
           backgroundColor: 'rgba(255, 99, 132, 1)',
+          pointHoverRadius: 0,
         },
+        {
+          label: "true equality",
+          data: [[0,0],[1,1]],
+          showLine:true,
+        }
       ],
     };
   }, [labels, datasets]);
@@ -111,6 +117,7 @@ export default function GraphSlot({
   scales: {
     y: {
       beginAtZero: true,
+      max: 1
     },
   },
 };
@@ -167,7 +174,7 @@ export default function GraphSlot({
             underline="hover"
             onClick={() => {
               console.log("hasData:", hasData);
-              if (hasData) {
+              if (hasData || hasDataLorenz) {
                 handleOpen();
               }
             }}
@@ -194,7 +201,6 @@ export default function GraphSlot({
           )) ||
             (hasData && title.includes("Lorenz") != true && <Line data={chartData} options={chartOptions} />) || (
               <Stack spacing={1} alignItems="center">
-                <h3>{hasData}</h3>
                 <InsertChartOutlinedIcon
                   sx={{ fontSize: 40, color: "text.secondary" }}
                 />
@@ -235,18 +241,19 @@ export default function GraphSlot({
             {title}
           </Typography>
 
-          {hasData ? (
-            <Line data={chartData} options={chartOptions} />
-          ) : (
-            <Stack spacing={1} alignItems="center">
-              <InsertChartOutlinedIcon
-                sx={{ fontSize: 40, color: "text.secondary" }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Waiting for data...
-              </Typography>
-            </Stack>
-          )}
+          {(hasDataLorenz && title.includes("Lorenz") && (
+            <Scatter data={scatterChartData} options={scatterOptions} />
+          )) ||
+            (hasData && title.includes("Lorenz") != true && <Line data={chartData} options={chartOptions} />) || (
+              <Stack spacing={1} alignItems="center">
+                <InsertChartOutlinedIcon
+                  sx={{ fontSize: 40, color: "text.secondary" }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Waiting for data...
+                </Typography>
+              </Stack>
+            )}
         </Box>
       </Modal>
     </div>

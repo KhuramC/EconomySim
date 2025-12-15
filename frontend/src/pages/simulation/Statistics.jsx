@@ -159,7 +159,7 @@ export default function Statistics() {
                     color: "text.secondary",
                   }}
                 >
-                  {title} Distribution Over Time
+                {title.includes("Lorenz") ? title : `${title} Distribution Over Time`}
                 </Typography>
               </React.Fragment>
             );
