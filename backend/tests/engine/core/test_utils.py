@@ -7,7 +7,7 @@ import numpy as np
 from engine.core.utils import (
     validate_schema,
     POLICIES_SCHEMA,
-    DEMOGRAPHICS_SCHEMA,
+    POPULATION_SCHEMA,
     INDUSTRIES_SCHEMA,
     num_prop,
     generate_lognormal,
@@ -83,10 +83,10 @@ def invalid_data(request, policies, demographics, industries) -> dict[str, Any]:
             id="valid_policies",
         ),
         pytest.param(
-            "demographics",
-            DEMOGRAPHICS_SCHEMA,
-            "demographics",
-            id="valid_demographics",
+            "population",
+            POPULATION_SCHEMA,
+            "population",
+            id="valid_population",
         ),
         pytest.param(
             "industries",
@@ -125,10 +125,10 @@ def test_validate_schema_success(
             id="invalid_policies",
         ),
         pytest.param(
-            ("demographics", (Demographic.LOWER_CLASS, "proportion")),
-            DEMOGRAPHICS_SCHEMA,
-            "demographics",
-            id="invalid_demographics",
+            ("population", (Demographic.LOWER_CLASS, "proportion")),
+            POPULATION_SCHEMA,
+            "population",
+            id="invalid_population",
         ),
         pytest.param(
             ("industries", (IndustryType.HOUSEHOLD_GOODS, "starting_price")),

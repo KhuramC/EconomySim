@@ -192,3 +192,34 @@ def test_purchase_goods(
 @mark.xfail(reason="Function not implemented yet.")
 def test_change_employment():
     assert False
+
+
+def test_update_class(mock_economy_model):
+    """
+    Unit test for personAgent.update_class().
+    Tests the Pew Research Center thresholds logic.
+    """
+    person = PersonAgent(
+        mock_economy_model,
+        demographic=Demographic.MIDDLE_CLASS,  # Start as middle
+        preferences={},
+        income=500,
+    )
+
+    # Median = 1000
+    # Low Threshold = 670, High Threshold = 2000
+
+    # Case 1: Drop to Lower (< 670)
+    person.income = 600
+    person.update_class(median_income=1000)
+    assert person.demographic == Demographic.LOWER_CLASS
+
+    # Case 2: Rise to Upper (> 2000)
+    person.income = 2100
+    person.update_class(median_income=1000)
+    assert person.demographic == Demographic.UPPER_CLASS
+
+    # Case 3: Return to Middle (670 - 2000)
+    person.income = 1000
+    person.update_class(median_income=1000)
+    assert person.demographic == Demographic.MIDDLE_CLASS
