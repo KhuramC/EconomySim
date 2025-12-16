@@ -140,15 +140,17 @@ def test_calculate_median_income(model: EconomyModel, incomes: list, expected: f
 @mark.parametrize(
     "incomes,expected",
     [
-        param([20] * 10, 20.0, id="Same incomes"),
+        param([20] * 10, 0.0, id="Same incomes"),
         param([0] * 10, 0.0, id="Zero (same) incomes"),
-        param([0, 2, 4, 6, 8, 10, 12, 14, 16, 18], 9.0, id="Different incomes"),
+        param(
+            [0, 2, 4, 6, 8, 10, 12, 14, 16, 18], 0.2777777777, id="Different incomes"
+        ),
         param(
             [5, 12, 19, 21, 32, 51, 68, 87, 92, 100],
-            41.5,
+            0.3172484599,
             id="Different incomes(bigger range)",
         ),
-        param([0] * 9 + [100], 0.0, id="Unequal incomes"),
+        param([0] * 9 + [100], 0.9, id="Unequal incomes"),
     ],
 )
 def test_calculate_hoover_index(model: EconomyModel, incomes: list, expected: float):
@@ -164,9 +166,7 @@ def test_calculate_hoover_index(model: EconomyModel, incomes: list, expected: fl
     for i, agent in enumerate(peopleAgents):
         agent.income = incomes[i]
 
-    # assert expected == indicators.calculate_hoover_index(model)
-    # TODO: Calculate Hoover Index for the incomes, and change the expected value in params accordingly
-    # TODO: More tests cases might be required
+    assert expected == approx(indicators.calculate_hoover_index(model))
 
 
 @mark.parametrize(
