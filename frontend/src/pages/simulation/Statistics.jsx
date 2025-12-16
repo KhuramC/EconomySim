@@ -100,7 +100,7 @@ export default function Statistics() {
             let isLorenzCurve= false
             try {
 
-              if (title == "Lorenz Curve" && indicatorData[title][indicatorData?.week.length-1].x){
+              if (title == Indicators.LORENZ_CURVE && indicatorData[title][indicatorData?.week.length-1].x){
                 isLorenzCurve=true;
               }
             } catch {

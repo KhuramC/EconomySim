@@ -96,7 +96,7 @@ export default function GraphSlot({
             y: Math.floor(Math.random() * 100),
           })),
           showLine:true,
-          backgroundColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: "rgb(75, 192, 192)",
           pointHoverRadius: 0,
         },
         {
