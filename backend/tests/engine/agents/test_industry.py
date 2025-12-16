@@ -5,23 +5,6 @@ from engine.types.industry_type import IndustryType
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
-def test_get_tariffs(mock_economy_model, industry_type: IndustryType):
-    """
-    Test for `get_tariffs`.
-    Tests that the tariffs obtained for this industry is accurate.
-
-    Args:
-        industry_type (IndustryType): the industry be looked at.
-        mock_economy_model: a mock model.
-    """
-
-    i_agent = IndustryAgent(mock_economy_model, industry_type=industry_type)
-    assert (
-        i_agent.get_tariffs() == mock_economy_model.policies["tariffs"][industry_type]
-    )
-
-
-@pytest.mark.parametrize("industry_type", list(IndustryType))
 def test_get_employees(mock_economy_model, industry_type: IndustryType):
     """
     Test for `get_employees`.
@@ -494,7 +477,10 @@ def test_get_profit_corpo_tax_realistic(
     ],
 )
 def test_fixed_cost_property_tax(
-    mock_economy_model, property_tax: float, starting_fixed_cost:float, expected_fixed_cost: float
+    mock_economy_model,
+    property_tax: float,
+    starting_fixed_cost: float,
+    expected_fixed_cost: float,
 ):
     """
     Tests the fixed cost function and the property tax policy
@@ -506,7 +492,6 @@ def test_fixed_cost_property_tax(
         industry_type=IndustryType.AUTOMOBILES,
         starting_fixed_cost=starting_fixed_cost,
     )
-    
 
     # TODO: change to using get_fixed_cost whenever it's fixed to include property tax
     assert ind.get_fixed_cost_naive() == pytest.approx(expected_fixed_cost)

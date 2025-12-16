@@ -96,6 +96,16 @@ export default function Statistics() {
               Object.values(IndustryMetrics).includes(title);
             const isDemoMetric = Object.values(DemoMetrics).includes(title);
 
+
+            let isLorenzCurve= false
+            try {
+
+              if (title == Indicators.LORENZ_CURVE && indicatorData[title][indicatorData?.week.length-1].x){
+                isLorenzCurve=true;
+              }
+            } catch {
+              console.log("womp")
+            }
             return (
               <React.Fragment key={index}>
                 <Box sx={{ mb: 2 }}>
@@ -106,9 +116,9 @@ export default function Statistics() {
                       datasets={[
                         {
                           label: title,
-                          data: indicatorData?.[title]
-                            ? indicatorData[title]
-                            : [],
+                          data: isLorenzCurve && indicatorData[title][indicatorData?.week.length-1] || 
+                             indicatorData[title] ||
+                             [],
                         },
                       ]}
                     />
@@ -147,7 +157,7 @@ export default function Statistics() {
                     color: "text.secondary",
                   }}
                 >
-                  {title} Distribution Over Time
+                {title.includes("Lorenz") ? title : `${title} Distribution Over Time`}
                 </Typography>
               </React.Fragment>
             );
