@@ -119,6 +119,14 @@ class PersonAgent(Agent):
         """
         Round up if x is within 0.05 of the next whole number,
         otherwise round down.
+        
+        Note: This is mainly used to avoid floating point precision issues
+        when determining affordable quantities.
+        
+        Args:
+            x: The float number to round.
+        Returns:
+            The rounded integer.
         """
         lower = math.floor(x)
         upper = lower + 1
@@ -169,7 +177,6 @@ class PersonAgent(Agent):
         )
         #returns an unrounded quantity demand per good
 
-        # >>> NEW: Convert desired quantity into DOLLARS allocated
         # For each industry, we add the weekly allocated money into the savings bucket.
         for industry in industry_agents:
             itype = industry.industry_type
@@ -187,20 +194,18 @@ class PersonAgent(Agent):
             # add this to the industry-specific savings pool
             self.industry_savings[itype] += allocated_dollars
 
-        # >>> Now attempt purchases using savings pool — not weekly budget
-        for industry in industry_agents:
-            itype = industry.industry_type
+            # >>> Now attempt purchases using savings pool — not weekly budget
             savings_bucket = self.industry_savings[itype]
             if savings_bucket <= 0:
                 continue
-            unit_price = prices[itype]  # price including sales tax
+            price_with_tax = prices[itype]  # price including sales tax
 
             # Check if agent saved enough to buy at least 1 unit
-            if savings_bucket < unit_price:
+            if savings_bucket < price_with_tax:
                 continue
 
             # Determine how many units savings allow
-            max_affordable_from_savings = self.custom_round(savings_bucket / unit_price)
+            max_affordable_from_savings = self.custom_round(savings_bucket / price_with_tax)
             # Limit by inventory
             purchasable_units = min(
                 max_affordable_from_savings,
@@ -211,7 +216,7 @@ class PersonAgent(Agent):
                 continue
 
             # Total cost
-            total_cost = purchasable_units * unit_price
+            total_cost = purchasable_units * price_with_tax
 
             # Execute purchase using SAVINGS
             self.industry_savings[itype] -= total_cost
