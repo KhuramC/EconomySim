@@ -2,7 +2,7 @@
 name: Backend Issue
 about: Tickets for the backend
 title: ":robot: Implement ??? "
-assignees: ''
+assignees: ""
 projects:
   - project: "EconomySim Capstone"
     column: "Type"
@@ -13,12 +13,12 @@ projects:
 
 **Location:** file path in repo
 
-**Resources:** 
+**Resources:**
 
 ### Action items
 
-- [ ]  
-- [ ]  
+- [ ]
+- [ ]
 
 ### Definition of done
 

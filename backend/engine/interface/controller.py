@@ -285,6 +285,17 @@ class ModelController:
 
         metrics_df = metrics_df[columns_to_keep]
 
+        if metrics_df.empty:
+            final_columns = [
+                "week",
+                "Demographics",
+                DemoMetrics.PROPORTION,
+                DemoMetrics.AVERAGE_BALANCE,
+                DemoMetrics.STD_BALANCE,
+                DemoMetrics.AVERAGE_WAGE,
+            ]
+            return pd.DataFrame(columns=final_columns)
+
         # Turn metrics from dicts to values with demo column
         metrics_df = (
             metrics_df.set_index("week")[

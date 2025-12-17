@@ -117,11 +117,7 @@ class IndustryAgent(Agent):
         self.insurance = insurance
 
         # Tick variables; recalculated every tick
-        self.tick_cost = 0.0
-        self.tick_revenue = 0.0
-        self.tick_sellable_inventory = 0
-        self.tick_goods_produced = 0
-        self.tick_hours_worked = 0
+        self.new_tick()
 
     def new_tick(self) -> None:
         """
@@ -267,6 +263,7 @@ class IndustryAgent(Agent):
             self.tick_hours_worked = 0
             self.tick_cost = Fixed  # fixed cost is still factored into losses this tick
             self.balance -= Fixed
+            self.goods_produced = 0
             return
 
         variable_cost_per_unit = self.get_variable_cost()

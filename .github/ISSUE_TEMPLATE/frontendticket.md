@@ -2,7 +2,7 @@
 name: Frontend Issue
 about: Tickets for the frontend
 title: ":art: Implement ??? "
-assignees: ''
+assignees: ""
 projects:
   - project: "EconomySim Capstone"
     column: "Type"
@@ -13,12 +13,12 @@ projects:
 
 **Location:** file path in repo
 
-**Resources:** 
+**Resources:**
 
 ### Action items
 
-- [ ]  
-- [ ]  
+- [ ]
+- [ ]
 
 ### Definition of done
 

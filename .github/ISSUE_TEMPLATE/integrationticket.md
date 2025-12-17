@@ -2,7 +2,7 @@
 name: Integration Issue
 about: Tickets for integrating the frontend and backend
 title: ":airplane: Integrate ??? "
-assignees: ''
+assignees: ""
 projects:
   - project: "EconomySim Capstone"
     column: "Type"
@@ -13,12 +13,12 @@ projects:
 
 **Location:** file path in repo
 
-**Resources:** 
+**Resources:**
 
 ### Action items
 
-- [ ]  
-- [ ]  
+- [ ]
+- [ ]
 
 ### Definition of done
 

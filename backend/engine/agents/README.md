@@ -84,7 +84,7 @@ $$
 P = A - BQ
 $$
 
-where $A$ and $B$ are estimated using linear regression.
+where $A$ and $B$ are [estimated](#approximating-the-demand-curve). Conceptually, $A$ is intercept, or the price whenever $q=0$, and $B$ is the slope.
 
 TODO: This estimation does not occur currently.
 
@@ -163,6 +163,16 @@ $$
 
 Quadratic equations can have 0, 1, or 2 real solutions. If 2 solutions are found, the higher quantity will be chosen to incentivize more sales. If 1 solution is found, that quantity will be used. If no solution is found, profit maximization will be used instead to minimize losses.
 
+#### Approximating the Demand Curve
+
+Both solutions above for determining the price are dependent on the slope and intercept being approximated each tick.
+
+TODO: put in approximation logic
+
 ### Production of Goods
 
+TODO: put good production logic
+
 ### Employment
+
+TODO: put employment logic

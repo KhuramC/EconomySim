@@ -17,7 +17,6 @@ from pytest import approx, mark, param
 def test_custom_round(x: float, expected: int):
     """
     Tests `custom_round` with various floats.
-
     Args:
         x (float): the number to be rounded.
         expected (int): The expected integer after rounding.
@@ -49,7 +48,6 @@ def test_demand_func(
 ):
     """
     Tests the `demand_func` with different values.
-
     Args:
         sigma (float): The elasticity of substitution
         budget (float): The total money available to spend.
@@ -62,3 +60,4 @@ def test_demand_func(
 
     for industry, demand in demands.items():
         assert demand == approx(expected[industry])
+        
