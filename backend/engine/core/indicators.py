@@ -77,7 +77,7 @@ def calculate_hoover_index(model: Model):
     total_income = incomes.sum()
     if total_income == 0:
         return 0.0
-    
+
     total_people = incomes.size
     income_shares = incomes / total_income
     population_shares = 1.0 / total_people
@@ -186,7 +186,10 @@ def calculate_average_balance(model: Model) -> dict[Demographic, float]:
 
     for demographic in Demographic:
         demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
-        balances[demographic] = demoAgents.agg("balance", np.mean)
+        if len(demoAgents) == 0:
+            balances[demographic] = 0.0
+        else:
+            balances[demographic] = demoAgents.agg("balance", np.mean)
 
     return balances
 
@@ -203,7 +206,10 @@ def calculate_std_balance(model: Model) -> dict[Demographic, float]:
 
     for demographic in Demographic:
         demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
-        std_balances[demographic] = demoAgents.agg("balance", np.std)
+        if len(demoAgents) == 0:
+            std_balances[demographic] = 0.0
+        else:
+            std_balances[demographic] = demoAgents.agg("balance", np.std)
 
     return std_balances
 
@@ -220,7 +226,10 @@ def calculate_average_wage(model: Model) -> dict[Demographic, float]:
 
     for demographic in Demographic:
         demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
-        wages[demographic] = demoAgents.agg("income", np.mean)
+        if len(demoAgents) == 0:
+            wages[demographic] = 0.0
+        else:
+            wages[demographic] = demoAgents.agg("income", np.mean)
 
     return wages
 
@@ -237,6 +246,9 @@ def calculate_std_wage(model: Model) -> dict[Demographic, float]:
 
     for demographic in Demographic:
         demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
-        std_wages[demographic] = demoAgents.agg("income", np.std)
+        if len(demoAgents) == 0:
+            std_wages[demographic] = 0.0
+        else:
+            std_wages[demographic] = demoAgents.agg("income", np.std)
 
     return std_wages
