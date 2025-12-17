@@ -1,6 +1,6 @@
 import PageTitle from "../components/PageTitle";
 import { useAppSettings } from "../context/AppSettingsContext";
-import { Box, Container, Typography, Grid, Paper } from "@mui/material";
+import { Box, Container, Typography, Paper } from "@mui/material";
 
 function About() {
   const { textSize } = useAppSettings();

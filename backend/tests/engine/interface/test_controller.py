@@ -1,33 +1,13 @@
 import pytest
+import copy
 from pytest import mark
 from contextlib import nullcontext
 from engine.types.industry_type import IndustryType
 from engine.types.industry_metrics import IndustryMetrics
+from engine.types.demographic import Demographic
+from engine.types.demographic_metrics import DemoMetrics
 from engine.types.indicators import Indicators
 from engine.interface.controller import ModelController
-
-
-def test_create_model(controller: ModelController, demographics, industries, policies):
-    """
-    Test for `create_model`.
-    Ensures that the controller is correctly making a new model.
-
-    Args:
-        controller (ModelController): the controller being used.
-        demographics (dict): a valid demographics.
-        industries (dict): a valid industries.
-        policies (dict): a valid policies.
-    """
-
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=100,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
-    assert controller.models[model_id].policies == policies
-    assert controller.next_id == model_id + 1
 
 
 @mark.parametrize(
@@ -38,10 +18,7 @@ def test_create_model(controller: ModelController, demographics, industries, pol
     ],
 )
 def test_delete_model(
-    controller: ModelController,
-    demographics,
-    industries,
-    policies,
+    controller_model: dict,
     model_id: int,
     exception,
 ):
@@ -50,78 +27,79 @@ def test_delete_model(
     Tests attempted deletion of a valid and invalid model id.
 
     Args:
-        controller (ModelController): the controller being used.
-        demographics (dict): a valid demographics.
-        industries (dict): a valid industries.
-        policies (dict): a valid policies.
+        controller_model (dict): the controller with the created model.
         model_id (int): the id of the model to delete.
         exception: the expected exception.
     """
-    controller.create_model(
-        max_simulation_length=52,
-        num_people=100,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+    controller = controller_model["controller"]
 
     with exception:
         controller.delete_model(model_id)
         assert model_id not in controller.models
 
 
-@mark.xfail(reason="Testing the step function has not been determined yet.")
-def test_step_model(controller: ModelController, demographics, policies):
-    assert False
+@pytest.mark.parametrize(
+    "time",
+    [
+        pytest.param(0),
+        pytest.param(1),
+        pytest.param(10),
+        pytest.param(-1),
+        pytest.param(-10),
+    ],
+)
+def test_step_model(controller_model: dict, time: int):
+    """
+    Test for `step_model`.
+    Tests that stepping positively does step that amount,
+    and stepping negatively does nothing since the time is still at 0.
+
+    Args:
+        controller_model (dict): the controller with the created model.
+        time (int): the amount of time to step the model for.
+    """
+
+    controller: ModelController = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
+    controller.step_model(model_id, time)
+    current_week = controller.get_current_week(model_id)
+    if time > 0:
+        assert current_week == time
+    else:
+        assert current_week == 0
 
 
-# TODO: add tests for reverse stepping as well.
-
-
-def test_get_policies(controller: ModelController, demographics, industries, policies):
+def test_get_policies(controller_model: dict, policies):
     """
     Test for `get_policies`.
     Tests that one can correctly retrieve the current policies of a model.
 
     Args:
-        controller (ModelController): the controller being used.
-        demographics (dict): a valid demographics.
-        industries (dict): a valid industries.
-        policies (dict): a valid policies.
+        controller_model(dict): the controller with the created model.
+        policies (dict): a valid policies dict.
     """
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
 
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=100,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
     retrieved_policies = controller.get_policies(model_id)
     assert retrieved_policies == policies
 
 
-def test_set_policies(controller: ModelController, demographics, industries, policies):
+def test_set_policies(controller_model: dict, policies):
     """
     Test for `set_policies`.
     Tests that one can correctly set the current policies of a model.
 
     Args:
-        controller (ModelController): the controller being used.
-        demographics (dict): a valid demographics.
-        industries (dict): a valid industries.
-        policies (dict): a valid policies.
+        controller_model(dict): the controller with the created model.
+        policies (dict): a valid policies dict.
     """
 
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=100,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
 
-    new_policies = policies.copy()
+    new_policies = copy.deepcopy(policies)
     new_policies["corporate_income_tax"][IndustryType.AUTOMOBILES] = 0.25
     controller.set_policies(model_id, new_policies)
 
@@ -129,21 +107,17 @@ def test_set_policies(controller: ModelController, demographics, industries, pol
     assert retrieved_policies == new_policies
 
 
-def test_get_current_week(
-    controller: ModelController, demographics, industries, policies
-):
+def test_get_current_week(controller_model: dict):
     """
     Test for `get_current_week`.
     Tests that one can correctly retrieve the current week of a model.
-    """
 
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=100,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+    Args:
+        controller_model(dict): the controller with the created model.
+    """
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
     current_week = controller.get_current_week(model_id)
     assert current_week == 0
 
@@ -175,17 +149,18 @@ def test_get_current_week(
         ),
     ],
 )
-def test_get_industry_data_validation(
-    controller: ModelController, demographics, industries, policies, kwargs, error_msg
-):
-    """Tests parameter validation for `get_industry_data`."""
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=10,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+def test_get_demo_metrics_validation(controller_model: dict, kwargs, error_msg):
+    """
+    Tests parameter validation at various edge cases for `get_demo_metrics`.
+
+    Args:
+        controller_model(dict): the controller with the created model.
+        kwargs: arguments to `get_demo_metrics`.
+        error_msg (str): the expected error message.
+    """
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
     if "model_id" not in kwargs:
         kwargs["model_id"] = model_id
 
@@ -193,21 +168,104 @@ def test_get_industry_data_validation(
         controller.get_industry_data(**kwargs)
 
 
-def test_get_industry_data(
-    controller: ModelController, demographics, industries, policies
-):
+def test_get_demo_metrics(controller_model: dict, demographics):
+    """
+    Test for `get_demo_metrics`.
+    Tests that time and metric filtering function as expected and
+    that the dataframe returned has the correct structure.
+
+    Args:
+        controller_model(dict): the controller with the created model.
+        demographics (dict): a valid demographics dict.
+    """
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
+    # Step the model 5 times to generate data for weeks 1 through 5
+    for _ in range(5):
+        controller.step_model(model_id)
+
+    # Test fetching all data (end_time=0 means up to current week, which is 5)
+    all_data_df = controller.get_demo_metrics(model_id, start_time=0, end_time=0)
+    assert not all_data_df.empty
+    assert set(all_data_df["week"].unique()) == {1, 2, 3, 4, 5}
+    assert len(all_data_df["Demographics"].unique()) == len(demographics)
+    expected_columns = set(DemoMetrics.values()).union({"week"})
+    assert expected_columns.issubset(all_data_df.columns)
+
+    # Test time filtering
+    time_filtered_df = controller.get_demo_metrics(model_id, start_time=2, end_time=4)
+    assert set(time_filtered_df["week"].unique()) == {2, 3, 4}
+
+    # Test metric filtering
+    target_metrics = [DemoMetrics.AVERAGE_BALANCE, DemoMetrics.STD_BALANCE]
+    metric_filtered_df = controller.get_demo_metrics(
+        model_id, demo_metrics=target_metrics
+    )
+    assert all(target in metric_filtered_df.columns for target in target_metrics)
+
+    # Test filtering by both time and metric
+    combined_filtered_df = controller.get_demo_metrics(
+        model_id, start_time=3, end_time=5, demo_metrics=[DemoMetrics.PROPORTION]
+    )
+    assert set(combined_filtered_df["week"].unique()) == {3, 4, 5}
+    assert DemoMetrics.PROPORTION in combined_filtered_df.columns
+
+
+@mark.parametrize(
+    "kwargs, error_msg",
+    [
+        pytest.param(
+            {"start_time": -1},
+            "Invalid start_time or end_time values.",
+            id="negative_start",
+        ),
+        pytest.param(
+            {"end_time": -1},
+            "Invalid start_time or end_time values.",
+            id="negative_end",
+        ),
+        pytest.param(
+            {"start_time": 3, "end_time": 2},
+            "Invalid start_time or end_time values.",
+            id="start_after_end",
+        ),
+        pytest.param(
+            {"model_id": 999}, "Model with ID 999 does not exist.", id="bad_model_id"
+        ),
+    ],
+)
+def test_get_industry_data_validation(controller_model: dict, kwargs, error_msg):
+    """
+    Tests parameter validation at various edge cases for `get_industry_data`.
+
+    Args:
+        controller_model(dict): the controller with the created model.
+        kwargs: arguments to `get_industry_data`.
+        error_msg (str): the expected error message.
+    """
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
+    if "model_id" not in kwargs:
+        kwargs["model_id"] = model_id
+
+    with pytest.raises(ValueError, match=error_msg):
+        controller.get_industry_data(**kwargs)
+
+
+def test_get_industry_data(controller_model: dict, industries):
     """
     Test for `get_industry_data`.
     Tests that time and industry filtering function as expected and
     that the dataframe returned has the correct structure.
+
+    Args:
+        controller_model(dict): the controller with the created model.
+        industries (dict): a valid industries dict.
     """
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=10,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
 
     # Step the model 5 times to generate data for weeks 1 through 5
     for _ in range(5):
@@ -268,17 +326,18 @@ def test_get_industry_data(
         ),
     ],
 )
-def test_get_indicators_validation(
-    controller: ModelController, demographics, industries, policies, kwargs, error_msg
-):
-    """Tests parameter validation for `get_indicators`."""
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=10,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+def test_get_indicators_validation(controller_model: dict, kwargs, error_msg: str):
+    """
+    Tests parameter validation at various edge cases for `get_indicators`.
+
+    Args:
+        controller_model(dict): the controller with the created model.
+        kwargs: arguments to `get_indicators`.
+        error_msg (str): the expected error message.
+    """
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
+
     if "model_id" not in kwargs:
         kwargs["model_id"] = model_id
 
@@ -286,21 +345,17 @@ def test_get_indicators_validation(
         controller.get_indicators(**kwargs)
 
 
-def test_get_indicators(
-    controller: ModelController, demographics, industries, policies
-):
+def test_get_indicators(controller_model: dict):
     """
     Test for `get_indicators`.
     Tests that time and indicator filtering function as expected and
     that the dataframe returned has the correct structure.
+
+    Args:
+        controller_model(dict): the controller with the created model.
     """
-    model_id = controller.create_model(
-        max_simulation_length=52,
-        num_people=10,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+    controller = controller_model["controller"]
+    model_id = controller_model["model_id"]
 
     # Step the model 5 times to generate data for weeks 1 through 5
     for _ in range(5):
@@ -341,10 +396,7 @@ def test_get_indicators(
     ],
 )
 def test_get_model(
-    controller: ModelController,
-    demographics,
-    industries,
-    policies,
+    controller_model: dict,
     model_id: int,
     exception,
 ):
@@ -353,20 +405,11 @@ def test_get_model(
     Tests attempted get of a valid and invalid model id.
 
     Args:
-        controller (ModelController): the controller being used.
-        demographics (dict): a valid demographics.
-        industries (dict): a valid industries.
-        policies (dict): a valid policies.
+        controller_model(dict): the controller with the created model.
         model_id (int): the id of the model to get.
         exception: the expected exception.
     """
-    controller.create_model(
-        max_simulation_length=52,
-        num_people=100,
-        demographics=demographics,
-        industries=industries,
-        starting_policies=policies,
-    )
+    controller = controller_model["controller"]
     with exception:
         model = controller.get_model(model_id)
         assert model is controller.models[model_id]

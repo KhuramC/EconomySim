@@ -37,6 +37,24 @@ class MockEconomyModel():
         people = self.agents_by_type[PersonAgent]
         return [agent for agent in people if agent.employer == industry_type]
 
+        self.MOCK_EMPLOYEES = {
+            industry_type: AgentSet(
+                [
+                    PersonAgent(
+                        self,
+                        demographic=Demographic.LOWER_CLASS,
+                        preferences={i_type: 1.0 * i for i_type in IndustryType},
+                    )
+                ],
+                self
+            )
+            for i, industry_type in enumerate(IndustryType)
+        }
+        """A mock dictionary associating employees with industry types."""
+
+    def get_employees(self, industry_type: IndustryType) -> AgentSet:
+        return self.MOCK_EMPLOYEES[industry_type]
+
 
 @pytest.fixture()
 def mock_economy_model(policies) -> MockEconomyModel:
@@ -47,6 +65,6 @@ def mock_economy_model(policies) -> MockEconomyModel:
         policies (dict): a valid policies.
 
     Returns:
-        MockEconomyModel: The minimal model for testing.
+        mock_model (MockEconomyModel): an instance of the mock model.
     """
     return MockEconomyModel(policies)

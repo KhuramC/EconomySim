@@ -1,16 +1,16 @@
 import { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
-import SidebarNav from "../../components/SidebarNav";
+import SidebarNav from "../../components/simView/SidebarNav";
+import TimelinePanel from "../../components/simView/TimelinePanel";
 import { SimulationAPI } from "../../api/SimulationAPI";
-import TimelinePanel from "../../components/TimelinePanel";
 
 // Content-only pages (no sidebar or outer Paper inside them)
-import Overview from "./Overview.jsx";
-import Industries from "./Industries.jsx";
-import Policies from "./Policies.jsx";
-import Demographics from "./Demographics.jsx";
-import Statistics from "./Statistics.jsx";
+import Overview from "./Overview";
+import Industries from "./Industries";
+import Policies from "./Policies";
+import Demographics from "./Demographics";
+import Statistics from "./Statistics";
 
 export const SimulationContext = createContext(null);
 
@@ -21,6 +21,7 @@ export default function BaseSimView() {
   // This ensures it persists across navigations within this view.
   const [modelId] = useState(location.state?.modelId);
   const [initialIndustryParams] = useState(location.state?.industryParams);
+  const [initialDemoParams] = useState(location.state?.demoParams);
   const [week, setWeek] = useState(0);
 
   // useMemo ensures the API instance is created only once for a given modelId.
@@ -91,6 +92,7 @@ export default function BaseSimView() {
             bgcolor: "background.paper",
             p: 2,
             overflowY: "auto", // Scroll inside sidebar if it gets tall
+            overflowX: "hidden", // Prevent horizontal scroll
           }}
         >
           <SidebarNav basePath={basePath} />
@@ -121,10 +123,15 @@ export default function BaseSimView() {
               <Route path="overview" element={<Overview />} />
               <Route
                 path="industries"
-                element={<Industries oldindustryParams={initialIndustryParams} />}
+                element={
+                  <Industries oldindustryParams={initialIndustryParams} />
+                }
               />
               <Route path="policies" element={<Policies />} />
-              <Route path="demographics" element={<Demographics />} />
+              <Route
+                path="demographics"
+                element={<Demographics oldDemoParams={initialDemoParams} />}
+              />
               <Route path="statistics" element={<Statistics />} />
               <Route
                 path="*"

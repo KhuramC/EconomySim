@@ -1,9 +1,8 @@
 import numpy as np
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
+from ..types.demographic import Demographic
 from mesa import Model
-import random
-import statistics
 
 
 def calculate_unemployment(model: Model) -> float:
@@ -46,10 +45,7 @@ def calculate_income_per_capita(model: Model):
         average_income(float): The average income per person(capita) in the simulation.
     """
     peopleAgents = model.agents_by_type[PersonAgent]
-    total = len(peopleAgents)
-    return peopleAgents.agg(
-        "income", lambda incomes: sum(incomes) / total if total > 0 else 0
-    )
+    return peopleAgents.agg("income", np.mean)
 
 
 def calculate_median_income(model: Model):
@@ -60,7 +56,7 @@ def calculate_median_income(model: Model):
         median_income(float): The median income of people in the simulation.
     """
     peopleAgents = model.agents_by_type[PersonAgent]
-    return peopleAgents.agg("income", lambda incomes: statistics.median(incomes))
+    return peopleAgents.agg("income", np.median)
 
 
 def calculate_hoover_index(model: Model):
@@ -72,12 +68,22 @@ def calculate_hoover_index(model: Model):
     Returns:
         hoover_index(float): squared income proportions from 0-1
     """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    incomes = np.array(peopleAgents.get("income"))
 
-    # TODO: Implement calculation of the Hoover Index
-    # see https://www.wallstreetoasis.com/resources/skills/economics/hoover-index
-    # for the formula. It's from the project documentation back in the spring
+    if incomes.size == 0:
+        return 0.0
 
-    return 0
+    total_income = incomes.sum()
+    if total_income == 0:
+        return 0.0
+
+    total_people = incomes.size
+    income_shares = incomes / total_income
+    population_shares = 1.0 / total_people
+
+    hoover_index = 0.5 * np.sum(np.abs(income_shares - population_shares))
+    return hoover_index
 
 
 def calculate_lorenz_curve(model: Model) -> dict[str, list[float]]:
@@ -143,3 +149,106 @@ def calculate_gini_coefficient(model: Model) -> float:
 
     gini = (equality_area - lorenz_area) / equality_area
     return gini
+
+
+# Demographic Metrics
+
+
+def calculate_proportion(model: Model) -> dict[Demographic, float]:
+    """
+    Calculates the proportion of each demographic in the simulation.
+
+    Returns:
+        dict[Demographic, float]: A dictionary of the proportion of each demographic.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    total_agents = len(peopleAgents)
+    proportions = {}
+
+    for demographic in Demographic:
+        demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
+        proportions[demographic] = (
+            len(demoAgents) / total_agents if total_agents > 0 else 0
+        )
+
+    return proportions
+
+
+def calculate_average_balance(model: Model) -> dict[Demographic, float]:
+    """
+    Calculates the average balance of each demographic in the simulation.
+
+    Returns:
+        dict[Demographic, float]: A dictionary of the average balance of each demographic.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    balances = {}
+
+    for demographic in Demographic:
+        demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
+        if len(demoAgents) == 0:
+            balances[demographic] = 0.0
+        else:
+            balances[demographic] = demoAgents.agg("balance", np.mean)
+
+    return balances
+
+
+def calculate_std_balance(model: Model) -> dict[Demographic, float]:
+    """
+    Calculates the standard deviation of the balance of each demographic in the simulation.
+
+    Returns:
+        dict[Demographic, float]: A dictionary of the standard deviation of the balance of each demographic.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    std_balances = {}
+
+    for demographic in Demographic:
+        demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
+        if len(demoAgents) == 0:
+            std_balances[demographic] = 0.0
+        else:
+            std_balances[demographic] = demoAgents.agg("balance", np.std)
+
+    return std_balances
+
+
+def calculate_average_wage(model: Model) -> dict[Demographic, float]:
+    """
+    Calculates the average wage of each demographic in the simulation.
+
+    Returns:
+        dict[Demographic, float]: A dictionary of the average wage of each demographic.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    wages = {}
+
+    for demographic in Demographic:
+        demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
+        if len(demoAgents) == 0:
+            wages[demographic] = 0.0
+        else:
+            wages[demographic] = demoAgents.agg("income", np.mean)
+
+    return wages
+
+
+def calculate_std_wage(model: Model) -> dict[Demographic, float]:
+    """
+    Calculates the standard deviation of the wage of each demographic in the simulation.
+
+    Returns:
+        dict[Demographic, float]: A dictionary of the standard deviation of the wage of each demographic.
+    """
+    peopleAgents = model.agents_by_type[PersonAgent]
+    std_wages = {}
+
+    for demographic in Demographic:
+        demoAgents = peopleAgents.select(lambda agent: agent.demographic == demographic)
+        if len(demoAgents) == 0:
+            std_wages[demographic] = 0.0
+        else:
+            std_wages[demographic] = demoAgents.agg("income", np.std)
+
+    return std_wages

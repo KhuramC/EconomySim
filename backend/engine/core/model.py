@@ -9,42 +9,16 @@ from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 from ..types.indicators import Indicators
 from ..types.industry_metrics import IndustryMetrics
+from ..types.demographic_metrics import DemoMetrics
 from .indicators import *
-
-demographics_schema = {
-    demo.value: {
-        "income": {"mean": None, "sd": None},
-        "proportion": None,
-        "unemployment_rate": None,
-        "spending_behavior": {itype.value: None for itype in IndustryType},
-        "balance": {"mean": None, "sd": None},
-    }
-    for demo in Demographic
-}
-"""Schema for validating the demographics dictionary."""
-
-industries_schema = {
-    itype.value: {
-        "price": None,
-        "inventory": None,
-        "balance": None,
-        "offered_wage": None,
-    }
-    for itype in IndustryType
-}
-"""Schema for validating the industries dictionary."""
-
-policies_schema = {
-    "corporate_income_tax": {itype.value: None for itype in IndustryType},
-    "personal_income_tax": {demo.value: None for demo in Demographic},
-    "sales_tax": {itype.value: None for itype in IndustryType},
-    "property_tax": None,
-    "tariffs": {itype.value: None for itype in IndustryType},
-    "subsidies": {itype.value: None for itype in IndustryType},
-    "rent_cap": None,
-    "minimum_wage": None,
-}
-"""Schema for validating the policies dictionary."""
+from .utils import (
+    validate_schema,
+    DEMOGRAPHICS_SCHEMA,
+    INDUSTRIES_SCHEMA,
+    POLICIES_SCHEMA,
+    num_prop,
+    generate_lognormal,
+)
 
 
 class EconomyModel(Model):
@@ -97,9 +71,9 @@ class EconomyModel(Model):
         if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
-        self.validate_schema(demographics, demographics_schema, path="demographics")
-        self.validate_schema(industries, industries_schema, path="industries")
-        self.validate_schema(starting_policies)
+        validate_schema(demographics, DEMOGRAPHICS_SCHEMA, path="demographics")
+        validate_schema(industries, INDUSTRIES_SCHEMA, path="industries")
+        validate_schema(starting_policies, POLICIES_SCHEMA, path="policies")
 
         self.max_simulation_length = max_simulation_length
         self.inflation_rate = inflation_rate
@@ -118,6 +92,11 @@ class EconomyModel(Model):
                 Indicators.HOOVER_INDEX: calculate_hoover_index,
                 Indicators.LORENZ_CURVE: calculate_lorenz_curve,
                 Indicators.GINI_COEFFICIENT: calculate_gini_coefficient,
+                DemoMetrics.PROPORTION: calculate_proportion,
+                DemoMetrics.AVERAGE_BALANCE: calculate_average_balance,
+                DemoMetrics.STD_BALANCE: calculate_std_balance,
+                DemoMetrics.AVERAGE_WAGE: calculate_average_wage,
+                DemoMetrics.STD_WAGE: calculate_std_wage,
             },
             agenttype_reporters={
                 IndustryAgent: {
@@ -125,6 +104,7 @@ class EconomyModel(Model):
                     IndustryMetrics.INVENTORY: "inventory",
                     IndustryMetrics.BALANCE: "balance",
                     IndustryMetrics.WAGE: "offered_wage",
+                    IndustryMetrics.NUM_EMPLOYEES: "num_employees",
                 }
             },
         )
@@ -137,55 +117,6 @@ class EconomyModel(Model):
             self.agents_by_type[PersonAgent] = AgentSet([], self)
         if IndustryAgent not in self.agents_by_type:
             self.agents_by_type[IndustryAgent] = AgentSet([], self)
-
-    def validate_schema(
-        self, data: dict, schema: dict = policies_schema, path="policies"
-    ):
-        """
-        Recursively validate the dictionary against the schema.
-
-        Args:
-            data (dict): The dictionary to validate.
-            path (str, optional): Name of dict variable. Defaults to "policies".
-
-        Raises:
-            ValueError: If the data dictionary does not match the schema.
-        """
-
-        missing = set(schema.keys()) - set(data.keys())
-        if missing:
-            raise ValueError(f"Missing keys at {path}: {missing}")
-
-        for key, subschema in schema.items():
-            if isinstance(subschema, dict):
-                self.validate_schema(data[key], subschema, path=f"{path}[{key}]")
-
-    def num_prop(self, ratio, N):
-        """Calculate numbers of total N in proportion to ratio"""
-        ratio = np.asarray(ratio)
-        p = np.cumsum(np.insert(ratio.ravel(), 0, 0))  # cumulative proportion
-        return np.diff(np.round(N / p[-1] * p).astype(int)).reshape(ratio.shape)
-
-    def generate_lognormal(self, log_mean: float, log_std: float, size: int):
-        """
-        Generates n observations from a lognormal distribution.
-
-        Args:
-            log_mean (float): The desired mean of the lognormal distribution.
-            log_std (float): The desired standard deviation of the lognormal distribution.
-            size (int): The number of observations to generate (n).
-
-        Returns:
-            np.ndarray: An array of random samples.
-        """
-        # Convert to the parameters of the underlying normal distribution
-        mu_underlying = np.log(log_mean**2 / np.sqrt(log_std**2 + log_mean**2))
-        sigma_underlying = np.sqrt(np.log(1 + (log_std**2 / log_mean**2)))
-
-        # Generate the samples
-        return np.random.lognormal(
-            mean=mu_underlying, sigma=sigma_underlying, size=size
-        )
 
     def setup_person_agents(
         self,
@@ -210,7 +141,7 @@ class EconomyModel(Model):
         """
 
         # get number of people per demographic
-        demo_people = self.num_prop(
+        demo_people = num_prop(
             [
                 demographics[demographic]["proportion"] * 100
                 for demographic in demographics.keys()
@@ -233,23 +164,19 @@ class EconomyModel(Model):
             starting_balance_info = demo_info.get("balance", {})
             spending_behavior_info = demo_info.get("spending_behavior")
 
-            # TODO: set unemployment based on starting_unemployment_rate per demographic
-            # actually do something with unemployment rate
-            unemployment_rate = demo_info.get("unemployment_rate", 0)
-
             # TODO: set savings_rate per demographic
             # Does this also get randomized?
             savings_rate = demo_info.get("savings_rate", 0.10)
 
             # Generate distributed parameters for N agents
             # Incomes from lognormal distribution
-            incomes = self.generate_lognormal(
+            incomes = generate_lognormal(
                 log_mean=income_info.get("mean", 0),
                 log_std=income_info.get("sd", 0),
                 size=num_demo_people,
             )
             # Account balances from lognormal distribution
-            starting_balances = self.generate_lognormal(
+            starting_balances = generate_lognormal(
                 log_mean=starting_balance_info.get("mean", 0),
                 log_std=starting_balance_info.get("sd", 0),
                 size=num_demo_people,
@@ -271,8 +198,6 @@ class EconomyModel(Model):
                     industries[i]: pref_vector[i] for i in range(len(industries))
                 }
                 pref_list.append(pref_dict)
-
-            # TODO: Distribute starting employment based on unemployment_rate
 
             PersonAgent.create_agents(
                 model=self,
@@ -299,24 +224,30 @@ class EconomyModel(Model):
         Raises:
             ValueError: if the industries dictionary is invalid.
         """
+        # TODO: Distribute starting employment based on num_employees
         for industry_type, industry_info in industries.items():
             if not isinstance(industry_info, dict):
                 raise ValueError(
                     f"Industry info must be a dictionary at industries[{industry_type}]."
                 )
-            starting_price = industry_info.get("price", 0.0)
-            starting_inventory = industry_info.get("inventory", 0)
-            starting_balance = industry_info.get("balance", 0.0)
-            starting_offered_wage = industry_info.get("offered_wage", 0.0)
 
             IndustryAgent.create_agents(
                 model=self,
                 n=1,
                 industry_type=industry_type,
-                starting_price=starting_price,
-                starting_inventory=starting_inventory,
-                starting_balance=starting_balance,
-                starting_offered_wage=starting_offered_wage,
+                starting_price=industry_info.get("starting_price", 0.0),
+                starting_inventory=industry_info.get("starting_inventory", 0),
+                starting_balance=industry_info.get("starting_balance", 0.0),
+                starting_offered_wage=industry_info.get("starting_offered_wage", 0.0),
+                starting_fixed_cost=industry_info.get("starting_fixed_cost", 0.0),
+                starting_raw_mat_cost=industry_info.get("starting_raw_mat_cost", 0.0),
+                starting_number_of_employees=industry_info.get(
+                    "starting_number_of_employees", 0
+                ),
+                starting_worker_efficiency=industry_info.get(
+                    "starting_worker_efficiency", 1.0
+                ),
+                starting_debt_allowed=industry_info.get("starting_debt_allowed", False),
             )
 
     def get_employees(self, industry: IndustryType) -> AgentSet:
@@ -352,7 +283,7 @@ class EconomyModel(Model):
 
         self.market_wage = max(self.market_wage, self.policies.get("minimum_wage", 0))
 
-    def inflation(self):
+    def inflation(self) -> None:
         """
         Applies the weekly inflation rate to all industry costs and
         the minimum wage policy. This is a "cost-push" inflation model.
@@ -395,8 +326,6 @@ class EconomyModel(Model):
         # TODO: Implement reversing simulation
         # might want to add choice of how much to reverse.
         pass
-
-    # Economic indicators
 
     def get_week(self) -> int:
         """

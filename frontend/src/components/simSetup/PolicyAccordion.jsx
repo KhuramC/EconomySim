@@ -1,5 +1,8 @@
-import ParameterNumInput from "./ParameterNumInput.jsx";
-import ParameterAccordion from "./ParameterAccordion.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import ToggleableSliderInput from "../inputs/ToggleableSliderInput";
+import ParameterAccordion from "./ParameterAccordion";
+import PersonalIncomeTaxBracket from "./PersonalIncomeTaxBracket";
 
 /**
  * Policy section:
@@ -11,73 +14,85 @@ export default function PolicyAccordion({
   handlePolicyChange,
   formErrors = {},
   starting = true,
+  handlePriceCapToggle,
+  handlePersonalIncomeTaxChange,
+  addPersonalIncomeTaxBracket,
+  removePersonalIncomeTaxBracket,
 }) {
   const coreFields = (
     <>
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Sales Tax (%)"
         value={policyParams.salesTax}
         onChange={handlePolicyChange("salesTax")}
         error={!!formErrors.salesTax}
         helpText="Tax applied to consumer purchases. Increases effective prices and can dampen demand."
       />
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Corporate Income Tax (%)"
         value={policyParams.corporateTax}
         onChange={handlePolicyChange("corporateTax")}
         error={!!formErrors.corporateTax}
         helpText="Tax on industry profits. Reduces retained earnings and may affect investment."
       />
-      <ParameterNumInput
-        label="Personal Income Tax (%)"
-        value={policyParams.personalIncomeTax}
-        onChange={handlePolicyChange("personalIncomeTax")}
-        error={!!formErrors.personalIncomeTax}
-        helpText="Tax on individual income. Lowers disposable income and consumption."
-      />
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Property Tax (%)"
         value={policyParams.propertyTax}
         onChange={handlePolicyChange("propertyTax")}
         error={!!formErrors.propertyTax}
         helpText="Recurring tax on property values. Can influence housing costs and investment."
       />
-      <ParameterNumInput
-        label="Minimum Wage ($/hr)"
-        value={policyParams.minimumWage}
-        onChange={handlePolicyChange("minimumWage")}
-        error={!!formErrors.minimumWage}
-        helpText="Legal wage floor. Firms cannot offer wages below this value."
-        
+
+      <ToggleableSliderInput
+        label="Price Cap (%/year)"
+        value={policyParams.priceCap}
+        isEnabled={policyParams.priceCapEnabled}
+        setIsEnabled={handlePriceCapToggle}
+        onChange={handlePolicyChange("priceCap")}
+        error={!!formErrors.priceCap}
+        helpText="The percentage above which industries cannot set their prices from the week before. Helps control inflation."
       />
-      <ParameterNumInput
+
+      <ParameterSliderInput
         label="Tariffs (%)"
         value={policyParams.tariffs}
         onChange={handlePolicyChange("tariffs")}
         error={!!formErrors.tariffs}
         helpText="Import duties that raise costs of targeted goods. Can shift demand across industries."
       />
-      <ParameterNumInput
+      <ParameterSliderInput
         label="Subsidies (%)"
         value={policyParams.subsidies}
         onChange={handlePolicyChange("subsidies")}
         error={!!formErrors.subsidies}
         helpText="Government support paid to industries. Lowers effective costs or boosts income."
       />
+
       <ParameterNumInput
-        label="Rent Cap ($)"
-        value={policyParams.rentCap}
-        onChange={handlePolicyChange("rentCap")}
-        error={!!formErrors.rentCap}
-        helpText="Upper bound on weekly housing rent. If binding, it limits rent growth."
+        label="Minimum Wage ($/hr)"
+        value={policyParams.minimumWage}
+        onChange={handlePolicyChange("minimumWage")}
+        error={!!formErrors.minimumWage}
+        helpText="Legal wage floor. Firms cannot offer wages below this value."
       />
-      
+
+      <PersonalIncomeTaxBracket
+        personalIncomeTax={policyParams.personalIncomeTax}
+        formErrors={formErrors}
+        handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
+        addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
+        removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
+      />
     </>
   );
 
   return (
     <ParameterAccordion
-      title={starting === true ? "Starting Government Policies" : "Government Policies"}
+      title={
+        starting === true
+          ? "Starting Government Policies"
+          : "Government Policies"
+      }
       advancedContent={null}
     >
       {coreFields}

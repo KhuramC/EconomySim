@@ -1,6 +1,6 @@
-import { Grid, Switch, FormControlLabel, Tooltip } from "@mui/material";
-import ParameterNumInput from "./ParameterNumInput.jsx";
-import ParameterAccordion from "./ParameterAccordion.jsx";
+import ParameterNumInput from "../inputs/ParameterNumInput";
+import ParameterSliderInput from "../inputs/ParameterSliderInput";
+import ParameterAccordion from "./ParameterAccordion";
 
 /**
  * Environmental section:
@@ -35,28 +35,12 @@ export default function EnvironmentalAccordion({
 
   const advancedFields = (
     <>
-      <ParameterNumInput
-        label="National Inflation Rate (%/week)"
+      <ParameterSliderInput
+        label="National Inflation Rate (%/year)"
         value={envParams.inflationRate}
         onChange={handleEnvChange("inflationRate")}
-        helpText="Baseline weekly inflation rate. Prices tend to drift upward by this percentage each step."
+        helpText="Baseline annual inflation rate. Prices tend to drift upward by this percentage each year."
       />
-      {/* Wrap the switch in a Grid item to keep layout consistent */}
-      <Grid item xs={6}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={!!envParams.randomEvents}
-              onChange={handleEnvChange("randomEvents")}
-            />
-          }
-          label={
-            <Tooltip title="Enable stochastic shocks (e.g., demand/supply shocks). Adds variability to outcomes." arrow>
-              <span>Random Events</span>
-            </Tooltip>
-          }
-        />
-      </Grid>
     </>
   );
 

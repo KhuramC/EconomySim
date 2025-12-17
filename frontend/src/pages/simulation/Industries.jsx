@@ -1,9 +1,9 @@
 import { useContext, useState, useEffect } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
-import { SimulationContext } from "./BaseSimView.jsx";
-import IndustryAccordion from "../../components/SimSetup/IndustryAccordion.jsx";
-import UnchangeableParameters from "../../components/SimView/UnchangeableParameters.jsx";
-import { receiveIndustriesPayload } from "../../api/payloadReceiver.js";
+import { SimulationContext } from "./BaseSimView";
+import IndustryAccordion from "../../components/simSetup/IndustryAccordion";
+import UnchangeableParameters from "../../components/simView/UnchangeableParameters";
+import { receiveIndustriesPayload } from "../../api/payloadReceiver";
 
 /**
  * Read-only Industries view
@@ -23,7 +23,7 @@ export default function Industries({ oldindustryParams }) {
         setError("Simulation API not available");
         return;
       }
-      simAPI.sendMessage({ action: "get_current_industry_data" });
+      simAPI.getCurrentIndustryData();
     };
 
     // Only fetch if it's not week 0
@@ -57,7 +57,7 @@ export default function Industries({ oldindustryParams }) {
     };
 
     if (simAPI) {
-      simAPI.sendMessage({ action: "get_current_week" }); // Get initial week
+      simAPI.getCurrentWeek(); // Get initial week
       simAPI.addMessageListener(handleWebSocketMessage);
       return () => simAPI.removeMessageListener(handleWebSocketMessage);
     }
@@ -76,22 +76,19 @@ export default function Industries({ oldindustryParams }) {
       )}
 
       <Grid container spacing={3}>
-        {/* LEFT column: main content */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Industries
           </Typography>
 
-          {/* Only render the accordion when industries data is available;
-          Uses existing accordion; safe because all keys are present */}
+          {/* Only render the accordion when industries data is available */}
           {industryParams ? (
             <IndustryAccordion
               industryParams={industryParams}
-              // If you don’t support editing here, pass a no-op HOF to avoid errors:
+              // don't want to support editing, so pass a no-op HOF to avoid errors:
               // IndustryAccordion expects a higher-order handler: (k, f) => (e) => {}
               handleIndustryChange={() => () => {}}
               starting={false}
-              readOnly={true}
             />
           ) : null}
         </Grid>

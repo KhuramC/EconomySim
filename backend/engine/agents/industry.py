@@ -1,8 +1,8 @@
-from mesa import Agent
-from mesa import Model
+from mesa import Agent, Model
+from mesa.agent import AgentSet
 from ..types.industry_type import IndustryType, INDUSTRY_PRICING
 from ..types.pricing_type import PricingType
-from .pricing import avg_cost, linear_profit_max, linear_price
+from .pricing import avg_cost, linear_profit_max, linear_price, quantity_from_price
 import logging
 import math
 import random
@@ -24,21 +24,27 @@ class IndustryAgent(Agent):
         offered_wage (float): The per time step(weekly) wage offered by this industry.
     """
 
+    # Static Values
     industry_type: IndustryType
     """The type of industry this agent represents."""
+    debt_allowed: bool
+    """Whether this industry is allowed to go into debt."""
+
     price: float
     """The price of goods/services in this industry."""
     inventory: int
-    """The inventory level of goods/services in this industry."""
+    """The total inventory level of goods/services in this industry."""
+    inventory_available_this_step: int
+    """The inventory available for sale this time step."""
     balance: float
     """The total money held by this industry. Negative indicates debt."""
+    raw_mat_cost: float
+    """The cost of raw materials per unit produced."""
+
+    # Employment Variables
     # TODO: Possible feature for employment logic: have each person agent have a custom wage, with minimum wage floor, meaning some workers are cheaper than others
     offered_wage: float
     """The weekly wage offered by this industry."""
-    fixed_cost: float
-    """The fixed cost incurred by this industry per time step."""
-    raw_mat_cost: float
-    """The cost of raw materials per unit produced."""
     num_employees: int
     """The number of employees in this industry."""
     # TODO: Possible feature for employment logic: have each person agent have a custom efficiency, meaning some workers produce more goods than others
@@ -46,14 +52,26 @@ class IndustryAgent(Agent):
     """The efficiency of workers in this industry (units produced per worker per hour)."""
     hours_worked: float
     """Number of hours worked by each employee this tick, used for updating employee pay"""
-    debt_allowed: bool
-    """Whether this industry is allowed to go into debt."""
+
+    # Values that define the demand graph for a good
     demand_intercept: float
     """The demand intercept (A) for the industry's demand curve."""
     demand_slope: float
     """The demand slope (B) for the industry's demand curve."""
-    inventory_available_this_step: int
-    """The inventory available for sale this time step."""
+
+    # fixed costs
+    salary_cost: float  # aggregate cost of all salaried employees per tick
+    property_value: float  # value of all property owned by industryAgent.  used with property tax to calculate cost per tick
+    insurance: float  # insurance payments per tick
+    equipment_cost: float  # cost of equipment/machines per tick
+    fixed_cost: float  # shorthand value used for testing. Will eventually be phased out in favor of calls to get_fixed_cost, which will work similarly to get_variable_cost
+    """The fixed cost incurred by this industry per time step."""
+
+    # Used in profit calculation
+    total_cost: float
+    """total cost of goods this tick"""
+    total_revenue: float
+    """total revenue from sold goods this tick"""
 
     def __init__(
         # TODO: associate most or all starting variables with industry_type so they don't need to be passed in via the constructor
@@ -72,6 +90,10 @@ class IndustryAgent(Agent):
         # TODO: Demand logic will be pulled from another file, either demand.py or person.py.  These values are currently black box standins to enable determine_price logic
         starting_demand_intercept: float = 400.0,
         starting_demand_slope: float = 1.0,
+        salary_cost=100.0,
+        equipment_cost=100.0,
+        property_value=2000.0,
+        insurance=0.0,
     ):
         """
         Initialize an IndustryAgent with its starting values.
@@ -97,17 +119,7 @@ class IndustryAgent(Agent):
         self.hours_worked = 0  # calculated by produce_goods
         self.employees_desired = starting_number_of_employees
 
-    def get_tariffs(self) -> float:
-        """
-        Get the tariff rate for this industry from the model's tax rates.
-
-        Returns:
-            float: The tariff rate for this industry.
-        """
-        tariffs = self.model.policies.get("tariffs", {})
-        return tariffs.get(self.industry_type, 0.0)
-
-    def get_employees(self):
+    def get_employees(self) -> AgentSet:
         """
         Gets all employees that are employed to this industry.
         """
@@ -134,7 +146,7 @@ class IndustryAgent(Agent):
             self.get_production_capacity() requirements:
                 self.num_employees (int): number of employees employeed by industry
                 if debt is not allowed,
-                    self.total_money must be known
+                    self.balance must be known
             self.industry_type (IndustryType): defines the pricing strategy
 
 
@@ -145,6 +157,12 @@ class IndustryAgent(Agent):
             self.price (float): Returns the price to sell the suggested quantity
         """
         self.quantity_last_sold = 0  # Reset tracker weekly
+
+
+        skipPriceCap = (
+            self.price == 0
+        )  # if simulation is just starting and price is still zero, skip price cap logic
+        oldPrice = self.price
 
         A = float(self.demand_intercept)
         B = float(self.demand_slope)
@@ -161,11 +179,11 @@ class IndustryAgent(Agent):
 
         Price = self.price
         Suggested_Quantity = self.inventory
-
+        F = self.get_fixed_cost_naive()
         # Determine pricing strategy
         strategy = INDUSTRY_PRICING[self.industry_type]
         if strategy == PricingType.AVG_COST:
-            Suggested_Quantity = avg_cost(A, B, V, float(self.fixed_cost))
+            Suggested_Quantity = avg_cost(A, B, V, float(F))
         elif strategy == PricingType.LINEAR_PROFIT_MAX:
             Suggested_Quantity = linear_profit_max(A, B, m, n)
 
@@ -181,6 +199,24 @@ class IndustryAgent(Agent):
         # Set price based on suggested quantity
         Price = linear_price(A, B, Suggested_Quantity)
 
+        price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
+        price_cap_enabled = self.model.policies["price_cap_enabled"][self.industry_type]
+        if (
+            price_cap_percentage is not None
+            and skipPriceCap == False
+            and price_cap_enabled
+        ):
+            price_cap = oldPrice * (
+                1 + price_cap_percentage
+            )  # price cap is set to a percentage amount higher than the price from the previous tick
+            if price_cap < Price:
+                Price = price_cap
+                if (
+                    price_cap <= V
+                ):  # price cap is less than variable cost, meaning producing anything would result in a net loss
+                    Suggested_Quantity = 0
+                else:
+                    Suggested_Quantity = quantity_from_price(A, B, Price)
         # set results on the instance
         self.price = float(Price)
         # inventory_available_this_step is how many units are expected to be available to sell this step
@@ -193,7 +229,7 @@ class IndustryAgent(Agent):
             associated with the industry type
             The suggested quantity is used by produce_goods to determine the number of units produced this tick
 
-            Incorperated in the calculation is the production cap, determined by the maximum amount that employees
+            Incorporated in the calculation is the production cap, determined by the maximum amount that employees
             can produce, and the total available funds
 
         Required Inputs: (These Values must be known before running this function)
@@ -208,9 +244,11 @@ class IndustryAgent(Agent):
 
         Updated Variables:
             self.inventory (int): total inventory available after production
-            self.total_money (float): Funds available after production
+            self.balance (float): Funds available after production
             self.goods_produced (int): Number of good produced this cycle. Tracker for indicator calculations.
         """
+        Fixed = self.get_fixed_cost_naive()
+
         # produce needed inventory without re-producing inventory aready in storage
         quantity_to_produce = self.inventory_available_this_step - self.inventory
 
@@ -219,9 +257,10 @@ class IndustryAgent(Agent):
         ):  # no production this turn, already have enough inventory
             self.hours_worked = 0
             self.total_cost = (
-                self.fixed_cost
-            )  # fixed cost is still factored into losses this tick
-            self.balance -= self.fixed_cost
+                Fixed  # fixed cost is still factored into losses this tick
+            )
+            self.balance -= Fixed
+            self.goods_produced = 0
             return
 
         variable_cost_per_unit = self.get_variable_cost()
@@ -248,12 +287,11 @@ class IndustryAgent(Agent):
         self.inventory += quantity_to_produce
         self.goods_produced = quantity_to_produce
         spent_variable = variable_cost_per_unit * quantity_to_produce
-        spent_fixed = self.fixed_cost
-        self.balance = self.balance - spent_fixed - spent_variable
-
+        self.total_cost = Fixed + spent_variable
+        self.balance = self.balance - self.total_cost
         logging.info(
             f"Produced {quantity_to_produce:.2f} units; spent_variable={spent_variable:.2f}; "
-            f"spent_fixed={spent_fixed:.2f}; remaining funds {self.balance:.2f}; "
+            f"spent_fixed={Fixed:.2f}; remaining funds {self.balance:.2f}; "
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
 
@@ -296,6 +334,7 @@ class IndustryAgent(Agent):
         """
         new_wage = self.model.market_wage
         self.offered_wage = max(new_wage, self.model.policies.get("minimum_wage", 0))
+
         return self.offered_wage
 
     def fire_employees(self, count: int):
@@ -375,8 +414,57 @@ class IndustryAgent(Agent):
             # semantics: if eff==0 we cannot produce — treat per-unit cost as infinite
             return float("inf")
 
+        # Tariffs/Subsidies logic, treated as direct opposites of one another for now
+        # Both modify the cost of raw materials, which is then fed into the variable cost calculation
+        # subsidies and tariffs treated as percentages
+        subsidies = self.model.policies["subsidies"][self.industry_type]
+        tariffs = self.model.policies["tariffs"][self.industry_type]
+        rawMaterialCostModifier = 0.0
+        if subsidies is not None:
+            rawMaterialCostModifier -= (
+                subsidies  # subsidies reduce the cost of raw materials
+            )
+        if tariffs is not None:
+            rawMaterialCostModifier += (
+                tariffs  # Tariffs increase the cost of raw materials
+            )
+
+        rm += rm * rawMaterialCostModifier
+
         variable_cost = (ow / eff) + rm
+
         return variable_cost
+
+    # def get_fixed_cost(self):
+    #     """
+    #     update fixed cost based on salary, property cost, insurance, equipment cost, and property tax
+    #     """
+    #     # TODO have property value, salary cost, and equipment cost scale with the level of production
+    #     property_cost = 0.0
+    #     property_tax = self.model.policies["property_tax"]["commercial"]
+    #     if property_tax is not None:
+    #         property_cost = self.property_value * property_tax
+
+    #     # NOTE: self.fixed_cost will eventually be phased out.  It is kept now for testing purposes
+    #     # When it is phased out, this function will return a value instead of just updating a variable
+    #     self.fixed_cost = (
+    #         self.salary_cost + property_cost + self.insurance + self.equipment_cost
+    #     )
+
+    def get_fixed_cost_naive(self) -> float:
+        """
+        in order to show for now on the frontend that changing property tax will affect the fixed costs,
+        This function will directly apply the property tax modifier to the fixed cost value.
+
+        This function will eventually be removed in favor of get_fixed_cost
+        returns:
+            naive_fixed_cost (float)
+        """
+
+        property_tax = self.model.policies["property_tax"]["commercial"]
+        if property_tax is not None:
+            property_cost = self.fixed_cost * property_tax
+        return self.fixed_cost + property_cost
 
     def get_production_capacity(self):
         """
@@ -398,13 +486,15 @@ class IndustryAgent(Agent):
                 self.offered_wage (float): hourly wage of employees
                 self.worker_efficiency (float): goods produced per employee, per hour
                 self.raw_mat_cost (float): per-unit cost of raw materials
-            self.total_money (float): total money available
+            self.balance (float): total money available
             
         Returns:
             production_capacity (int): depending on debt allowed, either worker capacity limit
                                        or the min of fund cap and worker cap
 
         """
+        Fixed = self.get_fixed_cost_naive()
+
         # worker_limit: how many units can workers produce this period
         # (num_employees * efficiency * hours_per_worker); hours assumed 40 here
         # clamp at zero and floor to int
@@ -433,9 +523,7 @@ class IndustryAgent(Agent):
                 funds_limit = 0
             else:
                 # compute funds_limit safely — protect against unreasonable huge values
-                funds_limit_raw = (
-                    self.balance - self.fixed_cost
-                ) / variable_cost_per_unit
+                funds_limit_raw = (self.balance - Fixed) / variable_cost_per_unit
                 # if funds_limit_raw is not finite for some reason, fall back to 0
                 if not math.isfinite(funds_limit_raw):
                     funds_limit = 0
@@ -443,7 +531,7 @@ class IndustryAgent(Agent):
                     # clamp to a sensible integer range before floor to avoid overflow
                     # e.g., prevent converting > maxsize ints (though Python int is unbounded, math.floor can choke on inf)
                     funds_limit = int(max(0, math.floor(funds_limit_raw)))
-                if self.fixed_cost > self.balance:
+                if Fixed > self.balance:
                     funds_limit = 0
                     # TODO add handler for if fixed cost is more than total money -> Bankruptcy imminent!
 
@@ -482,7 +570,7 @@ class IndustryAgent(Agent):
         Updated Variables:
             self.inventory (int): reduced by quantity sold
             self.inventory_available_this_step (int): reduced by quantity sold
-            self.total_money (float): increased by revenue generated by sale
+            self.balance (float): increased by revenue generated by sale
         """
         if quantity <= 0:
             return
@@ -497,3 +585,37 @@ class IndustryAgent(Agent):
         self.inventory_available_this_step -= quantity
         self.balance += quantity * self.price
         self.quantity_last_sold += quantity
+
+        self.total_revenue += quantity * self.price
+
+    def new_tick(self):
+        """
+        Run this to reset values that are specific to this tick and aren't adjusted anywhere else
+        IDEA: incorporate all functions that need to be run every tick into this?
+        """
+        # self.total_cost = 0    Actually reset by produce_goods
+        self.total_revenue = 0
+
+    def get_profit(self) -> float:
+        """
+        Summary:
+            uses cost and revenue values to calculate the profit for this tick.
+            Note: make sure to reset total_revenue next tick!
+        Returns:
+            profit (float): total profit this turn
+        """
+        profit = self.total_revenue - self.total_cost
+        return profit
+
+    def deduct_corporate_tax(self):
+        """
+        Summary: deducts corporate tax from profit generated this turn.  Does not deduct anything if profit was zero
+        """
+        profit = self.get_profit()
+        profit = max(0.0, profit)  # if profit is negative, clamp to zero
+        corporate_income_tax = self.model.policies["corporate_income_tax"][
+            self.industry_type
+        ]
+        if corporate_income_tax is not None and profit > 0:
+            taxedAmt = profit * corporate_income_tax
+        self.balance -= taxedAmt

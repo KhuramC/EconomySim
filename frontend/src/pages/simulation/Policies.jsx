@@ -1,9 +1,10 @@
 import { useContext, useState, useEffect, useMemo } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
 import _ from "lodash";
-import PolicyAccordion from "../../components/SimSetup/PolicyAccordion.jsx";
-import { SimulationContext } from "./BaseSimView.jsx";
-import ChangeableParameters from "../../components/SimView/ChangeableParameters.jsx";
+import PolicyAccordion from "../../components/simSetup/PolicyAccordion";
+import { SimulationContext } from "./BaseSimView";
+import ChangeableParameters from "../../components/simView/ChangeableParameters";
+import { receivePoliciesPayload } from "../../api/payloadReceiver";
 
 export default function Policies() {
   const simAPI = useContext(SimulationContext);
@@ -18,9 +19,7 @@ export default function Policies() {
         return;
       }
       try {
-        const fetchedPolicies = await simAPI.getModelPolicies();
-        console.log("fetched policies:", fetchedPolicies);
-        setPolicies(fetchedPolicies); // Assuming fetchedPolicies is already in frontend format
+        simAPI.getPolicies();
       } catch (err) {
         setError(err.message);
       }
@@ -29,10 +28,8 @@ export default function Policies() {
     fetchPolicies(); // Initial fetch
 
     const handleWebSocketMessage = (message) => {
-      // Refetch policies if they were changed by another client or if a step occurs
-      if (message.action === "set_policies" || message.action === "step") {
-        console.log("Policies updated via WebSocket, refetching...");
-        fetchPolicies();
+      if (message.action === "get_policies") {
+        setPolicies(receivePoliciesPayload(message.data));
       }
     };
 
@@ -76,6 +73,56 @@ export default function Policies() {
     });
   };
 
+  const handlePriceCapToggle = (event) => {
+    setPolicies((prevPolicies) => {
+      const newPolicies = {
+        ...prevPolicies,
+        priceCapEnabled: !prevPolicies.priceCapEnabled,
+      };
+
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
+  const handlePersonalIncomeTaxChange = (index, field) => (event) => {
+    const { value } = event.target;
+    setPolicies((prevPolicies) => {
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
+      newTaxBrackets[index] = {
+        ...newTaxBrackets[index],
+        [field]: parseFloat(value) || 0,
+      };
+      newPolicies.personalIncomeTax = newTaxBrackets;
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
+  const addPersonalIncomeTaxBracket = () => {
+    setPolicies((prevPolicies) => {
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
+      newTaxBrackets.push({ threshold: 0, rate: 0 });
+      newPolicies.personalIncomeTax = newTaxBrackets;
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
+  const removePersonalIncomeTaxBracket = (index) => {
+    setPolicies((prevPolicies) => {
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const newTaxBrackets = (newPolicies.personalIncomeTax || []).filter(
+        (_, i) => i !== index
+      );
+      newPolicies.personalIncomeTax = newTaxBrackets;
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
   return (
     <Box>
       {error && (
@@ -90,7 +137,7 @@ export default function Policies() {
 
       <Grid container spacing={3}>
         {/* LEFT column: main content (editable) */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
             Policies
           </Typography>
@@ -101,6 +148,10 @@ export default function Policies() {
               policyParams={policies}
               handlePolicyChange={handlePolicyChange}
               starting={false}
+              handlePriceCapToggle={handlePriceCapToggle}
+              handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}
+              addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
+              removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
             />
           ) : null}
         </Grid>

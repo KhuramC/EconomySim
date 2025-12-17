@@ -1,7 +1,7 @@
 export const Demographic = {
-  LOWER_CLASS: "lower class",
-  MIDDLE_CLASS: "middle class",
-  UPPER_CLASS: "upper class",
+  LOWER_CLASS: "Lower Class",
+  MIDDLE_CLASS: "Middle Class",
+  UPPER_CLASS: "Upper Class",
 };
 
 Object.freeze(Demographic);

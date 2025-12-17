@@ -1,9 +1,9 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
+from .demand import demand_func
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
-import math
 
 
 class PersonAgent(Agent):
@@ -16,18 +16,24 @@ class PersonAgent(Agent):
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
         balance (float): The current amount of money the person has; negative indicating debt.
         preferences (dict): Spending preferences a weight for each industry, summing to 1.
+        sigma (float): The elasticity of substitution for the industries.
+        savings_rate (float): The proportion of income saved on a weekly basis.
     """
 
     demographic: Demographic
     """Economic class of the person."""
-    income: int
+    income: float
     """Weekly income of the person."""
     employer: IndustryAgent | None
     """The employer of this person, or None if unemployed."""
     balance: float
     """The total dollars held by this person. Negative indicates debt."""
     preferences: dict[IndustryType, float]
-    """Spending preferences, mapping industry name to a weight. Must sum to 1."""
+    """Spending preferences, mapping industry type to a weight. Must sum to 1."""
+    sigma: float
+    """The elasticity of substitution associated with the industries."""
+    savings_rate: float
+    """The proportion of income saved and not used on purchasing goods on a weekly basis."""
 
     def __init__(
         self,
@@ -35,7 +41,7 @@ class PersonAgent(Agent):
         demographic: Demographic,
         preferences: dict[IndustryType, float],
         savings_rate: float = 0.10,
-        income: int = 0,
+        income: float = 0,
         employer: IndustryAgent | None = None,
         starting_balance: float = 0.0,
     ):
@@ -51,46 +57,32 @@ class PersonAgent(Agent):
         self.savings_rate = savings_rate
         self.sigma = DEMOGRAPHIC_SIGMAS[self.demographic]
 
-    def payday(self):
-        """Weekly payday for the agent based on their income."""
-        self.balance = self.balance + self.income
+    def deduct_income_tax(self) -> None:
+        """Deducts personal income tax from the agent's balance based on their income."""
+        personal_income_tax: list = self.model.policies["personal_income_tax"]
+        if not personal_income_tax:
+            return
 
-    def demand_func(
-        self,
-        budget: float,
-        prefs: dict[IndustryType, float],
-        prices: dict[IndustryType, float],
-    ) -> dict[str, int]:
-        """
-        Calculates the quantity of each good to purchase based on the CES demand function.
+        previous_threshold = float("inf")
+        for bracket in personal_income_tax:
+            # it is assumed that the highest threshold is first
+            threshold = bracket["threshold"]
+            rate = bracket["rate"]
 
-        Args:
-            budget: The total money available to spend.
-            prefs: The preference weights for the available goods.
-            prices: The prices of the available goods.
-        Returns:
-            A dictionary mapping each good's name to the desired quantity.
-        """
+            if self.income > threshold:
+                # tax from current threshold to income or previous treshold
+                taxable_income = min(previous_threshold, self.income) - threshold
+                tax = taxable_income * rate
+                self.balance -= tax
+            else:
+                continue
 
-        valid_goods = [name for name in prefs if name in prices]
+            previous_threshold = threshold
 
-        denominator = sum(
-            (prefs[name] ** self.sigma) * (prices[name] ** (1 - self.sigma))
-            for name in valid_goods
-        )
-
-        if denominator == 0:
-            return {name: 0 for name in valid_goods}
-
-        demands = {}
-        for name in valid_goods:
-            numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity: int = math.floor(
-                (numerator / denominator) * budget
-            )  # The good's share of the budget, rounded down
-            demands[name] = quantity
-
-        return demands
+    def payday(self) -> None:
+        """Weekly payday(after tax) for the agent based on their income."""
+        self.balance += self.income
+        self.deduct_income_tax()
 
     def determine_budget(self) -> float:
         """
@@ -115,11 +107,22 @@ class PersonAgent(Agent):
 
         # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
-        prices = {agent.industry_type: agent.price for agent in industry_agents}
+
+        # sales tax logic; incorporate into person facing prices
+        effective_prices = {
+            agent.industry_type: (
+                agent.price
+                * (1 + self.model.policies["sales_tax"][agent.industry_type])
+            )
+            for agent in industry_agents
+        }
 
         # Calculate desired purchases
-        desired_quantities = self.demand_func(
-            budget=self.determine_budget(), prefs=self.preferences, prices=prices
+        desired_quantities = demand_func(
+            sigma=self.sigma,
+            budget=self.determine_budget(),
+            prefs=self.preferences,
+            prices=effective_prices,
         )
 
         # Attempt to purchase goods
@@ -137,10 +140,11 @@ class PersonAgent(Agent):
             # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
             # This unspent money is effectively saved for the next cycle.
 
-            available_quantity = industry.inventory
+            available_quantity = industry.inventory_available_this_step
             quantity_to_buy = min(desired_quantity, available_quantity)
 
-            cost = quantity_to_buy * industry.price
+            # prices already have sales tax applied
+            cost = quantity_to_buy * effective_prices[industry_type]
 
             if self.balance >= cost:
                 # Execute transaction

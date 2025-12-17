@@ -1,89 +1,114 @@
+import React, { useState, useContext, useEffect } from "react";
 import {
   Box,
   Grid,
   Typography,
   Button,
   Card,
-  CardContent,
-  Paper,
+  CardContent
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Link as RouterLink, useLocation } from "react-router-dom";
+import { SimulationContext } from "./BaseSimView.jsx";
+import GraphSlot from "../../components/simView/GraphSlot";
+import {Indicators} from "../../types/Indicators.js"
+
 
 export default function Overview() {
+  const simAPI = useContext(SimulationContext); // Get API from context
+
+  const [indicatorData, setIndicatorData] = useState(null);
+  const [policiesData, setPoliciesData] = useState(null);
+   const [week, setWeek] = useState(0);
+  useEffect(() => {
+    if (!simAPI) return;
+
+    const handleWebSocketMessage = (message) => {
+      // When a step happens, request the latest indicators/
+      if (message.action === "step" || message.action === "reverse_step") {
+        simAPI.sendMessage({ action: "get_indicators" });
+        simAPI.sendMessage({ action: "get_industry_data" });
+      }
+      // When indicator data arrives, update our state
+      if (message.action === "get_indicators" && message.data) {
+        console.log("Received indicator data:", message.data);
+        setIndicatorData(message.data);
+      }
+      if (message.action === "get_policies" && message.data) {
+        console.log("Received policies data:", message.data);
+        setPoliciesData(message.data);
+      }
+      if (message.action === "get_current_week" && message.data) {
+        setWeek(message.data.week);
+      }
+    };
+
+    // Add the listener
+    simAPI.addMessageListener(handleWebSocketMessage);
+    // Fetch initial data on component mount
+    simAPI.sendMessage({ action: "get_indicators" });
+    simAPI.sendMessage({ action: "get_industry_data" });
+    simAPI.sendMessage({ action: "get_policies" });
+    // Cleanup: remove the listener when the component unmounts
+    return () => {
+      simAPI.removeMessageListener(handleWebSocketMessage);
+    };
+  }, [simAPI]); // Rerun if simAPI instance changes
+
+  const title = Indicators.GDP;
+  const title2 = Indicators.GINI_COEFFICIENT;
+
   return (
     // NOTE: No outer Paper or sidebar here.
     // This component is rendered inside BaseSimView's shared Paper and layout.
     <Box>
-      <Grid container spacing={3}>
+      {/* Page title */}
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
+            Overview
+          </Typography>
+      <Grid container spacing={12}>
         {/* MAIN COLUMN */}
         <Grid
           item
           xs={12}
           md={8}
-          sx={{ display: "flex", flexDirection: "column" }}
+          sx={{ display: "flex", flexDirection: "row" }}
         >
-          {/* Page title */}
-          <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
-            Overview
-          </Typography>
 
-          {/* KPI row (GDP + Unemployment) */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {/* GDP */}
             <Grid item xs={12} sm={6}>
-              <Card sx={{ height: "100%" }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    GDP
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                    $22,540
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "success.main", fontWeight: 700 }}
-                  >
-                    ↑ 0.3%
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Unemployment */}
-            <Grid item xs={12} sm={6}>
-              <Card sx={{ height: "100%" }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Unemployment
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                    6.1%
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "error.main", fontWeight: 700 }}
-                  >
-                    ↓ 0.2%
-                  </Typography>
-                </CardContent>
-              </Card>
+              <React.Fragment key={"display-graph"}>
+                <Box sx={{ mb: 2 }}>
+                  {indicatorData && (
+                    <GraphSlot
+                      title={`${title} Graph`}
+                      labels={indicatorData?.week || []}
+                      datasets={[
+                        {
+                          label: title,
+                          data: indicatorData?.[title]
+                            ? indicatorData[title]
+                            : [],
+                        },
+                      ]}
+                    />
+                  )}
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: -1,
+                    mb: 2,
+                    fontWeight: 600,
+                    color: "text.secondary",
+                  }}
+                >
+                  {title} Distribution Over Time
+                </Typography>
+              </React.Fragment>
             </Grid>
           </Grid>
 
-          {/* Summary card */}
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Summary
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                • GDP increased by 0.3%
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                • Unemployment rate decreased to 6.1%
-              </Typography>
-            </CardContent>
-          </Card>
         </Grid>
 
         {/* RIGHT COLUMN */}
@@ -93,73 +118,93 @@ export default function Overview() {
           md={4}
           sx={{ display: "flex", flexDirection: "column" }}
         >
-          {/* Policies summary */}
-          <Card sx={{ mb: 2 }}>
+           <Grid container spacing={2} sx={{ mb: 2 }}>
+            {/* GDP */}
+            <Grid item xs={12} sm={6}>
+              <React.Fragment key={"display-graph"}>
+                <Box sx={{ mb: 2 }}>
+                  {indicatorData && (
+                    <GraphSlot
+                      title={`${title2} Graph`}
+                      labels={indicatorData?.week || []}
+                      datasets={[
+                        {
+                          label: title2,
+                          data: indicatorData?.[title2]
+                            ? indicatorData[title2]
+                            : [],
+                        },
+                      ]}
+                    />
+                  )}
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: -1,
+                    mb: 2,
+                    fontWeight: 600,
+                    color: "text.secondary",
+                  }}
+                >
+                  {title2} Distribution Over Time
+                </Typography>
+              </React.Fragment>
+            </Grid>
+          </Grid>
+          
+        </Grid>
+      </Grid>
+      <Card sx={{ mb: 2 }}>
             <CardContent>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Current Policies
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Sales Tax: 5%
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Corporate Tax: 20%
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Property Tax: 12%
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Tariffs: 4%
-              </Typography>
+              {policiesData && (
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Hourly Minimum Wage: {policiesData.minimum_wage/40}
+                </Typography>
+              )}
+              {policiesData && (
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Residential Property Tax:{" "}
+                  {policiesData.property_tax.residential.toFixed(4)*100}%
+                </Typography>
+              )}
+              {policiesData&& (
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Grocery Sales Tax: {policiesData.sales_tax.Groceries.toFixed(4) * 100}%
+                </Typography>
+              )}
+              {policiesData && (
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Grocery Tariffs: {policiesData.tariffs.Groceries.toFixed(4)*100}%
+                </Typography>
+              )}
               <Button
                 variant="outlined"
                 size="small"
                 sx={{ mt: 1, fontWeight: 700 }}
-                onClick={() => console.log("View/Edit Policies clicked")}
+                key={"Policies"}
+                component={RouterLink}
+              to={`/BaseSimView/policies`}
               >
                 View/Edit Policies
               </Button>
             </CardContent>
           </Card>
-
-          {/* Add widget placeholder */}
-          <Paper
-            variant="outlined"
-            sx={{
-              mb: 2,
-              p: 2,
-              borderRadius: 2,
-              height: 240,
-              display: "grid",
-              placeItems: "center",
-              cursor: "pointer",
-              userSelect: "none",
-              transition:
-                "box-shadow 120ms, border-color 120ms, transform 80ms",
-              "&:hover": { boxShadow: 3, borderColor: "primary.main" },
-              "&:active": { transform: "scale(0.98)" },
-            }}
-            onClick={() => console.log("Add widget clicked")}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <AddIcon fontSize="large" />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 1 }}
-              >
-                Add widget
+          {/* Summary card */}
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                Summary
               </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Progressed to Week: {week}
+              </Typography>
+              
+            </CardContent>
+          </Card>
     </Box>
   );
 }

@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Line, Scatter } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -22,7 +22,10 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-// Simple placeholder area to drop/choose a graph later
+
+/**
+ * A component to graph data using ChartJS.
+ */
 export default function GraphSlot({
   title = "Untitled Graph",
   labels = [],
@@ -33,6 +36,8 @@ export default function GraphSlot({
     () => datasets.some((d) => d.data && d.data.length > 0),
     [datasets]
   );
+
+  const [hasDataLorenz,setDataLorenz] = useState(false);
 
   // useMemo will re-calculate chartData only when `labels` or `data` props change.
   // This ensures the chart gets a new object reference and triggers a re-render.
@@ -46,7 +51,6 @@ export default function GraphSlot({
       "rgb(255, 159, 64)",
       "rgb(199, 199, 199)",
     ];
-
     return {
       labels: labels,
       datasets: datasets.map((dataset, index) => ({
@@ -57,6 +61,63 @@ export default function GraphSlot({
       })),
     };
   }, [labels, datasets]);
+
+  const scatterChartData = useMemo(() => {
+    const colors = [
+      "rgb(75, 192, 192)",
+      "rgb(255, 99, 132)",
+      "rgb(54, 162, 235)",
+      "rgb(255, 206, 86)",
+      "rgb(153, 102, 255)",
+      "rgb(255, 159, 64)",
+      "rgb(199, 199, 199)",
+    ];
+
+    let lorenzData = []
+    let newData = []
+    if(datasets[0].data.x){
+      setDataLorenz(true);
+      lorenzData = datasets[0].data
+      for(let i=0; i<lorenzData.x.length;i++){
+        const x = lorenzData.x[i]
+        const y = lorenzData.y[i]
+        newData.push([x,y])
+      }
+    }
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "plotted points",
+          data: newData.length
+        ? newData
+        : Array.from({ length: 100 }, () => ({
+            x: Math.floor(Math.random() * 100),
+            y: Math.floor(Math.random() * 100),
+          })),
+          showLine:true,
+          backgroundColor: "rgb(75, 192, 192)",
+          pointHoverRadius: 0,
+        },
+        {
+          label: "true equality",
+          data: [[0,0],[1,1]],
+          showLine:true,
+        }
+      ],
+    };
+  }, [labels, datasets]);
+
+  const scatterOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 1
+    },
+  },
+};
 
   const chartOptions = {
     responsive: true,
@@ -110,7 +171,7 @@ export default function GraphSlot({
             underline="hover"
             onClick={() => {
               console.log("hasData:", hasData);
-              if (hasData) {
+              if (hasData || hasDataLorenz) {
                 handleOpen();
               }
             }}
@@ -132,18 +193,19 @@ export default function GraphSlot({
             px: 2,
           }}
         >
-          {hasData ? (
-            <Line data={chartData} options={chartOptions} />
-          ) : (
-            <Stack spacing={1} alignItems="center">
-              <InsertChartOutlinedIcon
-                sx={{ fontSize: 40, color: "text.secondary" }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Waiting for data...
-              </Typography>
-            </Stack>
-          )}
+          {(hasDataLorenz && title.includes("Lorenz") && (
+            <Scatter data={scatterChartData} options={scatterOptions} />
+          )) ||
+            (hasData && title.includes("Lorenz") != true && <Line data={chartData} options={chartOptions} />) || (
+              <Stack spacing={1} alignItems="center">
+                <InsertChartOutlinedIcon
+                  sx={{ fontSize: 40, color: "text.secondary" }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Waiting for data...
+                </Typography>
+              </Stack>
+            )}
         </Box>
       </Paper>
       <Modal
@@ -176,18 +238,19 @@ export default function GraphSlot({
             {title}
           </Typography>
 
-          {hasData ? (
-            <Line data={chartData} options={chartOptions} />
-          ) : (
-            <Stack spacing={1} alignItems="center">
-              <InsertChartOutlinedIcon
-                sx={{ fontSize: 40, color: "text.secondary" }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Waiting for data...
-              </Typography>
-            </Stack>
-          )}
+          {(hasDataLorenz && title.includes("Lorenz") && (
+            <Scatter data={scatterChartData} options={scatterOptions} />
+          )) ||
+            (hasData && title.includes("Lorenz") != true && <Line data={chartData} options={chartOptions} />) || (
+              <Stack spacing={1} alignItems="center">
+                <InsertChartOutlinedIcon
+                  sx={{ fontSize: 40, color: "text.secondary" }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Waiting for data...
+                </Typography>
+              </Stack>
+            )}
         </Box>
       </Modal>
     </div>

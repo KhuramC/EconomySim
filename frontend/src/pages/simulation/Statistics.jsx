@@ -10,14 +10,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  ToggleButtonGroup,
-  ToggleButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { SimulationContext } from "./BaseSimView.jsx";
-import GraphSlot from "../../components/GraphSlot";
+import { SimulationContext } from "./BaseSimView";
+import GraphSlot from "../../components/simView/GraphSlot";
 import { Indicators } from "../../types/Indicators";
-import { IndustryMetrics } from "../../types/IndustryMetrics.js";
+import { IndustryMetrics } from "../../types/IndustryMetrics";
+import { DemoMetrics } from "../../types/DemographicMetrics";
 
 export default function Statistics() {
   const simAPI = useContext(SimulationContext); // Get API from context
@@ -26,39 +25,49 @@ export default function Statistics() {
   const [indicatorData, setIndicatorData] = useState(null);
   // State for industry-specific data (price, etc.)
   const [industryData, setIndustryData] = useState(null);
+  // State for demographic-specific data (proportion, etc.)
+  const [demoData, setDemoData] = useState(null);
 
   // Controls for adding new graphs
   const [metric, setMetric] = useState(Indicators.GDP);
   const [startUnit, setStartUnit] = useState("week");
   // Default graphs to show
   const [graphs, setGraphs] = useState([Indicators.GDP]);
+  //TODO: allow for plotting the Lorenz Curve, which has a different structure.
 
   useEffect(() => {
     if (!simAPI) return;
 
     const handleWebSocketMessage = (message) => {
-      // When a step happens, request the latest indicators/
+      // When a step happens, request the latest data
       if (message.action === "step" || message.action === "reverse_step") {
-        simAPI.sendMessage({ action: "get_indicators" });
-        simAPI.sendMessage({ action: "get_industry_data" });
+        simAPI.getIndicators();
+        simAPI.getIndustryData();
+        simAPI.getDemoMetrics();
       }
-      // When indicator data arrives, update our state
+      // When indicator data arrives, update state
       if (message.action === "get_indicators" && message.data) {
         console.log("Received indicator data:", message.data);
         setIndicatorData(message.data);
       }
-      // When industry data arrives, update our state
+      // When industry data arrives, update state
       if (message.action === "get_industry_data" && message.data) {
         console.log("Received industry data:", message.data);
         setIndustryData(message.data);
+      }
+      // When demographic data arrives, update state
+      if (message.action === "get_demo_metrics" && message.data) {
+        console.log("Received demographic metrics:", message.data);
+        setDemoData(message.data);
       }
     };
 
     // Add the listener
     simAPI.addMessageListener(handleWebSocketMessage);
     // Fetch initial data on component mount
-    simAPI.sendMessage({ action: "get_indicators" });
-    simAPI.sendMessage({ action: "get_industry_data" });
+    simAPI.getIndicators();
+    simAPI.getIndustryData();
+    simAPI.getDemoMetrics();
 
     // Cleanup: remove the listener when the component unmounts
     return () => {
@@ -74,9 +83,7 @@ export default function Statistics() {
       <Grid container spacing={3}>
         {/* MAIN COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={8}
+          size={{ xs: 12, md: 8 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>
@@ -87,7 +94,18 @@ export default function Statistics() {
             const isIndicator = Object.values(Indicators).includes(title);
             const isIndustryMetric =
               Object.values(IndustryMetrics).includes(title);
+            const isDemoMetric = Object.values(DemoMetrics).includes(title);
 
+
+            let isLorenzCurve= false
+            try {
+
+              if (title == Indicators.LORENZ_CURVE && indicatorData[title][indicatorData?.week.length-1].x){
+                isLorenzCurve=true;
+              }
+            } catch {
+              console.log("womp")
+            }
             return (
               <React.Fragment key={index}>
                 <Box sx={{ mb: 2 }}>
@@ -98,23 +116,33 @@ export default function Statistics() {
                       datasets={[
                         {
                           label: title,
-                          data: indicatorData?.[title]
-                            ? indicatorData[title]
-                            : [],
+                          data: isLorenzCurve && indicatorData[title][indicatorData?.week.length-1] || 
+                             indicatorData[title] ||
+                             [],
                         },
                       ]}
                     />
                   )}
                   {isIndustryMetric && industryData && (
                     <GraphSlot
-                      title={`${
-                        title.charAt(0).toUpperCase() + title.slice(1)
-                      } by Industry`}
+                      title={`${title} by Industry`}
                       labels={indicatorData?.week || []}
                       datasets={Object.entries(industryData || {}).map(
                         ([industryName, industryDetails]) => ({
                           label: industryName,
                           data: industryDetails[title] || [],
+                        })
+                      )}
+                    />
+                  )}
+                  {isDemoMetric && demoData && (
+                    <GraphSlot
+                      title={`${title} by Demographic`}
+                      labels={indicatorData?.week || []}
+                      datasets={Object.entries(demoData || {}).map(
+                        ([demoName, demoDetails]) => ({
+                          label: demoName,
+                          data: demoDetails[title] || [],
                         })
                       )}
                     />
@@ -129,7 +157,7 @@ export default function Statistics() {
                     color: "text.secondary",
                   }}
                 >
-                  {title} Distribution Over Time
+                {title.includes("Lorenz") ? title : `${title} Distribution Over Time`}
                 </Typography>
               </React.Fragment>
             );
@@ -138,9 +166,7 @@ export default function Statistics() {
 
         {/* RIGHT COLUMN */}
         <Grid
-          item
-          xs={12}
-          md={4}
+          size={{ xs: 12, md: 4 }}
           sx={{ display: "flex", flexDirection: "column" }}
         >
           {/* Add New Graph panel */}
@@ -166,10 +192,16 @@ export default function Statistics() {
                 ))}
                 <Divider />
                 {Object.values(IndustryMetrics).map((value) => (
+                  // Create a MenuItem for each IndustryMetric
                   <MenuItem key={value} value={value}>
-                    <span style={{ textTransform: "capitalize" }}>
-                      {value} (by Industry)
-                    </span>
+                    <span>{value} (by Industry)</span>
+                  </MenuItem>
+                ))}
+                <Divider />
+                {Object.values(DemoMetrics).map((value) => (
+                  // Create a MenuItem for each IndustryMetric
+                  <MenuItem key={value} value={value}>
+                    <span>{value} (by Demographic)</span>
                   </MenuItem>
                 ))}
               </Select>
@@ -182,43 +214,6 @@ export default function Statistics() {
             >
               Select Start Date
             </Typography>
-
-            {/* More visible & translucent toggle buttons */}
-            <ToggleButtonGroup
-              exclusive
-              value={startUnit}
-              onChange={(_, v) => v && setStartUnit(v)}
-              sx={{
-                mb: 2,
-                "& .MuiToggleButton-root": {
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  color: "rgba(0,0,0,0.75)",
-                  backgroundColor: "rgba(0,0,0,0.05)",
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    backgroundColor: "rgba(0,0,0,0.08)",
-                  },
-                  "&.Mui-selected": {
-                    backgroundColor: "rgba(25, 118, 210, 0.2)", // soft primary tint
-                    color: "#1976d2",
-                    borderColor: "rgba(25,118,210,0.3)",
-                    "&:hover": {
-                      backgroundColor: "rgba(25,118,210,0.3)",
-                    },
-                  },
-                },
-              }}
-            >
-              <ToggleButton value="year" size="small">
-                Year
-              </ToggleButton>
-              <ToggleButton value="week" size="small">
-                Week
-              </ToggleButton>
-            </ToggleButtonGroup>
-
             <Button
               fullWidth
               variant="contained"

@@ -2,9 +2,8 @@ import pytest
 from engine.core.model import EconomyModel
 
 AGENT_COUNTS = [100, 1000, 10000, 100000, 1000000]
-
-
 @pytest.mark.parametrize("num_agents", AGENT_COUNTS)
+@pytest.mark.performance
 def test_model_step_performance(
     benchmark, demographics, industries, policies, num_agents: int
 ):

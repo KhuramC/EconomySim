@@ -73,6 +73,16 @@ This market wage will never be allowed to drop below the simulation's `minimum_w
 
 ## Indicators
 
+### Hoover Index
+
+This tracks income inequality as a number in the simulation. It is related to the Lorenz Curve in that it represents the maximum vertical distance from the curve to the theoretical straight line of perfect income equality. It indicates the proportion of income that needs to be transferred from the top of the bottom of the distribution to reach that perfect equality. A value of 0 implies nothing needs to be transferred; a value of 1 implies everything needs to be transferred. There are many slight variations, but the implementation being used is most similar to the `R` [function](https://search.r-project.org/CRAN/refmans/EconGeo/html/hoover_index.html), where one sums up the absolute value of all income shares subtracted by the population share:
+
+$$
+H = \frac{1}{2} \sum_{i=1}^{N} |\frac{y_i}{y_{total}} - \frac{1}{N}|
+$$
+
+Where $y_i$ is the income of agent $i$, $y_{total}$ is the total income, and $N$ is the total number of agents.
+
 ### Lorenz Curve
 
 This tracks wealth inequality as a curve in the simulation. It is currently implemented as described in https://www.datacamp.com/tutorial/lorenz-curve.
