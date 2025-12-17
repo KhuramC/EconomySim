@@ -52,7 +52,7 @@ def test_calculate_unemployment(model: EconomyModel):
 )
 def test_calculate_gdp(model: EconomyModel, production, price, expected):
     """
-    Tests that GDP is correctly calculated as the sum of (production × price)
+    Tests that GDP is correctly calculated as the sum of (production \\* price)
     across all industries.
 
     Args:
@@ -63,10 +63,10 @@ def test_calculate_gdp(model: EconomyModel, production, price, expected):
 
     for i, industry in enumerate(industryAgents):
         if i < len(production):
-            industry.goods_produced = production[i]
+            industry.tick_goods_produced = production[i]
             industry.price = price[i]
         else:
-            industry.goods_produced = 0
+            industry.tick_goods_produced = 0
 
     calculated_gdp = indicators.calculate_gdp(model)
     assert calculated_gdp == approx(expected)

@@ -74,8 +74,6 @@ class PersonAgent(Agent):
                 taxable_income = min(previous_threshold, self.income) - threshold
                 tax = taxable_income * rate
                 self.balance -= tax
-            else:
-                continue
 
             previous_threshold = threshold
 
@@ -116,8 +114,10 @@ class PersonAgent(Agent):
             )
             for agent in industry_agents
         }
-
         # Calculate desired purchases
+
+        # TODO: force some minimum with certain industries, such as HOUSING and UTILITIES
+        # since they are treated as regular industires, they don't have any higher priority, but they def should
         desired_quantities = demand_func(
             sigma=self.sigma,
             budget=self.determine_budget(),
@@ -140,7 +140,7 @@ class PersonAgent(Agent):
             # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
             # This unspent money is effectively saved for the next cycle.
 
-            available_quantity = industry.inventory_available_this_step
+            available_quantity = industry.tick_sellable_inventory
             quantity_to_buy = min(desired_quantity, available_quantity)
 
             # prices already have sales tax applied

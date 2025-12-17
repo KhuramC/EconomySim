@@ -136,7 +136,7 @@ def test_purchase_goods(
         starting_price=10,
         starting_inventory=100,
     )
-    food_industry.inventory_available_this_step = food_industry.inventory
+    food_industry.tick_sellable_inventory = food_industry.inventory
 
     mock_economy_model.policies["sales_tax"][
         IndustryType.ENTERTAINMENT
@@ -147,7 +147,7 @@ def test_purchase_goods(
         starting_price=20,
         starting_inventory=100,
     )
-    entertainment_industry.inventory_available_this_step = food_industry.inventory
+    entertainment_industry.tick_sellable_inventory = food_industry.inventory
 
     person = PersonAgent(
         mock_economy_model,

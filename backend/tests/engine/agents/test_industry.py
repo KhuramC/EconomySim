@@ -125,7 +125,7 @@ def test_determine_price_avg_cost(mock_economy_model):
     )
     ind.determine_price()
     ind.produce_goods()  # Should produce 200 units, which is the break-even quantity
-    assert ind.inventory_available_this_step == 200
+    assert ind.tick_sellable_inventory == 200
     assert ind.price == 18.0
 
 
@@ -209,7 +209,7 @@ def test_determine_price_linear_profit_max(mock_economy_model):
     )
     ind.determine_price()
     ind.produce_goods()
-    assert ind.price == 26.46, ind.inventory_available_this_step == 106
+    assert ind.price == 26.46, ind.tick_sellable_inventory == 106
 
 
 def test_starting_inventory_satisfies_demand(mock_economy_model):
@@ -238,8 +238,8 @@ def test_starting_inventory_satisfies_demand(mock_economy_model):
     ind.produce_goods()
     weekly_pay = ind.get_weekly_pay()
     assert ind.price == 26.46
-    assert ind.inventory_available_this_step == 106
-    assert ind.hours_worked == 0
+    assert ind.tick_sellable_inventory == 106
+    assert ind.tick_hours_worked == 0
     assert ind.offered_wage == 15.0
     assert weekly_pay == 0.0
 
@@ -296,7 +296,7 @@ def test_price_cap(
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == expected_price
-    assert ind.inventory_available_this_step == expected_quantity
+    assert ind.tick_sellable_inventory == expected_quantity
 
 
 """
@@ -356,7 +356,7 @@ def test_avg_cost_linear_profit_fallback(mock_economy_model):
     )
     ind.determine_price()
     ind.produce_goods()
-    assert ind.price == 18, ind.inventory_available_this_step == 2
+    assert ind.price == 18, ind.tick_sellable_inventory == 2
 
 
 def test_get_weekly_pay(mock_economy_model):
@@ -411,8 +411,8 @@ def test_determine_price_realistic(mock_economy_model):
     ind.determine_price()
     ind.produce_goods()
     assert ind.price == 15.2
-    assert ind.inventory_available_this_step == 9800
-    assert ind.total_cost == 56920.0
+    assert ind.tick_sellable_inventory == 9800
+    assert ind.tick_cost == 56920.0
 
 
 """
@@ -461,8 +461,8 @@ def test_get_profit_corpo_tax_realistic(
     )
     ind.determine_price()
     ind.produce_goods()
-    ind.total_revenue = 148960.00
-    ind.balance += ind.total_revenue
+    ind.tick_revenue = 148960.00
+    ind.balance += ind.tick_revenue
     ind.deduct_corporate_tax()
     assert ind.get_profit() == 92040
     assert (ind.balance - 1000000) == pytest.approx(expected_profit)

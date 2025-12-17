@@ -12,6 +12,7 @@ def demand_func(
     Calculates the quantity of each good to purchase based on the CES demand function.
 
     Args:
+        sigma (float): The elasticity of substitution.
         budget: The total money available to spend.
         prefs: The preference weights for the available goods.
         prices: The prices of the available goods.
@@ -26,14 +27,14 @@ def demand_func(
     )
 
     if denominator == 0:
-        return {name: 0 for name in valid_goods}
+        return {industry: 0 for industry in valid_goods}
 
     demands = {}
-    for name in valid_goods:
-        numerator = (prefs[name] ** sigma) * (prices[name] ** -sigma)
+    for industry in valid_goods:
+        numerator = (prefs[industry] ** sigma) * (prices[industry] ** -sigma)
         quantity_unrounded = (numerator / denominator) * budget
         quantity = custom_round(quantity_unrounded)
-        demands[name] = quantity
+        demands[industry] = quantity
 
     return demands
 
