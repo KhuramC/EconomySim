@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, createContext } from "react";
 import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { Box, Paper, Typography } from "@mui/material";
-import SidebarNav from "../../components/SimView/SidebarNav";
 import { SimulationAPI } from "../../api/SimulationAPI";
-import TimelinePanel from "../../components/SimView/TimelinePanel";
+import SidebarNav from "../../components/simView/SidebarNav";
+import TimelinePanel from "../../components/simView/TimelinePanel";
 
 // Content-only pages (no sidebar or outer Paper inside them)
 import Overview from "./Overview";
