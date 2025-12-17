@@ -1,5 +1,4 @@
 from mesa import Agent, Model
-from .demand import demand_func
 from .industry import IndustryAgent
 from .demand import demand_func
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
