@@ -4,7 +4,6 @@ from engine.agents.person import PersonAgent
 from engine.agents.industry import IndustryAgent
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
-from math import isnan
 import engine.core.indicators as indicators
 
 
@@ -289,18 +288,15 @@ def test_calculate_average_balance(indicator_test_model_factory_balance):
     # Create model with 100 agents, all middle class with balance of 50
     model = indicator_test_model_factory_balance(balances=[50] * 100)
     expected_balances = {
-        Demographic.LOWER_CLASS: float("nan"),
+        Demographic.LOWER_CLASS: 0,
         Demographic.MIDDLE_CLASS: 50,
-        Demographic.UPPER_CLASS: float("nan"),
+        Demographic.UPPER_CLASS: 0,
     }
 
     avg_balances = indicators.calculate_average_balance(model)
 
     for demo in Demographic:
-        if not isnan(expected_balances[demo]):
-            assert avg_balances[demo] == expected_balances[demo]
-        else:
-            assert isnan(avg_balances[demo])
+        assert avg_balances[demo] == expected_balances[demo]
 
 
 def test_calculate_std_balance(indicator_test_model_factory_balance):
@@ -315,18 +311,15 @@ def test_calculate_std_balance(indicator_test_model_factory_balance):
     # Create model with 100 agents, all middle class with balance of 50
     model = indicator_test_model_factory_balance(balances=[50] * 100)
     expected_std_balances = {
-        Demographic.LOWER_CLASS: float("nan"),
+        Demographic.LOWER_CLASS: 0,
         Demographic.MIDDLE_CLASS: 0,
-        Demographic.UPPER_CLASS: float("nan"),
+        Demographic.UPPER_CLASS: 0,
     }
 
     std_balances = indicators.calculate_std_balance(model)
 
     for demo in Demographic:
-        if not isnan(expected_std_balances[demo]):
-            assert std_balances[demo] == expected_std_balances[demo]
-        else:
-            assert isnan(std_balances[demo])
+        assert std_balances[demo] == expected_std_balances[demo]
 
 
 def test_calculate_average_wage(indicator_test_model_factory_income):
@@ -341,18 +334,15 @@ def test_calculate_average_wage(indicator_test_model_factory_income):
     # Create model with 100 agents, all middle class with income of 50
     model = indicator_test_model_factory_income(incomes=[50] * 100)
     expected_wages = {
-        Demographic.LOWER_CLASS: float("nan"),
+        Demographic.LOWER_CLASS: 0,
         Demographic.MIDDLE_CLASS: 50,
-        Demographic.UPPER_CLASS: float("nan"),
+        Demographic.UPPER_CLASS: 0,
     }
 
     avg_wages = indicators.calculate_average_wage(model)
 
     for demo in Demographic:
-        if not isnan(expected_wages[demo]):
-            assert avg_wages[demo] == expected_wages[demo]
-        else:
-            assert isnan(avg_wages[demo])
+        assert avg_wages[demo] == expected_wages[demo]
 
 
 def test_calculate_std_wage(indicator_test_model_factory_income):
@@ -367,15 +357,12 @@ def test_calculate_std_wage(indicator_test_model_factory_income):
     # Create model with 100 agents, all middle class with incomes of 50
     model = indicator_test_model_factory_income(incomes=[50] * 100)
     expected_std_wages = {
-        Demographic.LOWER_CLASS: float("nan"),
+        Demographic.LOWER_CLASS: 0,
         Demographic.MIDDLE_CLASS: 0,
-        Demographic.UPPER_CLASS: float("nan"),
+        Demographic.UPPER_CLASS: 0,
     }
 
     std_wages = indicators.calculate_std_wage(model)
 
     for demo in Demographic:
-        if not isnan(expected_std_wages[demo]):
-            assert std_wages[demo] == expected_std_wages[demo]
-        else:
-            assert isnan(std_wages[demo])
+        assert std_wages[demo] == expected_std_wages[demo]
