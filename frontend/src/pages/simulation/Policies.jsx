@@ -1,7 +1,6 @@
 import { useContext, useState, useEffect, useMemo } from "react";
 import { Box, Grid, Typography, Alert } from "@mui/material";
 import _ from "lodash";
-
 import PolicyAccordion from "../../components/simSetup/PolicyAccordion";
 import { SimulationContext } from "./BaseSimView";
 import ChangeableParameters from "../../components/simView/ChangeableParameters";

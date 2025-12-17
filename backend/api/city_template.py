@@ -11,7 +11,7 @@ _SMALL_CONFIG = {
     "inflation_rate": 0.0005,  # Inflation Rate is weekly; equates to 2.6% annually
     "demographics": {
         Demographic.LOWER_CLASS: {
-            "income": {"mean": 6.31, "sd": 0.40},  # Median: $548/wk (~$28.5k/yr)
+            "income": {"mean": 596, "sd": 248},  # Median: $548/wk (~$28.5k/yr)
             "proportion": 0.35,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.15,
@@ -22,10 +22,10 @@ _SMALL_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.07,
                 IndustryType.LUXURY: 0.10,
             },
-            "balance": {"mean": 6.0, "sd": 0.5},  # Low savings
+            "balance": {"mean": 457, "sd": 244},  # Low savings
         },
         Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 7.00, "sd": 0.30},  # Median: $1096/wk (~$57k/yr)
+            "income": {"mean": 1147, "sd": 352},  # Median: $1096/wk (~$57k/yr)
             "proportion": 0.50,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.12,
@@ -36,10 +36,10 @@ _SMALL_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.12,
                 IndustryType.LUXURY: 0.18,
             },
-            "balance": {"mean": 8.5, "sd": 0.4},  # Moderate savings
+            "balance": {"mean": 5325, "sd": 2218},  # Moderate savings
         },
         Demographic.UPPER_CLASS: {
-            "income": {"mean": 7.92, "sd": 0.60},  # Median: $2740/wk (~$142.5k/yr)
+            "income": {"mean": 3294, "sd": 2169},  # Median: $2740/wk (~$142.5k/yr)
             "proportion": 0.15,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
@@ -50,13 +50,13 @@ _SMALL_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.14,
                 IndustryType.LUXURY: 0.25,
             },
-            "balance": {"mean": 11.0, "sd": 0.7},  # High savings
+            "balance": {"mean": 76496, "sd": 60829},  # High savings
         },
     },
     "industries": {
         IndustryType.GROCERIES: {
             "starting_price": 62.47,
-            "starting_inventory": 504000,
+            "starting_inventory": 504,
             "starting_balance": 199992.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 7692.00,
@@ -69,7 +69,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.UTILITIES: {
             "starting_price": 50.08,
-            "starting_inventory": 201600,
+            "starting_inventory": 201,
             "starting_balance": 51843584.00,
             "starting_offered_wage": 1354.60,
             "starting_fixed_cost": 1993984.00,
@@ -82,7 +82,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.AUTOMOBILES: {
             "starting_price": 25000.00,
-            "starting_inventory": 484,
+            "starting_inventory": 4,
             "starting_balance": 39988.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 1538.00,
@@ -95,7 +95,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.HOUSING: {
             "starting_price": 230.77,
-            "starting_inventory": 120960,
+            "starting_inventory": 120,
             "starting_balance": 154183146.00,
             "starting_offered_wage": 1188.40,
             "starting_fixed_cost": 5930121.00,
@@ -108,7 +108,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.HOUSEHOLD_GOODS: {
             "starting_price": 75.00,
-            "starting_inventory": 40320,
+            "starting_inventory": 403,
             "starting_balance": 99996.00,
             "starting_offered_wage": 823.20,
             "starting_fixed_cost": 3846.00,
@@ -121,7 +121,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.ENTERTAINMENT: {
             "starting_price": 18.00,
-            "starting_inventory": 126000,
+            "starting_inventory": 126,
             "starting_balance": 80002.00,
             "starting_offered_wage": 991.60,
             "starting_fixed_cost": 3077.00,
@@ -134,7 +134,7 @@ _SMALL_CONFIG = {
         },
         IndustryType.LUXURY: {
             "starting_price": 1500.00,
-            "starting_inventory": 504,
+            "starting_inventory": 50,
             "starting_balance": 10010.00,
             "starting_offered_wage": 1234.80,
             "starting_fixed_cost": 385.00,
@@ -190,7 +190,7 @@ _MEDIUM_CONFIG = {
     "inflation_rate": 0.0005,  # Inflation Rate is weekly
     "demographics": {
         Demographic.LOWER_CLASS: {
-            "income": {"mean": 6.55, "sd": 0.40},  # Median: $702/wk (~$36.5k/yr)
+            "income": {"mean": 757, "sd": 316},  # Median: $702/wk (~$36.5k/yr)
             "proportion": 0.30,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.16,
@@ -201,10 +201,10 @@ _MEDIUM_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.07,
                 IndustryType.LUXURY: 0.14,
             },
-            "balance": {"mean": 6.0, "sd": 0.5},  # Low savings
+            "balance": {"mean": 457, "sd": 244},  # Low savings
         },
         Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 7.25, "sd": 0.30},  # Median: $1404/wk (~$73k/yr)
+            "income": {"mean": 1473, "sd": 452},  # Median: $1404/wk (~$73k/yr)
             "proportion": 0.55,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
@@ -215,10 +215,10 @@ _MEDIUM_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.12,
                 IndustryType.LUXURY: 0.25,
             },
-            "balance": {"mean": 8.5, "sd": 0.4},  # Moderate savings
+            "balance": {"mean": 5324, "sd": 2218},  # Moderate savings
         },
         Demographic.UPPER_CLASS: {
-            "income": {"mean": 8.16, "sd": 0.60},  # Median: $3510/wk (~$182.5k/yr)
+            "income": {"mean": 4188, "sd": 2757},  # Median: $3510/wk (~$182.5k/yr)
             "proportion": 0.15,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
@@ -229,13 +229,13 @@ _MEDIUM_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.12,
                 IndustryType.LUXURY: 0.25,
             },
-            "balance": {"mean": 11.0, "sd": 0.7},  # High savings
+            "balance": {"mean": 76496, "sd": 60829},  # High savings
         },
     },
     "industries": {
         IndustryType.GROCERIES: {
             "starting_price": 64.02,
-            "starting_inventory": 1108000,
+            "starting_inventory": 1108,
             "starting_balance": 800000.00,
             "starting_offered_wage": 1035.60,
             "starting_fixed_cost": 30769.00,
@@ -248,7 +248,7 @@ _MEDIUM_CONFIG = {
         },
         IndustryType.UTILITIES: {
             "starting_price": 49.85,
-            "starting_inventory": 443200,
+            "starting_inventory": 4432,
             "starting_balance": 113478144.00,
             "starting_offered_wage": 1563.64,
             "starting_fixed_cost": 4364544.00,
@@ -261,7 +261,7 @@ _MEDIUM_CONFIG = {
         },
         IndustryType.AUTOMOBILES: {
             "starting_price": 24000.00,
-            "starting_inventory": 1064,
+            "starting_inventory": 106,
             "starting_balance": 160004.00,
             "starting_offered_wage": 1035.60,
             "starting_fixed_cost": 6154.00,
@@ -274,7 +274,7 @@ _MEDIUM_CONFIG = {
         },
         IndustryType.HOUSING: {
             "starting_price": 346.15,
-            "starting_inventory": 265920,
+            "starting_inventory": 2659,
             "starting_balance": 504665980.00,
             "starting_offered_wage": 1285.20,
             "starting_fixed_cost": 19410230.00,
@@ -287,7 +287,7 @@ _MEDIUM_CONFIG = {
         },
         IndustryType.HOUSEHOLD_GOODS: {
             "starting_price": 85.00,
-            "starting_inventory": 88640,
+            "starting_inventory": 886,
             "starting_balance": 400010.00,
             "starting_offered_wage": 1035.60,
             "starting_fixed_cost": 15385.00,
@@ -300,7 +300,7 @@ _MEDIUM_CONFIG = {
         },
         IndustryType.ENTERTAINMENT: {
             "starting_price": 14.00,
-            "starting_inventory": 277000,
+            "starting_inventory": 2770,
             "starting_balance": 319999.00,
             "starting_offered_wage": 1248.40,
             "starting_fixed_cost": 12308.00,
@@ -313,7 +313,7 @@ _MEDIUM_CONFIG = {
         },
         IndustryType.LUXURY: {
             "starting_price": 1500.00,
-            "starting_inventory": 1108,
+            "starting_inventory": 110,
             "starting_balance": 39988.00,
             "starting_offered_wage": 1553.40,
             "starting_fixed_cost": 1538.00,
@@ -367,7 +367,7 @@ _LARGE_CONFIG = {
     "inflation_rate": 0.0005,  # Inflation Rate is weekly
     "demographics": {
         Demographic.LOWER_CLASS: {
-            "income": {"mean": 6.76, "sd": 0.40},  # Median: $865/wk (~$45k/yr)
+            "income": {"mean": 934, "sd": 389},  # Median: $865/wk (~$45k/yr)
             "proportion": 0.35,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.14,
@@ -378,10 +378,10 @@ _LARGE_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.05,
                 IndustryType.LUXURY: 0.10,
             },
-            "balance": {"mean": 6.0, "sd": 0.5},  # Low savings
+            "balance": {"mean": 457, "sd": 244},  # Low savings
         },
         Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 7.79, "sd": 0.30},  # Median: $2423/wk (~$126k/yr)
+            "income": {"mean": 2528, "sd": 776},  # Median: $2423/wk (~$126k/yr)
             "proportion": 0.40,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.12,
@@ -392,10 +392,10 @@ _LARGE_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.08,
                 IndustryType.LUXURY: 0.17,
             },
-            "balance": {"mean": 8.5, "sd": 0.4},  # Moderate savings
+            "balance": {"mean": 5324, "sd": 2218},  # Moderate savings
         },
         Demographic.UPPER_CLASS: {
-            "income": {"mean": 8.71, "sd": 0.60},  # Median: $6058/wk (~$315k/yr)
+            "income": {"mean": 7259, "sd": 4778},  # Median: $6058/wk (~$315k/yr)
             "proportion": 0.25,
             "spending_behavior": {
                 IndustryType.GROCERIES: 0.10,
@@ -406,13 +406,13 @@ _LARGE_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.15,
                 IndustryType.LUXURY: 0.25,
             },
-            "balance": {"mean": 11.0, "sd": 0.7},  # High savings
+            "balance": {"mean": 76496, "sd": 60829},  # High savings
         },
     },
     "industries": {
         IndustryType.GROCERIES: {
             "starting_price": 76.82,
-            "starting_inventory": 3260000,
+            "starting_inventory": 32600,
             "starting_balance": 3302988.00,
             "starting_offered_wage": 1435.60,
             "starting_fixed_cost": 127038.00,
@@ -425,7 +425,7 @@ _LARGE_CONFIG = {
         },
         IndustryType.UTILITIES: {
             "starting_price": 64.27,
-            "starting_inventory": 1304000,
+            "starting_inventory": 13040,
             "starting_balance": 430329120.00,
             "starting_offered_wage": 1998.88,
             "starting_fixed_cost": 16551120.00,
@@ -438,7 +438,7 @@ _LARGE_CONFIG = {
         },
         IndustryType.AUTOMOBILES: {
             "starting_price": 30000.00,
-            "starting_inventory": 3136,
+            "starting_inventory": 313,
             "starting_balance": 660790.00,
             "starting_offered_wage": 1435.60,
             "starting_fixed_cost": 25415.00,
@@ -451,7 +451,7 @@ _LARGE_CONFIG = {
         },
         IndustryType.HOUSING: {
             "starting_price": 761.54,
-            "starting_inventory": 782400,
+            "starting_inventory": 7824,
             "starting_balance": 3178195358.00,
             "starting_offered_wage": 2010.00,
             "starting_fixed_cost": 122238283.00,
@@ -464,7 +464,7 @@ _LARGE_CONFIG = {
         },
         IndustryType.HOUSEHOLD_GOODS: {
             "starting_price": 120.00,
-            "starting_inventory": 260800,
+            "starting_inventory": 2608,
             "starting_balance": 1651494.00,
             "starting_offered_wage": 1435.60,
             "starting_fixed_cost": 63519.00,
@@ -477,7 +477,7 @@ _LARGE_CONFIG = {
         },
         IndustryType.ENTERTAINMENT: {
             "starting_price": 15.00,
-            "starting_inventory": 815000,
+            "starting_inventory": 8150,
             "starting_balance": 1321190.00,
             "starting_offered_wage": 2083.60,
             "starting_fixed_cost": 50815.00,
@@ -490,7 +490,7 @@ _LARGE_CONFIG = {
         },
         IndustryType.LUXURY: {
             "starting_price": 1500.00,
-            "starting_inventory": 3260,
+            "starting_inventory": 326,
             "starting_balance": 165152.00,
             "starting_offered_wage": 2153.40,
             "starting_fixed_cost": 6352.00,
