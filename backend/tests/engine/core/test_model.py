@@ -9,6 +9,7 @@ from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
 from engine.agents.industry import IndustryAgent
 from engine.agents.person import PersonAgent
+from engine.core.indicators import calculate_unemployment
 
 
 def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics):
@@ -220,5 +221,46 @@ def test_step(model: EconomyModel):
 
 
 def test_reverse_step(model: EconomyModel):
-    # TODO: test whenever reverse_step is implemented
     pass
+
+
+@pytest.mark.parametrize(
+    "unemployment_rate, market_wage, min_wage, expected_new_wage",
+    [
+        (0.80, 20.0, 15.0, 18.50),  # High unemployment -> wage decreases
+        # (0.05 - 0.80) * 0.1 = -0.075 -> 20 * (1 - 0.075) = 18.5
+        (0.02, 20.0, 15.0, 20.06),  # Low unemployment -> wage increases
+        # (0.05 - 0.02) * 0.1 = 0.003 -> 20 * (1 + 0.003) = 20.06
+        (1.00, 16.0, 15.0, 15.0),  # High unemployment, but hits min wage floor
+        # (0.05 - 1.00) * 0.1 = -0.095 -> 16 * (1 - 0.095) = 14.48 -> max(14.48, 15.0) = 15.0
+        (0.05, 20.0, 15.0, 20.0),  # At target unemployment -> no change
+        # (0.05 - 0.05) * 0.1 = 0.0
+    ],
+)
+def test_update_market_wage(
+    model: EconomyModel,
+    unemployment_rate,
+    market_wage,
+    min_wage,
+    expected_new_wage,
+    monkeypatch,
+):
+    """
+    Tests the new update_market_wage function in the model.
+
+    We monkeypatch `calculate_unemployment` to isolate the
+    wage-setting logic.
+    """
+    # Force the model to believe the desired unemployment rate
+    monkeypatch.setattr(
+        "engine.core.model.calculate_unemployment", lambda m: unemployment_rate
+    )
+
+    # Set initial model state
+    model.market_wage = market_wage
+    model.policies["minimum_wage"] = min_wage
+
+    # Run the function
+    model.update_market_wage()
+
+    assert model.market_wage == pytest.approx(expected_new_wage)

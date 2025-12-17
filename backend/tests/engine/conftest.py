@@ -1,8 +1,13 @@
 import pytest
+from mesa import Model
+from mesa.agent import AgentSet
+from engine.core.model import EconomyModel
 import logging
 from typing import Any
 from engine.types.industry_type import IndustryType
 from engine.types.demographic import Demographic
+from engine.agents.person import PersonAgent
+from engine.agents.industry import IndustryAgent
 
 NUM_AGENTS = 10
 

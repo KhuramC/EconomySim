@@ -79,8 +79,9 @@ class EconomyModel(Model):
         self.inflation_rate = inflation_rate
         self.random_events = random_events
         self.policies = starting_policies
-
         self.week = 0
+        self.market_wage = self.policies.get("minimum_wage")  # weekly
+
         self.datacollector = DataCollector(
             model_reporters={
                 "week": self.get_week,
@@ -266,6 +267,22 @@ class EconomyModel(Model):
             )
         )
 
+    def update_market_wage(self):
+        """
+        Updates the market_wage based on unemployment.
+        - High unemployment puts downward pressure on wages.
+        - Low unemployment puts upward pressure on wages.
+        """
+        unemployment_rate = calculate_unemployment(self)
+        target_unemployment = 0.05
+
+        # (0.05 - 0.10) * 0.1 = -0.005 (0.5% downward pressure)
+        # (0.05 - 0.02) * 0.1 = +0.003 (0.3% upward pressure)
+        wage_adjustment = (target_unemployment - unemployment_rate) * 0.1
+        self.market_wage *= 1 + wage_adjustment
+
+        self.market_wage = max(self.market_wage, self.policies.get("minimum_wage", 0))
+
     def inflation(self) -> None:
         """
         Applies the weekly inflation rate to all industry costs and
@@ -286,17 +303,18 @@ class EconomyModel(Model):
         self.week = self.week + 1  # new week
 
         self.inflation()
+        self.update_market_wage()
 
         # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]
         industryAgents.shuffle_do("determine_price")
         industryAgents.shuffle_do("produce_goods")
-        industryAgents.shuffle_do("change_employment")
+        industryAgents.shuffle_do("update_staffing")
 
         # people agents do their tasks
         peopleAgents = self.agents_by_type[PersonAgent]
         peopleAgents.shuffle_do("purchase_goods")
-        peopleAgents.shuffle_do("change_employment")
+        peopleAgents.shuffle_do("seek_employment")
 
         # collect info for this week
         self.datacollector.collect(self)

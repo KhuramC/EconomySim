@@ -1,7 +1,34 @@
 import pytest
+from pytest import mark, approx
+import logging
 import math
 from engine.agents.industry import IndustryAgent
+from engine.agents.person import PersonAgent
 from engine.types.industry_type import IndustryType
+from engine.types.pricing_type import PricingType
+from engine.types.demographic import Demographic
+
+
+@pytest.fixture
+def industry_with_employees(mock_economy_model):
+    """
+    Creates an industry with 10 employees using the mock model.
+    """
+    industry = IndustryAgent(
+        mock_economy_model, IndustryType.GROCERIES, starting_number_of_employees=0
+    )
+
+    employees = []
+    for i in range(10):
+        person = PersonAgent(
+            mock_economy_model, Demographic.LOWER_CLASS, preferences={}
+        )
+        person.employer = industry
+        employees.append(person)
+
+    industry.num_employees = 10
+
+    return industry, employees
 
 
 @pytest.mark.parametrize("industry_type", list(IndustryType))
@@ -17,6 +44,202 @@ def test_get_employees(mock_economy_model, industry_type: IndustryType):
     i_agent = IndustryAgent(mock_economy_model, industry_type=industry_type)
     assert i_agent.get_employees() == mock_economy_model.MOCK_EMPLOYEES[industry_type]
 
+
+@pytest.mark.parametrize(
+    "market_wage, min_wage, expected_wage",
+    [
+        (20.0, 15.0, 20.0),  # Market wage is higher
+        (10.0, 15.0, 15.0),  # Minimum wage is higher
+        (15.0, 15.0, 15.0),  # Both are equal
+        (12.0, 0.0, 12.0),  # Minimum wage is 0 (or not set)
+    ],
+)
+def test_determine_wages(mock_economy_model, market_wage, min_wage, expected_wage):
+    """
+    Tests that the industry correctly sets its offered_wage based on
+    the model's market_wage and the minimum_wage policy.
+    """
+    mock_economy_model.market_wage = market_wage
+    mock_economy_model.policies["minimum_wage"] = min_wage
+
+    industry = IndustryAgent(mock_economy_model, industry_type=IndustryType.LUXURY)
+    industry.determine_wages()
+
+    assert industry.offered_wage == pytest.approx(expected_wage)
+
+
+def test_fire_employees_fires_correct_number(industry_with_employees):
+    """
+    Tests that fire_employees removes the correct number of employees
+    and updates their status.
+    """
+    industry, employees = industry_with_employees
+
+    assert len(industry.get_employees()) == 10
+    assert industry.num_employees == 10
+
+    # Fire 3 employees
+    industry.fire_employees(3)
+
+    # Check new employee count
+    assert len(industry.get_employees()) == 7
+    assert industry.num_employees == 7
+
+    # Check that 3 employees were *actually* fired
+    fired_count = 0
+    for agent in employees:
+        if agent.employer is None and agent.income == 0:
+            fired_count += 1
+
+    assert fired_count == 3
+
+
+def test_fire_employees_fires_too_many(industry_with_employees):
+    """
+    Tests that firing more employees than available just fires everyone.
+    """
+    industry, employees = industry_with_employees
+
+    # Fire 15 (only 10 exist)
+    industry.fire_employees(15)
+
+    # Check new employee count
+    assert len(industry.get_employees()) == 0
+    assert industry.num_employees == 0
+
+    # Check that all 10 employees were fired
+    for agent in employees:
+        assert agent.employer is None
+        assert agent.income == 0
+
+
+def test_fire_employees_fires_zero_or_negative(industry_with_employees):
+    """
+    Tests that firing 0 or a negative number does nothing.
+    """
+    industry, employees = industry_with_employees
+
+    industry.fire_employees(0)
+    assert len(industry.get_employees()) == 10
+
+    industry.fire_employees(-2)
+    assert len(industry.get_employees()) == 10
+
+
+@pytest.mark.parametrize(
+    "quantity_last_sold, worker_efficiency, expected_desired, expected_fired",
+    [
+        (400, 1.0, 10, 0),  # 10 desired (400 / (1*40)), 10 current -> 0 fired
+        (200, 1.0, 5, 5),  # 5 desired (200 / (1*40)), 10 current -> 5 fired
+        (800, 1.0, 20, 0),  # 20 desired (800 / (1*40)), 10 current -> 0 fired
+        (300, 0.5, 15, 0),  # 15 desired (300 / (0.5*40)), 10 current -> 0 fired
+    ],
+)
+def test_update_staffing_firing_logic(
+    industry_with_employees,
+    quantity_last_sold,
+    worker_efficiency,
+    expected_desired,
+    expected_fired,
+):
+    """
+    Tests:
+        1. Does it calculate employees_desired correctly?
+        2. Does it fire the correct number of employees when over-staffed?
+        3. Does it NOT fire when at or under capacity?
+        4. Does it update the internal num_employees count?
+    """
+    industry, employees = industry_with_employees
+    industry.worker_efficiency = worker_efficiency
+    industry.quantity_last_sold = quantity_last_sold
+
+    industry.update_staffing()
+
+    current_employees = len(industry.get_employees())
+
+    assert industry.employees_desired == expected_desired
+    assert current_employees == (10 - expected_fired)
+    assert industry.num_employees == (10 - expected_fired)
+
+    # Also verify the wage was set (even if it's just the default)
+    assert industry.offered_wage >= 0
+
+
+def test_update_staffing_zero_efficiency(industry_with_employees):
+    """
+    Tests the safety check for worker_efficiency <= 0.
+    """
+    industry, employees = industry_with_employees
+    industry.worker_efficiency = 0
+    industry.quantity_last_sold = 1000  # Set demand high
+
+    industry.update_staffing()
+
+    # Should desire 0 and not crash
+    assert industry.employees_desired == 0
+    # Should not fire anyone
+    assert len(industry.get_employees()) == 10
+    assert industry.num_employees == 10
+
+def test_hire_employee_success(mock_economy_model):
+    """
+    Tests that an industry can successfully hire a person if it is under capacity.
+    """
+    industry = IndustryAgent(
+        mock_economy_model,
+        IndustryType.GROCERIES,
+        starting_number_of_employees=5,
+        starting_offered_wage=25.0,
+    )
+    # Set desired employees higher than current
+    industry.employees_desired = 10
+
+    person = PersonAgent(
+        mock_economy_model, Demographic.LOWER_CLASS, preferences={}, income=0
+    )
+
+    assert industry.num_employees == 5
+    assert person.employer is None
+    assert person.income == 0
+
+    # Action
+    was_hired = industry.hire_employee(person)
+
+    # Assert
+    assert was_hired is True
+    assert industry.num_employees == 6
+    assert person.employer == industry
+    assert person.income == 25.0
+    
+def test_hire_employee_at_capacity(mock_economy_model):
+    """
+    Tests that an industry at full capacity (num_employees == employees_desired)
+    will not hire a new person.
+    """
+    industry = IndustryAgent(
+        mock_economy_model,
+        IndustryType.GROCERIES,
+        starting_number_of_employees=10,
+        starting_offered_wage=25.0,
+    )
+    # Set desired employees equal to current
+    industry.employees_desired = 10
+
+    person = PersonAgent(
+        mock_economy_model, Demographic.LOWER_CLASS, preferences={}, income=0
+    )
+
+    assert industry.num_employees == 10
+    assert person.employer is None
+
+    # Action
+    was_hired = industry.hire_employee(person)
+
+    # Assert
+    assert was_hired is False
+    assert industry.num_employees == 10
+    assert person.employer is None
+    assert person.income == 0
 
 def test_max_production_capacity(mock_economy_model):
     """
@@ -607,6 +830,7 @@ def test_subsidies(mock_economy_model, subsidy, expected_variable_cost):
     )  # under normal circumstances, produces a variable cost of 7.0
     mock_economy_model.policies["subsidies"][IndustryType.LUXURY] = subsidy
     assert ind.get_variable_cost() == expected_variable_cost
+
 
 
 def test_normal_case(mock_economy_model):

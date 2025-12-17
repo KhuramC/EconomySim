@@ -5,6 +5,11 @@ from ..types.pricing_type import PricingType
 from .pricing import avg_cost, linear_profit_max, linear_price, quantity_from_price
 import logging
 import math
+import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .person import PersonAgent
 
 
 class IndustryAgent(Agent):
@@ -98,29 +103,27 @@ class IndustryAgent(Agent):
         self.price = starting_price
         self.inventory = starting_inventory
         self.balance = starting_balance
-        self.offered_wage = starting_offered_wage
         self.fixed_cost = starting_fixed_cost
         self.raw_mat_cost = starting_raw_mat_cost
-        self.num_employees = starting_number_of_employees
-        self.worker_efficiency = starting_worker_efficiency
         self.debt_allowed = starting_debt_allowed
         self.demand_intercept = starting_demand_intercept
         self.demand_slope = starting_demand_slope
         self.inventory_available_this_step = 0  # calculated by determine_price
-        self.hours_worked = 0  # calculated by produce_goods
-        self.total_cost = 0.0
-        self.total_revenue = 0.0
-        self.salary_cost = salary_cost
-        self.equipment_cost = equipment_cost
-        self.property_value = property_value
-        self.insurance = insurance
         self.goods_produced: int = 0  # Tracker for GDP indicator
+        self.quantity_last_sold = 0
+
+        # Employment
+        self.offered_wage = starting_offered_wage
+        self.num_employees = starting_number_of_employees
+        self.worker_efficiency = starting_worker_efficiency
+        self.hours_worked = 0  # calculated by produce_goods
+        self.employees_desired = starting_number_of_employees
 
     def get_employees(self) -> AgentSet:
         """
         Gets all employees that are employed to this industry.
         """
-        return self.model.get_employees(self.industry_type)
+        return self.model.get_employees(self)
 
     def determine_price(self):
         """
@@ -153,10 +156,14 @@ class IndustryAgent(Agent):
                 last tick.  In order to maximize profit, the industry may artificially restrict how much they sell
             self.price (float): Returns the price to sell the suggested quantity
         """
+        self.quantity_last_sold = 0  # Reset tracker weekly
+
+
         skipPriceCap = (
             self.price == 0
         )  # if simulation is just starting and price is still zero, skip price cap logic
         oldPrice = self.price
+
         A = float(self.demand_intercept)
         B = float(self.demand_slope)
 
@@ -288,27 +295,90 @@ class IndustryAgent(Agent):
             f"total_hours_worked={quantity_to_produce:.1f}"
         )
 
-    def change_employment(self):
+    def update_staffing(self):
         """
-        How the industry will change their employees, whether it be by hiring more, firing more,
-        or changing the wages.
+        Determines the desired number of employees based on last week's sales,
+        fires employees if over-staffed, and sets the offered wage for new hires.
+
+        Hiring is handled by PersonAgents (Issue #52) applying to this industry.
         """
-        logging.info("Changing employment...NOT IMPLEMENTED")
-        # TODO: Implement industry employment logic
-        # deals with potentially firing or hiring employees, and wage changes
-        # should call determine_wages at some point
+        # Update wages for the week
+        self.determine_wages()
+        target_quantity = self.quantity_last_sold
+
+        if self.worker_efficiency <= 0:
+            self.employees_desired = 0
+            return
+
+        # Determine employess from target good produced
+        self.employees_desired = math.ceil(
+            target_quantity / (self.worker_efficiency * 40)
+        )
+        current_employees = len(self.get_employees())
+
+        # Fire excess
+        if self.employees_desired < current_employees:
+            self.fire_employees(current_employees - self.employees_desired)
+
+        self.num_employees = len(self.get_employees())
+        logging.info(
+            f"{self.industry_type} desires {self.employees_desired} employees, currently has {self.num_employees}."
+        )
+
         pass
 
     def determine_wages(self):
         """
-        How the industry will determine what to set their hiring wages at.
+        How the industry will determine what to set their hiring wages at,
+        based on the model's market_wage.
         """
-        logging.info("Changing wages...NOT IMPLEMENTED")
-        minimum_wage = self.model.policies["minimum_wage"]
-        if minimum_wage is not None and self.offered_wage < minimum_wage:
-            self.offered_wage = minimum_wage
+        new_wage = self.model.market_wage
+        self.offered_wage = max(new_wage, self.model.policies.get("minimum_wage", 0))
+
         return self.offered_wage
-        # TODO: Implement industry wage logic
+
+    def fire_employees(self, count: int):
+        """
+        Fires 'count' number of employees at random.
+        """
+        employees = list(self.get_employees())
+        if not employees or count <= 0:
+            return
+
+        random.shuffle(employees)
+        count_to_fire = min(count, len(employees))
+
+        for i in range(count_to_fire):
+            employee = employees[i]
+            employee.employer = None
+            employee.income = 0
+            self.num_employees -= 1
+            logging.info(f"Industry {self.unique_id} fired agent {employee.unique_id}")
+
+        logging.info(f"{self.industry_type} fired {count_to_fire} employees.")
+
+    def hire_employee(self, person: "PersonAgent") -> bool:
+        """
+        Hires a person if there is a vacant position.
+        This method is called by a PersonAgent.
+
+        Args:
+            person (PersonAgent): The agent applying for the job.
+
+        Returns:
+            bool: True if hiring was successful, False otherwise.
+        """
+        if self.num_employees >= self.employees_desired:
+            return False  # No more open positions
+
+        # Hire the person
+        person.employer = self
+        person.income = self.offered_wage
+        self.num_employees += 1
+        logging.info(
+            f"{self.industry_type} hired agent {person.unique_id} for {self.offered_wage:.2f}."
+        )
+        return True
 
     def get_variable_cost(self):
         """
@@ -514,6 +584,8 @@ class IndustryAgent(Agent):
         self.inventory -= quantity
         self.inventory_available_this_step -= quantity
         self.balance += quantity * self.price
+        self.quantity_last_sold += quantity
+
         self.total_revenue += quantity * self.price
 
     def new_tick(self):

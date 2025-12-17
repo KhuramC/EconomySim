@@ -158,16 +158,30 @@ class PersonAgent(Agent):
                     f"Agent {self.unique_id} has insufficient funds for {industry.industry_type}"
                 )
 
-    def change_employment(self):
+    def seek_employment(self):
         """
-        How the person will try to change their employment status and get hired. Only occurs if
-        they are not employed.
+        Applies for all available jobs in order of highest wage. Only occurs if they are not employed.
         """
-        self.income = self.income + 1
         if self.employer is not None:
-            logging.info("Already employed, no action taken.")
             return
 
-        # TODO: Implement person employment logic
-        # deals with trying to find a new job if unemployed
-        pass
+        all_industries = list(self.model.agents_by_type[IndustryAgent])
+
+        # Find industries that are hiring (have open positions)
+        hiring_industries = [
+            industry
+            for industry in all_industries
+            if industry.employees_desired > industry.num_employees
+        ]
+
+        if not hiring_industries:
+            return
+
+        # Apply to industries in order of wage
+        hiring_industries.sort(key=lambda x: x.offered_wage, reverse=True)
+        for industry in hiring_industries:
+            was_hired = industry.hire_employee(self)
+            if was_hired:
+                return  # Stop looking for a job
+
+        logging.info(f"Agent {self.unique_id} applied for jobs but was not hired.")
