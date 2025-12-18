@@ -2,7 +2,7 @@ import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
 from mesa.datacollection import DataCollector
-from typing import Dict, Tuple, Optional
+from typing import Optional
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
 from ..types.industry_type import IndustryType
@@ -52,7 +52,7 @@ class EconomyModel(Model):
     """The current week in the simulation."""
     
     model_demand_parameters: dict[str, tuple[float, Optional[float]]]
-    """Stores the slope and price at quantity zero of the model's demand for each industry"""
+    """Stores the slope and price at quantity zero of the model's demand for each industry."""
 
     def __init__(
         self,
@@ -343,8 +343,8 @@ class EconomyModel(Model):
         }
 
         # accumulators keyed by industry name (PersonAgent returns keys as strings)
-        slope_acc: Dict[str, list[float]] = {}
-        pzero_acc: Dict[str, list[float]] = {}
+        slope_acc: dict[str, list[float]] = {}
+        pzero_acc: dict[str, list[float]] = {}
 
         for person in people_agents:
             # budget is determined by the person's own method
@@ -361,18 +361,18 @@ class EconomyModel(Model):
                     pzero_acc.setdefault(industry_key, []).append(p_zero)
 
         # compute averages
-        aggregated: Dict[str, Tuple[float, Optional[float]]] = {}
+        aggregated: dict[str, tuple[float, Optional[float]]] = {}
         for industry_key, slopes in slope_acc.items():
-            avg_slope = sum(slopes) / len(slopes) if slopes else 0.0
+            avg_slope = np.mean(slopes) if slopes else 0.0
             pzeros = pzero_acc.get(industry_key, [])
-            avg_pzero = sum(pzeros) / len(pzeros) if pzeros else None
+            avg_pzero = np.mean(pzeros) if pzeros else None
             aggregated[industry_key] = (avg_slope, avg_pzero)
 
         # include industries that had p_zero values but no slopes (unlikely)
         for industry_key, pzeros in pzero_acc.items():
             if industry_key in aggregated:
                 continue
-            avg_pzero = sum(pzeros) / len(pzeros) if pzeros else None
+            avg_pzero = np.mean(pzeros) if pzeros else None
             aggregated[industry_key] = (0.0, avg_pzero)
 
         self.model_demand_parameters = aggregated
