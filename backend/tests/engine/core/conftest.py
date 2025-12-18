@@ -39,7 +39,7 @@ def indicator_test_model_factory_balance(population, industries, policies):
         model = EconomyModel(
             max_simulation_length=1,
             num_people=len(balances),
-            demographics=population,
+            population=population,
             industries=industries,
             starting_policies=policies,
         )

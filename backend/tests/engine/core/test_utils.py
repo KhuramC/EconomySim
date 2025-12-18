@@ -125,7 +125,7 @@ def test_validate_schema_success(
             id="invalid_policies",
         ),
         pytest.param(
-            ("population", (Demographic.LOWER_CLASS, "proportion")),
+            ("population", ("spending_behaviors", Demographic.LOWER_CLASS)),
             POPULATION_SCHEMA,
             "population",
             id="invalid_population",
