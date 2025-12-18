@@ -1,6 +1,6 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
-from .demand import demand_func
+from .demand import demand_func, custom_round
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
@@ -88,63 +88,6 @@ class PersonAgent(Agent):
         self.balance += self.income
         self.deduct_income_tax()
 
-    def demand_func(
-        self,
-        budget: float,
-        prefs: dict[IndustryType, float],
-        prices: dict[IndustryType, float],
-    ) -> dict[str, float]:
-        """
-        Calculates the quantity of each good to purchase based on the CES demand function.
-
-        Args:
-            budget: The total money available to spend.
-            prefs: The preference weights for the available goods.
-            prices: The prices of the available goods.
-        Returns:
-            A dictionary mapping each good's name to the desired quantity.
-        """
-
-        valid_goods = [name for name in prefs if name in prices]
-
-        denominator = sum(
-            (prefs[name] ** self.sigma) * (prices[name] ** (1 - self.sigma))
-            for name in valid_goods
-        )
-
-        if denominator == 0:
-            return {name: 0 for name in valid_goods}
-
-        demands = {}
-        for name in valid_goods:
-            numerator = (prefs[name] ** self.sigma) * (prices[name] ** -self.sigma)
-            quantity_unrounded = (numerator / denominator) * budget #value is not rounded until purchase step.  This allows for savings accumulation.
-            demands[name] = quantity_unrounded  
-
-        return demands
-
-    def custom_round(self, x: float) -> int:
-        """
-        Round up if x is within 0.05 of the next whole number,
-        otherwise round down.
-        
-        Note: This is mainly used to avoid floating point precision issues
-        when determining affordable quantities.
-        
-        Args:
-            x: The float number to round.
-        Returns:
-            The rounded integer.
-        """
-        lower = math.floor(x)
-        upper = lower + 1
-
-        # If x is within 0.05 of the upper integer, round up
-        if upper - x <= 0.05:
-            return upper
-        else:
-            return lower
-
     def determine_budget(self) -> float:
         """
         Determines the agent's spending budget for the week based on their
@@ -197,7 +140,7 @@ class PersonAgent(Agent):
                 continue
 
             # allocate money = quantity * price_with_tax
-            price_with_tax = prices[itype]
+            price_with_tax = effective_prices[itype]
             allocated_dollars = q_desired * price_with_tax
 
             # add this to the industry-specific savings pool
@@ -207,14 +150,14 @@ class PersonAgent(Agent):
             savings_bucket = self.industry_savings[itype]
             if savings_bucket <= 0:
                 continue
-            price_with_tax = prices[itype]  # price including sales tax
+            price_with_tax = effective_prices[itype]  # price including sales tax
 
             # Check if agent saved enough to buy at least 1 unit
             if savings_bucket < price_with_tax:
                 continue
 
             # Determine how many units savings allow
-            max_affordable_from_savings = self.custom_round(savings_bucket / price_with_tax)
+            max_affordable_from_savings = custom_round(savings_bucket / price_with_tax)
             # Limit by inventory
             purchasable_units = min(
                 max_affordable_from_savings,

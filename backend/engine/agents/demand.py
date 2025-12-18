@@ -31,9 +31,8 @@ def demand_func(
     demands = {}
     for name in valid_goods:
         numerator = (prefs[name] ** sigma) * (prices[name] ** -sigma)
-        quantity_unrounded = (numerator / denominator) * budget
-        quantity = custom_round(quantity_unrounded)
-        demands[name] = quantity
+        quantity_unrounded = (numerator / denominator) * budget #value is not rounded until purchase step.  This allows for savings accumulation.
+        demands[name] = quantity_unrounded  
 
     return demands
 
