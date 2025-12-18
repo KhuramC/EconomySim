@@ -17,7 +17,6 @@ class PersonAgent(Agent):
         balance (float): The current amount of money the person has; negative indicating debt.
         preferences (dict): Spending preferences a weight for each industry, summing to 1.
         sigma (float): The elasticity of substitution for the industries.
-        savings_rate (float): The proportion of income saved on a weekly basis.
     """
 
     demographic: Demographic
@@ -32,15 +31,12 @@ class PersonAgent(Agent):
     """Spending preferences, mapping industry type to a weight. Must sum to 1."""
     sigma: float
     """The elasticity of substitution associated with the industries."""
-    savings_rate: float
-    """The proportion of income saved and not used on purchasing goods on a weekly basis."""
 
     def __init__(
         self,
         model: Model,
         demographic: Demographic,
         preferences: dict[IndustryType, float],
-        savings_rate: float = 0.10,
         income: float = 0,
         employer: IndustryAgent | None = None,
         starting_balance: float = 0.0,
@@ -54,7 +50,6 @@ class PersonAgent(Agent):
         self.employer = employer
         self.balance = starting_balance
         self.preferences = preferences
-        self.savings_rate = savings_rate
         self.sigma = DEMOGRAPHIC_SIGMAS[self.demographic]
         
         self.industry_savings: dict[IndustryType, float] = {
@@ -94,10 +89,7 @@ class PersonAgent(Agent):
         income and savings rate.
         """
 
-        # TODO: How does this savings_rate get updated?
-        # Is it based off of demographic?
-
-        budget = self.income * (1 - self.savings_rate)
+        budget = self.income
         return max(0.0, budget)  # Must be non-negative
 
     def purchase_goods(self):

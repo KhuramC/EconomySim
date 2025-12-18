@@ -39,14 +39,14 @@ def demand_func(
 
 def custom_round(x: float) -> int:
     """
-    Round up if x is within 0.05 of the next whole number,
+    Round up if x is within 1e-9 of the next whole number,
     otherwise round down.
     """
     lower = math.floor(x)
     upper = lower + 1
 
-    # If x is within 0.05 (plus some tolerance for floating point errors) of the upper integer, round up
-    if upper - x <= 0.05 + 1e-9:
+    # If x is within 1e-9 (tolerance for floating point errors) of the upper integer, round up
+    if upper - x <= 1e-9:
         return upper
     else:
         return lower
