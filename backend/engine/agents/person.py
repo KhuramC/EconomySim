@@ -1,9 +1,9 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
+from .demand import demand_func
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
-import math
 
 
 class PersonAgent(Agent):
@@ -16,6 +16,8 @@ class PersonAgent(Agent):
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
         balance (float): The current amount of money the person has; negative indicating debt.
         preferences (dict): Spending preferences a weight for each industry, summing to 1.
+        sigma (float): The elasticity of substitution for the industries.
+        savings_rate (float): The proportion of income saved on a weekly basis.
     """
 
     demographic: Demographic
@@ -27,7 +29,11 @@ class PersonAgent(Agent):
     balance: float
     """The total dollars held by this person. Negative indicates debt."""
     preferences: dict[IndustryType, float]
-    """Spending preferences, mapping industry name to a weight. Must sum to 1."""
+    """Spending preferences, mapping industry type to a weight. Must sum to 1."""
+    sigma: float
+    """The elasticity of substitution associated with the industries."""
+    savings_rate: float
+    """The proportion of income saved and not used on purchasing goods on a weekly basis."""
 
     def __init__(
         self,
@@ -60,13 +66,15 @@ class PersonAgent(Agent):
         personal_income_tax: list = self.model.policies["personal_income_tax"]
         if not personal_income_tax:
             return
-        
-        previous_threshold = float('inf')
+
+        previous_threshold = float("inf")
         for bracket in personal_income_tax:
+            # it is assumed that the highest threshold is first
             threshold = bracket["threshold"]
             rate = bracket["rate"]
 
             if self.income > threshold:
+                # tax from current threshold to income or previous treshold
                 taxable_income = min(previous_threshold, self.income) - threshold
                 tax = taxable_income * rate
                 self.balance -= tax
@@ -161,19 +169,20 @@ class PersonAgent(Agent):
 
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
 
-        # tax-adjusted prices
-        prices = {
+        # sales tax logic; incorporate into person facing prices
+        effective_prices = {
             agent.industry_type: (
                 agent.price * (1 + self.model.policies["sales_tax"][agent.industry_type])
             )
             for agent in industry_agents
         }
 
-        # CES demand → produces quantity demand per good
-        desired_quantities = self.demand_func(
+        # Calculate desired purchases
+        desired_quantities = demand_func(
+            sigma=self.sigma,
             budget=self.determine_budget(),
             prefs=self.preferences,
-            prices=prices,
+            prices=effective_prices,
         )
         #returns an unrounded quantity demand per good
 
