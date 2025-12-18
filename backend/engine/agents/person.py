@@ -118,8 +118,7 @@ class PersonAgent(Agent):
         budget: float,
         prefs: dict[IndustryType, float],
         prices: dict[IndustryType, float],
-        epsilon: float = 1e-12,
-    ) -> dict[str, tuple[float, float | None]]:
+    ) -> dict[IndustryType, tuple[float, float | None]]:
         """
         Produces a tuple representing the tangent line (slope and y-intercept) to the CES demand curve at the current price point.
         
@@ -137,27 +136,27 @@ class PersonAgent(Agent):
               Returns None if slope = 0 or result is not positive/finite.
         """
 
-        valid_goods = [g for g in prefs if g in prices]
+        valid_goods = [name for name in prefs if name in prices]
 
         sigma = self.sigma
-        A = {g: prefs[g] ** sigma for g in valid_goods}         #get spending preferences for each industry
-        p = {g: max(prices[g], epsilon) for g in valid_goods}   #clamp to zero
+        A = {name: prefs[name] ** sigma for name in valid_goods}         #get spending preferences for each industry
+        p = {name: max(prices[name], 1e-12) for name in valid_goods}   #clamp to zero
 
         # denominator of CES demand
-        D = sum(A[g] * (p[g] ** (1 - sigma)) for g in valid_goods) 
+        D = sum(A[name] * (p[name] ** (1 - sigma)) for name in valid_goods)
 
         # If denominator is zero, return zero slope & None zero-price
         if D <= 0:
             return {
-                g.name if hasattr(g, "name") else str(g): (0.0, None)
-                for g in valid_goods
+                name: (0.0, None)
+                for name in valid_goods
             }
 
         results = {}
 
-        for g in valid_goods:
-            Ai = A[g]
-            pi = p[g]
+        for name in valid_goods:
+            Ai = A[name]
+            pi = p[name]
 
             # quantity at current price (continuous)
             q0 = budget * (Ai * (pi ** (-sigma)) / D)
@@ -182,8 +181,7 @@ class PersonAgent(Agent):
                 else:
                     p_zero = None
 
-            key = g.name if hasattr(g, "name") else str(g)
-            results[key] = (slope, p_zero)
+            results[name] = (slope, p_zero)
 
         return results
 

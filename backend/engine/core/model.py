@@ -51,7 +51,7 @@ class EconomyModel(Model):
     week: int
     """The current week in the simulation."""
     
-    model_demand_parameters: dict[str, tuple[float, Optional[float]]]
+    model_demand_parameters: dict[IndustryType, tuple[float, Optional[float]]]
     """Stores the slope and price at quantity zero of the model's demand for each industry."""
 
     def __init__(
@@ -330,8 +330,8 @@ class EconomyModel(Model):
                 (average_slope: float, average_price_at_zero: float | None)
         """
 
-        people_agents = self.agents_by_type.get(PersonAgent, None)
-        industry_agents = list(self.agents_by_type.get(IndustryAgent, []))
+        people_agents = self.agents_by_type.get(PersonAgent)
+        industry_agents = self.agents_by_type.get(IndustryAgent)
 
         # If no people or no industries, return empty dict
         if not people_agents or not industry_agents:
@@ -343,8 +343,8 @@ class EconomyModel(Model):
         }
 
         # accumulators keyed by industry name (PersonAgent returns keys as strings)
-        slope_acc: dict[str, list[float]] = {}
-        pzero_acc: dict[str, list[float]] = {}
+        slope_acc: dict[IndustryType, list[float]] = {}
+        pzero_acc: dict[IndustryType, list[float]] = {}
 
         for person in people_agents:
             # budget is determined by the person's own method
@@ -361,7 +361,7 @@ class EconomyModel(Model):
                     pzero_acc.setdefault(industry_key, []).append(p_zero)
 
         # compute averages
-        aggregated: dict[str, tuple[float, Optional[float]]] = {}
+        aggregated: dict[IndustryType, tuple[float, Optional[float]]] = {}
         for industry_key, slopes in slope_acc.items():
             avg_slope = np.mean(slopes) if slopes else 0.0
             pzeros = pzero_acc.get(industry_key, [])
