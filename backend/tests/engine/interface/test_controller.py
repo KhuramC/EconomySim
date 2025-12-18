@@ -189,7 +189,7 @@ def test_get_demo_metrics(controller_model: dict, population):
     all_data_df = controller.get_demo_metrics(model_id, start_time=0, end_time=0)
     assert not all_data_df.empty
     assert set(all_data_df["week"].unique()) == {0, 1, 2, 3, 4, 5}
-    assert len(all_data_df["Demographics"].unique()) == len(population)
+    assert len(all_data_df["Demographics"].unique()) == len(Demographic)
     expected_columns = set(DemoMetrics.values()).union({"week", "Demographics"})
     assert expected_columns.issubset(all_data_df.columns)
 
