@@ -54,21 +54,31 @@ TODO: Implement a demographic-specific value. This adds a layer of realism for e
 
 **How much of weekly income/total balance to spend?**
 
-The agent allocates their weekly income minus their `savings_rate` to their spending budget.
+The agent allocates their weekly income to their spending budget.
 
-TODO: update with how savings rate gets updated.
+Spending budget is then broken down into `industry_savings`, which represents income designated for spending in each industry.
+
+`industry_savings` carries over funds between cycles.
 
 #### Determining Purchase Quantity
 
-Traditionally, a `PersonAgent` is unable to buy any additional goods that cause them to go over budget. However, in cases where the agent can afford 95% of the additional unit, they are allowed to go exceed their budget slightly. This was done to compensate for floating point errors that can occur, causing what should be a whole number quantity be just slightly below, leading it to be rounded down unnecessarily.
+A `PersonAgent` is unable to buy any additional goods that cause them to go over their industry-specific budget.
+
+If the current amount in `industry_savings` doesn't allow for the purchase of a single good, the funds will carry over to the next cycles until a purchase can be made.
+
+A `custom_round` function is used to account for floating point errors.  If the next purchasable unit is within 1e-9 (one billionth of the cost), the additional 
+purchase will be made.
+
 
 #### Shortage Handling
 
 **How do we determine what happens if they want more than is available to buy?**
 
-Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget. This unspent money is effectively saved for the next cycle.
+When `IndustryAgent` doesn't produce enough goods to meet the market demand, a `PersonAgent` will save the money they would have spent on that industry.
 
-TODO: update with how shortage handling is dealt with.
+The additional funds are saved in the `industry_savings` dict, which is keyed by IndustryType.
+
+On the next cycle, the saved up funds will be put towards purchasing additional quantities.
 
 ## IndustryAgent
 
