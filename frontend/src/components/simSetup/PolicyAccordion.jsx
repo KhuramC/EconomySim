@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MenuItem, Typography } from "@mui/material";
+import { MenuItem } from "@mui/material";
 
 import ParameterNumInput from "../inputs/ParameterNumInput";
 import ParameterSliderInput from "../inputs/ParameterSliderInput";
@@ -18,7 +18,7 @@ import { Demographic } from "../../types/Demographic";
  *
  * Advanced:
  *  - Per-industry overrides:
- *      - sales tax, corporate tax, tariffs, subsidies, price cap.
+ *      - sales tax, corporate tax, tariffs, subsidies, price cap (+ enable flag).
  *  - Per-demographic overrides:
  *      - personal income tax (PIT) brackets by demographic.
  *
@@ -254,14 +254,27 @@ export default function PolicyAccordion({
         helpText="Override subsidies paid to this industry."
       />
 
-      <ParameterSliderInput
+      {/* Per-industry price cap with its own enable toggle */}
+      <ToggleableSliderInput
         label={`Price Cap (%/year) — ${selectedIndustry}`}
         value={
           policyParams.priceCapByIndustry?.[selectedIndustry] ??
           policyParams.priceCap
         }
+        isEnabled={
+          policyParams.priceCapEnabledByIndustry?.[selectedIndustry] ??
+          policyParams.priceCapEnabled
+        }
+        setIsEnabled={
+          typeof handleIndustryPolicyChange === "function"
+            ? handleIndustryPolicyChange(
+                "priceCapEnabledByIndustry",
+                selectedIndustry
+              )
+            : undefined
+        }
         onChange={getIndustryOnChange("priceCapByIndustry")}
-        helpText="Override the global price cap (annual %)."
+        helpText="Override and toggle the global price cap (annual %) for this industry."
       />
 
       {/* Per-demographic overrides: Personal Income Tax */}

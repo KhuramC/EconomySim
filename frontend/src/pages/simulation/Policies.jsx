@@ -103,7 +103,8 @@ export default function Policies() {
   const handlePolicyChange = (field) => (event) => {
     const { value } = event.target;
     setPolicies((prevPolicies) => {
-      // Use lodash for deep cloning and setting nested properties
+      if (!prevPolicies) return prevPolicies;
+
       const newPolicies = _.cloneDeep(prevPolicies);
       _.set(newPolicies, field, parseFloat(value) || 0);
 
@@ -113,10 +114,54 @@ export default function Policies() {
   };
 
   /**
+   * Handler for per-industry overrides, including numeric fields
+   * (salesTaxByIndustry, priceCapByIndustry, etc.) and boolean fields
+   * (priceCapEnabledByIndustry).
+   *
+   * @param {string} fieldName  - Name of the object field on `policies`,
+   *                              e.g. "salesTaxByIndustry".
+   * @param {string} industryKey - Industry enum value, e.g. "GROCERIES".
+   */
+  const handleIndustryPolicyChange = (fieldName, industryKey) => (event) => {
+    const raw =
+      event && event.target
+        ? event.target.type === "checkbox"
+          ? event.target.checked
+          : event.target.value
+        : event;
+
+    // Convert to appropriate JS type:
+    //  - checkboxes => boolean
+    //  - sliders / text => number
+    const value =
+      typeof raw === "boolean"
+        ? raw
+        : raw === "" || raw === null || raw === undefined
+        ? 0
+        : parseFloat(raw) || 0;
+
+    setPolicies((prevPolicies) => {
+      if (!prevPolicies) return prevPolicies;
+
+      const newPolicies = _.cloneDeep(prevPolicies);
+      const currentMap = newPolicies[fieldName] || {};
+      newPolicies[fieldName] = {
+        ...currentMap,
+        [industryKey]: value,
+      };
+
+      debouncedSetPolicies(newPolicies);
+      return newPolicies;
+    });
+  };
+
+  /**
    * Handler for toggling the global price cap enabled/disabled state.
    */
   const handlePriceCapToggle = () => {
     setPolicies((prevPolicies) => {
+      if (!prevPolicies) return prevPolicies;
+
       const newPolicies = {
         ...prevPolicies,
         priceCapEnabled: !prevPolicies.priceCapEnabled,
@@ -137,6 +182,8 @@ export default function Policies() {
   const handlePersonalIncomeTaxChange = (index, field) => (event) => {
     const { value } = event.target;
     setPolicies((prevPolicies) => {
+      if (!prevPolicies) return prevPolicies;
+
       const newPolicies = _.cloneDeep(prevPolicies);
       const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
 
@@ -156,6 +203,8 @@ export default function Policies() {
    */
   const addPersonalIncomeTaxBracket = () => {
     setPolicies((prevPolicies) => {
+      if (!prevPolicies) return prevPolicies;
+
       const newPolicies = _.cloneDeep(prevPolicies);
       const newTaxBrackets = [...(newPolicies.personalIncomeTax || [])];
 
@@ -174,6 +223,8 @@ export default function Policies() {
    */
   const removePersonalIncomeTaxBracket = (index) => {
     setPolicies((prevPolicies) => {
+      if (!prevPolicies) return prevPolicies;
+
       const newPolicies = _.cloneDeep(prevPolicies);
       const newTaxBrackets = (newPolicies.personalIncomeTax || []).filter(
         (_, i) => i !== index
@@ -209,6 +260,7 @@ export default function Policies() {
             <PolicyAccordion
               policyParams={policies}
               handlePolicyChange={handlePolicyChange}
+              handleIndustryPolicyChange={handleIndustryPolicyChange}
               starting={false}
               handlePriceCapToggle={handlePriceCapToggle}
               handlePersonalIncomeTaxChange={handlePersonalIncomeTaxChange}

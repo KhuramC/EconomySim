@@ -379,21 +379,51 @@ export default function SetupPage() {
     }));
   };
 
-  // Per-industry overrides
-  const handleIndustryPolicyChange = (fieldName, industryKey) => (event) => {
-    const { value } = event.target;
-    setParams((prev) => ({
-      ...prev,
-      policyParams: {
-        ...prev.policyParams,
-        [fieldName]: {
-          ...(prev.policyParams[fieldName] || {}),
-          [industryKey]: Number(value),
-        },
-      },
-    }));
-  };
+  /**
+   * Per-industry overrides handler.
+   *
+   * This supports both:
+   *  - numeric fields via sliders/text inputs (value: number)
+   *  - boolean fields via toggles (value: boolean)
+   *
+   * It is used for:
+   *  - salesTaxByIndustry, corporateTaxByIndustry, tariffsByIndustry,
+   *    subsidiesByIndustry, priceCapByIndustry
+   *  - priceCapEnabledByIndustry (boolean, used by ToggleableSliderInput)
+   */
+  const handleIndustryPolicyChange =
+    (fieldName, industryKey) => (eventOrValue) => {
+      // Extract raw value from either an event or a direct value
+      const raw =
+        eventOrValue && eventOrValue.target
+          ? eventOrValue.target.type === "checkbox"
+            ? eventOrValue.target.checked // toggle → boolean
+            : eventOrValue.target.value   // slider/text → string
+          : eventOrValue;
 
+      // Convert to final JS type: boolean or number
+      const value =
+        typeof raw === "boolean"
+          ? raw
+          : raw === "" || raw === null || raw === undefined
+          ? 0
+          : Number(raw) || 0;
+
+      setParams((prev) => ({
+        ...prev,
+        policyParams: {
+          ...prev.policyParams,
+          [fieldName]: {
+            ...(prev.policyParams[fieldName] || {}),
+            [industryKey]: value,
+          },
+        },
+      }));
+    };
+
+  /**
+   * Toggle for the global price cap (applies to all industries unless overridden).
+   */
   const handlePriceCapToggle = () => {
     setParams((prev) => ({
       ...prev,
@@ -637,7 +667,7 @@ export default function SetupPage() {
                 margin: "0.5rem 0 0 1rem",
                 padding: 0,
                 textAlign: "left",
-              }}å
+              }}
             >
               {Object.values(formErrors).map((text) => (
                 <li key={text}>{text}</li>
