@@ -6,27 +6,17 @@ from engine.types.demographic import Demographic
 
 NUM_AGENTS = 10
 
-DEMOGRAPHICS = {
-    demo: {
-        "income": {
-            # Weekly income, increases with class
-            "mean": 300 + (i * 500),
-            "sd": 100 + (i * 150),
-        },
-        # Proportions that add up to 1.0
-        "proportion": [0.45, 0.40, 0.15][i],
-        "spending_behavior": {
-            itype.value: 1 / len(list(IndustryType)) for itype in IndustryType
-        },
-        "balance": {
-            # Starting cash on hand, increases with class
-            "mean": 500 + (i * 2500),
-            "sd": 200 + (i * 1000),
-        },
-    }
-    for i, demo in enumerate(Demographic)
+POPULATION = {
+    "income_mean": 800,
+    "income_std": 250,
+    "balance_mean": 3000,
+    "balance_std": 1200,
+    "spending_behaviors": {
+        demo: {itype.value: 1 / len(list(IndustryType)) for itype in IndustryType}
+        for demo in Demographic
+    },
 }
-"""A sample demographics variable that should pass a validate_schema call by an EconomyModel."""
+"""A sample population variable that should pass a validate_schema call by an EconomyModel."""
 
 INDUSTRIES = {
     itype: {
@@ -69,13 +59,13 @@ def num_agents() -> int:
 
 
 @pytest.fixture()
-def demographics() -> (
-    dict[Demographic, dict[str, float | dict[str | IndustryType, float]]]
+def population() -> (
+    dict[str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]]
 ):
     """
     A fixture that provides a valid demographics for starting a simulation.
     """
-    return DEMOGRAPHICS
+    return POPULATION
 
 
 @pytest.fixture()

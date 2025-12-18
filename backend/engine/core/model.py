@@ -56,9 +56,7 @@ class EconomyModel(Model):
         self,
         max_simulation_length: int,
         num_people: int,
-        population: dict[
-            str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]
-        ],
+        population: dict[str, int | float | dict[str, dict[IndustryType, float]]],
         industries: dict[IndustryType, dict[str, float | int]],
         starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
         inflation_rate: float = 0.001,
@@ -71,7 +69,7 @@ class EconomyModel(Model):
         if num_people < 0:
             raise ValueError("A nonnegative amount of agents is required.")
         # check demographics/industries/policies has all necessary keys
-        validate_schema(population, POPULATION_SCHEMA, path="demographics")
+        validate_schema(population, POPULATION_SCHEMA, path="population")
         validate_schema(industries, INDUSTRIES_SCHEMA, path="industries")
         validate_schema(starting_policies, POLICIES_SCHEMA, path="policies")
 
@@ -116,6 +114,8 @@ class EconomyModel(Model):
             self.agents_by_type[PersonAgent] = AgentSet([], self)
         if IndustryAgent not in self.agents_by_type:
             self.agents_by_type[IndustryAgent] = AgentSet([], self)
+
+        self.datacollector.collect(self)
 
     def setup_person_agents(
         self,
@@ -164,7 +164,7 @@ class EconomyModel(Model):
             agent_demographics.append(assigned_demo)
 
             # Generate unique preferences from dirichlet distribution
-            spending_behavior = population.get("spending_behavior").get(assigned_demo)
+            spending_behavior = population["spending_behaviors"][assigned_demo]
             industries_list = list(spending_behavior.keys())
             alphas = list(spending_behavior.values())
             concentrated_alphas = [val * preference_concentration for val in alphas]
@@ -273,8 +273,8 @@ class EconomyModel(Model):
         # people agents do their tasks
         peopleAgents = self.agents_by_type[PersonAgent]
         indicators_df = self.datacollector.get_model_vars_dataframe()
-        median_income = indicators_df['Median Income'].iloc[-1]
-        
+        median_income = indicators_df["Median Income"].iloc[-1]
+
         peopleAgents.do("update_class", median_income)
         peopleAgents.shuffle_do("purchase_goods")
         peopleAgents.shuffle_do("change_employment")

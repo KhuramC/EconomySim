@@ -168,7 +168,7 @@ def test_get_demo_metrics_validation(controller_model: dict, kwargs, error_msg):
         controller.get_industry_data(**kwargs)
 
 
-def test_get_demo_metrics(controller_model: dict, demographics):
+def test_get_demo_metrics(controller_model: dict, population):
     """
     Test for `get_demo_metrics`.
     Tests that time and metric filtering function as expected and
@@ -176,7 +176,7 @@ def test_get_demo_metrics(controller_model: dict, demographics):
 
     Args:
         controller_model(dict): the controller with the created model.
-        demographics (dict): a valid demographics dict.
+        population (dict): a valid population dict.
     """
     controller = controller_model["controller"]
     model_id = controller_model["model_id"]
@@ -189,7 +189,7 @@ def test_get_demo_metrics(controller_model: dict, demographics):
     all_data_df = controller.get_demo_metrics(model_id, start_time=0, end_time=0)
     assert not all_data_df.empty
     assert set(all_data_df["week"].unique()) == {1, 2, 3, 4, 5}
-    assert len(all_data_df["Demographics"].unique()) == len(demographics)
+    assert len(all_data_df["population"].unique()) == len(population)
     expected_columns = set(DemoMetrics.values()).union({"week"})
     assert expected_columns.issubset(all_data_df.columns)
 

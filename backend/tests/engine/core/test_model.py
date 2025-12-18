@@ -11,7 +11,7 @@ from engine.agents.industry import IndustryAgent
 from engine.agents.person import PersonAgent
 
 
-def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics):
+def test_setup_person_agents(model: EconomyModel, num_agents: int, population):
     """
     Tests that the `setup_person_agents` method, called during
     EconomyModel.__init__, correctly creates agents.
@@ -54,7 +54,7 @@ def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics)
         assert set(agent.preferences.keys()) == expected_keys
 
 
-def test_setup_person_agents_preferences(model: EconomyModel, demographics):
+def test_setup_person_agents_preferences(model: EconomyModel, population):
     """
     Tests that:
         1. Each PersonAgent preference vector sums to 1 (within floating tolerance).
@@ -77,7 +77,7 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
         if len(demo_agents) <= 1:
             continue
 
-        theoretical_means = demographics[demo]["spending_behavior"]
+        theoretical_means = population[demo]["spending_behaviors"]
         theoretical_mean_vector = np.array(
             [theoretical_means[key] for key in industries]
         )

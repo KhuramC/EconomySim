@@ -33,8 +33,8 @@ class ModelController:
         self,
         max_simulation_length: int,
         num_people: int,
-        demographics: dict[
-            Demographic, dict[str, float | dict[str | IndustryType, float]]
+        population: dict[
+            str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]
         ],
         industries: dict[IndustryType, dict[str, float | int]],
         starting_policies: dict[str, float | dict[IndustryType | Demographic, float]],
@@ -47,7 +47,7 @@ class ModelController:
         Args:
             max_simulation_length (int): The maximum length of the simulation in weeks.
             num_people (int): The number of people to create in the model.
-            demographics (dict): A dictionary defining the demographics of the population.
+            population (dict): A dictionary defining the characteristics of the population.
             starting_policies (dict): A dictionary of policies to apply in the model.
             industries (dict): A dictionary defining the industries in the model.
             inflation_rate (float): The weekly inflation rate to apply in the model.
@@ -66,7 +66,7 @@ class ModelController:
                 inflation_rate=inflation_rate,
                 num_people=num_people,
                 random_events=random_events,
-                demographics=demographics,
+                population=population,
                 starting_policies=starting_policies,
                 industries=industries,
             )
@@ -78,7 +78,7 @@ class ModelController:
             return model_id
         except ValueError as e:
             raise ValueError(
-                f"Demographics/industries/policies not validated: {str(e)}"
+                f"population/industries/policies not validated: {str(e)}"
             )
 
     def delete_model(self, model_id: int) -> None:
