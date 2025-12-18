@@ -9,8 +9,9 @@ function decimalToPercent(decimal) {
 
 /**
  * Transforms a weekly compounding decimal rate to an annual percentage.
- * @param {object} weeklyDecimal
- * @returns {object}
+ *
+ * @param {number} weeklyDecimal - Weekly compounding rate as a decimal.
+ * @returns {number} Annual rate in percent (0–100).
  */
 function weeklyDecimaltoAnnualPercent(weeklyDecimal) {
   return decimalToPercent((1 + weeklyDecimal) ** 52 - 1);
@@ -25,8 +26,103 @@ function weeklyWagetoAnnual(weeklyWage) {
 }
 
 /**
+ * Helper to pick a single representative value from an industry-specific
+ * policy dictionary.
+ *
+ * Used to pre-populate the "global" sliders when the backend only provides
+ * per-industry values. We simply take the value for the first IndustryType.
+ *
+ * @param {object} policyDict - Backend dictionary keyed by IndustryType.
+ * @returns {number} A representative value (or 0 as a fallback).
+ */
+const getUniformIndustryPolicyValue = (policyDict) => {
+  if (typeof policyDict === "object" && policyDict !== null) {
+    const industryKeys = Object.values(IndustryType);
+    if (
+      industryKeys.length > 0 &&
+      policyDict[industryKeys[0]] !== undefined
+    ) {
+      return policyDict[industryKeys[0]];
+    }
+  }
+  // Fallback if the structure is unexpected or empty
+  return 0;
+};
+
+/**
+ * Helper: backend dict of decimals -> frontend dict of percent strings.
+ * Converts values for every industry to "xx.xx" percent strings.
+ *
+ * @param {object} backendDict - Backend dictionary keyed by IndustryType.
+ * @returns {object} Frontend dictionary of percent strings.
+ */
+const buildFrontendIndustryPercentDict = (backendDict) => {
+  const safeDict =
+    typeof backendDict === "object" && backendDict !== null
+      ? backendDict
+      : {};
+
+  return Object.fromEntries(
+    Object.values(IndustryType).map((industry) => {
+      const raw = safeDict[industry] ?? 0;
+      return [industry, decimalToPercent(raw).toFixed(2)];
+    })
+  );
+};
+
+/**
+ * Helper: backend dict of weekly decimals -> frontend dict of annual percent strings.
+ * Used for policies expressed as weekly compounding rates (e.g., price caps).
+ *
+ * @param {object} backendDict - Backend dictionary keyed by IndustryType.
+ * @returns {object} Frontend dictionary of annual percent strings.
+ */
+const buildFrontendIndustryWeeklyPercentDict = (backendDict) => {
+  const safeDict =
+    typeof backendDict === "object" && backendDict !== null
+      ? backendDict
+      : {};
+
+  return Object.fromEntries(
+    Object.values(IndustryType).map((industry) => {
+      const raw = safeDict[industry] ?? 0;
+      return [industry, weeklyDecimaltoAnnualPercent(raw).toFixed(2)];
+    })
+  );
+};
+
+/**
+ * Helper: backend dict of booleans -> frontend dict of booleans.
+ *
+ * @param {object} backendDict - Backend dictionary keyed by IndustryType.
+ * @returns {object} Frontend dictionary of booleans.
+ */
+const buildFrontendIndustryBooleanDict = (backendDict) => {
+  const safeDict =
+    typeof backendDict === "object" && backendDict !== null
+      ? backendDict
+      : {};
+
+  return Object.fromEntries(
+    Object.values(IndustryType).map((industry) => [
+      industry,
+      Boolean(safeDict[industry]),
+    ])
+  );
+};
+
+/**
  * Transforms the policies received from the backend to a format used by the frontend.
  * This function reverses the logic of `buildPoliciesPayload`.
+ *
+ * Specifically:
+ *  - Per-industry policy dictionaries (corporate_income_tax, sales_tax, tariffs,
+ *    subsidies, price_cap, price_cap_enabled) are split into:
+ *      * A single "global" scalar value for the main sliders.
+ *      * A `...ByIndustry` dictionary for the advanced per-industry overrides.
+ *  - Weekly decimal rates are converted into annual percent strings.
+ *  - Personal income tax brackets and (optionally) demographic-specific PIT
+ *    are converted into the frontend PIT bracket arrays.
  *
  * @param {object} backendPolicies - The policies object received from the backend.
  * @returns {object} The policies object formatted for the frontend's policyParams state.
@@ -34,57 +130,105 @@ function weeklyWagetoAnnual(weeklyWage) {
 export function receivePoliciesPayload(backendPolicies) {
   const frontendPolicies = {};
 
-  // Helper to safely get the first value from an industry-specific policy dictionary.
-  // This assumes that for policies like corporate tax, sales tax, etc., the frontend
-  // currently uses a single input that is applied uniformly across all industries.
-  // TODO: make this just give every value. Currently, the frontend is not setup to
-  // get the taxes on a industry-specific basis.
-  const getUniformIndustryPolicyValue = (policyDict) => {
-    if (typeof policyDict === "object" && policyDict !== null) {
-      const industryKeys = Object.values(IndustryType);
-      if (
-        industryKeys.length > 0 &&
-        policyDict[industryKeys[0]] !== undefined
-      ) {
-        return policyDict[industryKeys[0]];
-      }
-    }
-    // Fallback if the structure is unexpected or empty
-    return 0;
-  };
+  /**
+   * Helper to transform a backend PIT list (weekly thresholds/decimals)
+   * into the frontend format (annual salary and annual percent strings).
+   *
+   * @param {Array} backendList - Backend PIT brackets.
+   * @returns {Array} Frontend PIT brackets.
+   */
+  const transformBackendPITList = (backendList = []) =>
+    backendList.map((bracket) => ({
+      threshold: weeklyWagetoAnnual(bracket.threshold).toFixed(2),
+      rate: weeklyDecimaltoAnnualPercent(bracket.rate).toFixed(2),
+    }));
 
+  // --- Corporate income tax (global + per-industry overrides) ---
   frontendPolicies.corporateTax = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax)
   ).toFixed(2);
+  frontendPolicies.corporateTaxByIndustry =
+    buildFrontendIndustryPercentDict(backendPolicies.corporate_income_tax);
 
-  frontendPolicies.personalIncomeTax = backendPolicies.personal_income_tax.map(
-    (bracket) => ({
-      threshold: weeklyWagetoAnnual(bracket.threshold).toFixed(2),
-      rate: weeklyDecimaltoAnnualPercent(bracket.rate).toFixed(2),
-    })
-  );
+  // --- Personal income tax (global PIT brackets) ---
+  const backendPersonalIncomeTax = backendPolicies.personal_income_tax || [];
+  frontendPolicies.personalIncomeTax =
+    transformBackendPITList(backendPersonalIncomeTax);
+
+  // --- Personal income tax by demographic (optional from backend) ---
+  const demoValues = Object.values(Demographic);
+  const backendPITByDemo =
+    backendPolicies.personal_income_tax_by_demographic;
+
+  if (
+    backendPITByDemo &&
+    typeof backendPITByDemo === "object"
+  ) {
+    // Backend provides demographic-specific PIT; use those when available,
+    // and fall back to the global PIT list if a demographic is missing.
+    frontendPolicies.personalIncomeTaxByDemographic = Object.fromEntries(
+      demoValues.map((demo) => {
+        const listForDemo =
+          backendPITByDemo[demo] || backendPersonalIncomeTax || [];
+        return [demo, transformBackendPITList(listForDemo)];
+      })
+    );
+  } else {
+    // Backend does not provide demographic-specific PIT:
+    // copy the global PIT list to every demographic.
+    frontendPolicies.personalIncomeTaxByDemographic = Object.fromEntries(
+      demoValues.map((demo) => [
+        demo,
+        frontendPolicies.personalIncomeTax.map((b) => ({ ...b })),
+      ])
+    );
+  }
+
+  // --- Sales tax (global + per-industry overrides) ---
   frontendPolicies.salesTax = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.sales_tax)
   ).toFixed(2);
-  // TODO: make property tax actually support both rates in the frontend
+  frontendPolicies.salesTaxByIndustry = buildFrontendIndustryPercentDict(
+    backendPolicies.sales_tax
+  );
+
+  // NOTE: frontend currently uses a single propertyTax slider,
+  // so we take the residential rate as the representative value.
   frontendPolicies.propertyTax = decimalToPercent(
     backendPolicies.property_tax.residential
   ).toFixed(2);
+
+  // --- Tariffs ---
   frontendPolicies.tariffs = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.tariffs)
   ).toFixed(2);
+  frontendPolicies.tariffsByIndustry = buildFrontendIndustryPercentDict(
+    backendPolicies.tariffs
+  );
+
+  // --- Subsidies ---
   frontendPolicies.subsidies = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.subsidies)
   ).toFixed(2);
+  frontendPolicies.subsidiesByIndustry = buildFrontendIndustryPercentDict(
+    backendPolicies.subsidies
+  );
 
+  // --- Price cap (weekly decimal -> annual %) ---
   frontendPolicies.priceCap = weeklyDecimaltoAnnualPercent(
     getUniformIndustryPolicyValue(backendPolicies.price_cap)
   ).toFixed(2);
+  frontendPolicies.priceCapByIndustry =
+    buildFrontendIndustryWeeklyPercentDict(backendPolicies.price_cap);
 
-  frontendPolicies.priceCapEnabled = getUniformIndustryPolicyValue(
-    backendPolicies.price_cap_enabled
+  // --- Price cap enabled (boolean) ---
+  frontendPolicies.priceCapEnabled = Boolean(
+    getUniformIndustryPolicyValue(backendPolicies.price_cap_enabled)
   );
+  frontendPolicies.priceCapEnabledByIndustry =
+    buildFrontendIndustryBooleanDict(backendPolicies.price_cap_enabled);
 
+  // --- Minimum wage (weekly -> hourly) ---
   frontendPolicies.minimumWage = weeklyWageToHourly(
     backendPolicies.minimum_wage
   ).toFixed(2);
@@ -169,7 +313,7 @@ export function receiveDemographicsPayload(
  * expected by the frontend's industryParams state.
  *
  * @param {object} backendIndustries - The industries object from the backend config.
- * @param {boolean} isSetup - whether this is for setting up, or for something else.
+ * @param {boolean} isSetup - Whether this is for initial setup or for an in-flight model.
  * @returns {object} The industryParams object for the frontend.
  */
 export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
@@ -177,6 +321,7 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
     Object.values(IndustryType).map((industryValue) => {
       const backendIndustry = backendIndustries[industryValue];
       if (!backendIndustry) return [industryValue, {}];
+
       let frontendIndustry = {};
       if (isSetup) {
         frontendIndustry = {
