@@ -10,10 +10,10 @@ _SMALL_CONFIG = {
     "num_people": 1000,
     "inflation_rate": 0.0005,  # Inflation Rate is weekly; equates to 2.6% annually
     "population": {
-        "income_mean": 1280,
-        "income_std": 950,
-        "balance_mean": 20000,
-        "balance_std": 20000,
+        "income_mean": 1147,
+        "income_std": 352,
+        "balance_mean": 5325,
+        "balance_std": 2218,
         "spending_behaviors": {
             Demographic.LOWER_CLASS: {
                 IndustryType.GROCERIES: 0.15,
@@ -180,10 +180,10 @@ _MEDIUM_CONFIG = {
     "num_people": 10000,
     "inflation_rate": 0.0005,  # Inflation Rate is weekly
     "population": {
-        "income_mean": 1404,
-        "income_std": 1200,
-        "balance_mean": 15000,
-        "balance_std": 22000,
+        "income_mean": 1473,
+        "income_std": 452,
+        "balance_mean": 5324,
+        "balance_std": 2218,
         "spending_behaviors": {
             Demographic.LOWER_CLASS: {
                 IndustryType.GROCERIES: 0.16,
@@ -348,10 +348,10 @@ _LARGE_CONFIG = {
     "num_people": 75220,
     "inflation_rate": 0.0005,  # Inflation Rate is weekly
     "population": {
-        "income_mean": 2423,
-        "income_std": 2500,
-        "balance_mean": 22000,
-        "balance_std": 35000,
+        "income_mean": 2528,
+        "income_std": 776,
+        "balance_mean": 5324,
+        "balance_std": 2218,
         "spending_behaviors": {
             Demographic.LOWER_CLASS: {
                 IndustryType.GROCERIES: 0.14,
