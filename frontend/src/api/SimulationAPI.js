@@ -4,8 +4,18 @@ import {
   receivePoliciesPayload,
   receiveTemplatePayload,
 } from "./payloadReceiver";
-const BASE_HTTP_URL = "http://localhost:8000";
-const BASE_WS_URL = "ws://localhost:8000";
+
+// True when using 'npm run build'
+const isProd = import.meta.env.PROD;
+
+// If Prod: Use relative path (empty string)
+// If Dev: localhost:8000
+const BASE_HTTP_URL = isProd ? "" : "http://localhost:8000";
+
+// If Prod: Detect if we are on https (secure) or http and use the current host
+const BASE_WS_URL = isProd
+  ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`
+  : "ws://localhost:8000";
 
 export class SimulationAPI {
   constructor(modelId) {
@@ -237,6 +247,20 @@ export class SimulationAPI {
    */
   getCurrentIndustryData() {
     this.sendMessage({ action: "get_current_industry_data" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the demographic metrics.
+   */
+  getDemoMetrics() {
+    this.sendMessage({ action: "get_demo_metrics" });
+  }
+
+  /**
+   * Sends a message through the WebSocket to get the demographic metrics for the current week.
+   */
+  getCurrentDemoMetrics() {
+    this.sendMessage({ action: "get_current_demo_metrics" });
   }
 
   /**

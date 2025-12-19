@@ -116,16 +116,6 @@ class IndustryAgent(Agent):
         self.insurance = insurance
         self.goods_produced: int = 0  # Tracker for GDP indicator
 
-    def get_tariffs(self) -> float:
-        """
-        Get the tariff rate for this industry from the model's tax rates.
-
-        Returns:
-            float: The tariff rate for this industry.
-        """
-        tariffs = self.model.policies.get("tariffs", {})
-        return tariffs.get(self.industry_type, 0.0)
-
     def get_employees(self) -> AgentSet:
         """
         Gets all employees that are employed to this industry.
@@ -204,7 +194,11 @@ class IndustryAgent(Agent):
 
         price_cap_percentage = self.model.policies["price_cap"][self.industry_type]
         price_cap_enabled = self.model.policies["price_cap_enabled"][self.industry_type]
-        if price_cap_percentage is not None and skipPriceCap == False and price_cap_enabled:
+        if (
+            price_cap_percentage is not None
+            and skipPriceCap == False
+            and price_cap_enabled
+        ):
             price_cap = oldPrice * (
                 1 + price_cap_percentage
             )  # price cap is set to a percentage amount higher than the price from the previous tick
@@ -259,6 +253,7 @@ class IndustryAgent(Agent):
                 Fixed  # fixed cost is still factored into losses this tick
             )
             self.balance -= Fixed
+            self.goods_produced = 0
             return
 
         variable_cost_per_unit = self.get_variable_cost()
@@ -395,7 +390,7 @@ class IndustryAgent(Agent):
         returns:
             naive_fixed_cost (float)
         """
-        
+
         property_tax = self.model.policies["property_tax"]["commercial"]
         if property_tax is not None:
             property_cost = self.fixed_cost * property_tax

@@ -9,6 +9,7 @@ from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 from ..types.indicators import Indicators
 from ..types.industry_metrics import IndustryMetrics
+from ..types.demographic_metrics import DemoMetrics
 from .indicators import *
 from .utils import (
     validate_schema,
@@ -93,6 +94,11 @@ class EconomyModel(Model):
                 Indicators.HOOVER_INDEX: calculate_hoover_index,
                 Indicators.LORENZ_CURVE: calculate_lorenz_curve,
                 Indicators.GINI_COEFFICIENT: calculate_gini_coefficient,
+                DemoMetrics.PROPORTION: calculate_proportion,
+                DemoMetrics.AVERAGE_BALANCE: calculate_average_balance,
+                DemoMetrics.STD_BALANCE: calculate_std_balance,
+                DemoMetrics.AVERAGE_WAGE: calculate_average_wage,
+                DemoMetrics.STD_WAGE: calculate_std_wage,
             },
             agenttype_reporters={
                 IndustryAgent: {
@@ -308,8 +314,6 @@ class EconomyModel(Model):
         # TODO: Implement reversing simulation
         # might want to add choice of how much to reverse.
         pass
-
-    # Economic indicators
 
     def get_week(self) -> int:
         """

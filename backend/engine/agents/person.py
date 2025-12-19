@@ -1,9 +1,9 @@
 from mesa import Agent, Model
 from .industry import IndustryAgent
+from .demand import demand_func, custom_round
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
-import math
 
 
 class PersonAgent(Agent):
@@ -16,26 +16,28 @@ class PersonAgent(Agent):
         employer (IndustryAgent | None): The industry agent that employs this person, or None if unemployed.
         balance (float): The current amount of money the person has; negative indicating debt.
         preferences (dict): Spending preferences a weight for each industry, summing to 1.
+        sigma (float): The elasticity of substitution for the industries.
     """
 
     demographic: Demographic
     """Economic class of the person."""
-    income: int
+    income: float
     """Weekly income of the person."""
     employer: IndustryAgent | None
     """The employer of this person, or None if unemployed."""
     balance: float
     """The total dollars held by this person. Negative indicates debt."""
     preferences: dict[IndustryType, float]
-    """Spending preferences, mapping industry name to a weight. Must sum to 1."""
+    """Spending preferences, mapping industry type to a weight. Must sum to 1."""
+    sigma: float
+    """The elasticity of substitution associated with the industries."""
 
     def __init__(
         self,
         model: Model,
         demographic: Demographic,
         preferences: dict[IndustryType, float],
-        savings_rate: float = 0.10,
-        income: int = 0,
+        income: float = 0,
         employer: IndustryAgent | None = None,
         starting_balance: float = 0.0,
     ):
@@ -48,21 +50,26 @@ class PersonAgent(Agent):
         self.employer = employer
         self.balance = starting_balance
         self.preferences = preferences
-        self.savings_rate = savings_rate
         self.sigma = DEMOGRAPHIC_SIGMAS[self.demographic]
+        
+        self.industry_savings: dict[IndustryType, float] = {
+            itype: 0.0 for itype in preferences
+        }
 
     def deduct_income_tax(self) -> None:
         """Deducts personal income tax from the agent's balance based on their income."""
         personal_income_tax: list = self.model.policies["personal_income_tax"]
         if not personal_income_tax:
             return
-        
-        previous_threshold = float('inf')
+
+        previous_threshold = float("inf")
         for bracket in personal_income_tax:
+            # it is assumed that the highest threshold is first
             threshold = bracket["threshold"]
             rate = bracket["rate"]
 
             if self.income > threshold:
+                # tax from current threshold to income or previous treshold
                 taxable_income = min(previous_threshold, self.income) - threshold
                 tax = taxable_income * rate
                 self.balance -= tax
@@ -205,73 +212,88 @@ class PersonAgent(Agent):
         income and savings rate.
         """
 
-        # TODO: How does this savings_rate get updated?
-        # Is it based off of demographic?
-
-        budget = self.income * (1 - self.savings_rate)
+        budget = self.income
         return max(0.0, budget)  # Must be non-negative
 
     def purchase_goods(self):
         """
-        The person receives their weekly income and then attempts to purchase goods
-        from various industries based on their CES utility function.
+        Person receives income, then allocates budget by CES.
+        Instead of requiring affordability this week, agents save
+        per-industry until they can afford a unit.
         """
 
-        # Receive periodic income
+        # Receive weekly income
         self.payday()
 
-        # Get industry and pricing info
         industry_agents = list(self.model.agents_by_type[IndustryAgent])
 
-        # sales tax will now be incorporated into price calculation
-        prices = {
+        # sales tax logic; incorporate into person facing prices
+        effective_prices = {
             agent.industry_type: (
-                agent.price
-                * (1 + self.model.policies["sales_tax"][agent.industry_type])
+                agent.price * (1 + self.model.policies["sales_tax"][agent.industry_type])
             )
             for agent in industry_agents
         }
 
         # Calculate desired purchases
-        desired_quantities = self.demand_func(
-            budget=self.determine_budget(), prefs=self.preferences, prices=prices
+        desired_quantities = demand_func(
+            sigma=self.sigma,
+            budget=self.determine_budget(),
+            prefs=self.preferences,
+            prices=effective_prices,
         )
+        #returns an unrounded quantity demand per good
 
-        # Attempt to purchase goods
+        # For each industry, we add the weekly allocated money into the savings bucket.
         for industry in industry_agents:
-            industry_type = industry.industry_type
-            if industry_type not in desired_quantities:
+            itype = industry.industry_type
+            if itype not in desired_quantities:
                 continue
 
-            desired_quantity = desired_quantities[industry_type]
-            if desired_quantity <= 0:
+            q_desired = desired_quantities[itype]
+            if q_desired <= 0:
                 continue
 
-            # TODO: Shortage Handling
-            # how do we determine what happens if they want more than is available to buy?
-            # Currently, if a good is unavailable, the agent simply doesn't spend that portion of their budget.
-            # This unspent money is effectively saved for the next cycle.
+            # allocate money = quantity * price_with_tax
+            price_with_tax = effective_prices[itype]
+            allocated_dollars = q_desired * price_with_tax
 
-            available_quantity = industry.inventory_available_this_step
-            quantity_to_buy = min(desired_quantity, available_quantity)
+            # add this to the industry-specific savings pool
+            self.industry_savings[itype] += allocated_dollars
 
-            # sales tax logic
-            cost = quantity_to_buy * industry.price
-            sales_tax = self.model.policies["sales_tax"][industry.industry_type]
-            if sales_tax is not None:
-                cost += cost * sales_tax
+            # >>> Now attempt purchases using savings pool — not weekly budget
+            savings_bucket = self.industry_savings[itype]
+            if savings_bucket <= 0:
+                continue
+            price_with_tax = effective_prices[itype]  # price including sales tax
 
-            if self.balance >= cost:
-                # Execute transaction
-                self.balance -= cost
-                industry.sell_goods(quantity_to_buy)
-                logging.info(
-                    f"Agent {self.unique_id} purchased {quantity_to_buy:.2f} of {industry.industry_type}"
-                )
-            else:
-                logging.warning(
-                    f"Agent {self.unique_id} has insufficient funds for {industry.industry_type}"
-                )
+            # Check if agent saved enough to buy at least 1 unit
+            if savings_bucket < price_with_tax:
+                continue
+
+            # Determine how many units savings allow
+            max_affordable_from_savings = custom_round(savings_bucket / price_with_tax)
+            # Limit by inventory
+            purchasable_units = min(
+                max_affordable_from_savings,
+                industry.inventory_available_this_step
+            )
+
+            if purchasable_units <= 0:
+                continue
+
+            # Total cost
+            total_cost = purchasable_units * price_with_tax
+
+            # Execute purchase using SAVINGS
+            self.industry_savings[itype] -= total_cost
+            self.balance -= total_cost
+            industry.sell_goods(purchasable_units)
+
+            logging.info(
+                f"Agent {self.unique_id} purchased {purchasable_units} units of "
+                f"{industry.industry_type} using saved funds."
+            )
 
     def change_employment(self):
         """

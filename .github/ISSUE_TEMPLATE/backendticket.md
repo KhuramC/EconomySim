@@ -2,7 +2,7 @@
 name: Backend Issue
 about: Tickets for the backend
 title: ":robot: Implement ??? "
-assignees: ''
+assignees: ""
 projects:
   - project: "EconomySim Capstone"
     column: "Type"
@@ -13,16 +13,17 @@ projects:
 
 **Location:** file path in repo
 
-**Resources:** 
+**Resources:**
 
 ### Action items
 
-- [ ]  
-- [ ]  
+- [ ]
+- [ ]
 
 ### Definition of done
 
-- Code is written and functions as described.
-- Tests written in pytest have been implemented on the written code and pass.
 - Code is committed to a feature branch.
+- Code is written and functions as described.
+- Documentation is added/updated accordingly.
+- Tests written in pytest have been implemented on the written code and pass.
 - A pull request has been created and successfully reviewed, passing all pipelines.
