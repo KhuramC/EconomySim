@@ -4,6 +4,7 @@ from .demand import demand_func, custom_round
 from ..types.demographic import Demographic, DEMOGRAPHIC_SIGMAS
 from ..types.industry_type import IndustryType
 import logging
+import math
 
 
 class PersonAgent(Agent):

@@ -2,9 +2,10 @@ import numpy as np
 from mesa import Model
 from mesa.agent import AgentSet
 from mesa.datacollection import DataCollector
-
+from typing import Optional
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
+from ..agents.demand import demand_tangent_tuple
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 from ..types.indicators import Indicators
@@ -51,6 +52,9 @@ class EconomyModel(Model):
 
     week: int
     """The current week in the simulation."""
+    
+    model_demand_parameters: dict[IndustryType, tuple[float, Optional[float]]]
+    """Stores the slope and price at quantity zero of the model's demand for each industry."""
 
     def __init__(
         self,
@@ -264,8 +268,11 @@ class EconomyModel(Model):
 
         self.inflation()
 
+        self.aggregate_person_demand_tangents() 
+        
         # industry agents do their tasks
         industryAgents = self.agents_by_type[IndustryAgent]
+        industryAgents.shuffle_do("get_demand_graph_params")
         industryAgents.shuffle_do("determine_price")
         industryAgents.shuffle_do("produce_goods")
         industryAgents.shuffle_do("change_employment")
@@ -298,3 +305,60 @@ class EconomyModel(Model):
             week(int): The current week.
         """
         return self.week
+
+
+    def aggregate_person_demand_tangents(self):
+        """
+        Query every PersonAgent for their demand_tangent_tuple and aggregate results.
+
+        Returns:
+            dict where keys are industry names (strings) and values are tuples:
+                (average_slope: float, average_price_at_zero: float | None)
+        """
+
+        people_agents = self.agents_by_type.get(PersonAgent)
+        industry_agents = self.agents_by_type.get(IndustryAgent)
+
+        # If no people or no industries, return empty dict
+        if not people_agents or not industry_agents:
+            return {}
+
+        # Build prices dict keyed by IndustryType (as PersonAgent expects)
+        prices: dict[IndustryType, float] = {
+            ia.industry_type: ia.price * (1 + self.policies["sales_tax"][ia.industry_type]) for ia in industry_agents
+        }
+
+        # accumulators keyed by industry name (PersonAgent returns keys as strings)
+        slope_acc: dict[IndustryType, list[float]] = {}
+        pzero_acc: dict[IndustryType, list[float]] = {}
+
+        for person in people_agents:
+            # budget is determined by the person's own method
+            budget = person.determine_budget()
+            prefs = person.preferences
+
+            # call person method with expected signature
+            tangents = demand_tangent_tuple(budget=budget, sigma=person.sigma, prefs=prefs, prices=prices)
+
+            # tangents: { "INDUSTRY_NAME": (slope, p_zero_or_None), ... }
+            for industry_key, (slope, p_zero) in tangents.items():
+                slope_acc.setdefault(industry_key, []).append(slope)
+                if p_zero is not None:
+                    pzero_acc.setdefault(industry_key, []).append(p_zero)
+
+        # compute averages
+        aggregated: dict[IndustryType, tuple[float, Optional[float]]] = {}
+        for industry_key, slopes in slope_acc.items():
+            avg_slope = np.mean(slopes) if slopes else 0.0
+            pzeros = pzero_acc.get(industry_key, [])
+            avg_pzero = np.mean(pzeros) if pzeros else None
+            aggregated[industry_key] = (avg_slope, avg_pzero)
+
+        # include industries that had p_zero values but no slopes (unlikely)
+        for industry_key, pzeros in pzero_acc.items():
+            if industry_key in aggregated:
+                continue
+            avg_pzero = np.mean(pzeros) if pzeros else None
+            aggregated[industry_key] = (0.0, avg_pzero)
+
+        self.model_demand_parameters = aggregated
