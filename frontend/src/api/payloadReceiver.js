@@ -253,36 +253,42 @@ export function receiveEnvironmentPayload(backendConfig) {
  * @param {boolean} isSetup - whether this is for setting up, or for something else.
  * @returns {object} The populationParams object for the frontend.
  */
-export function receivePopulationPayload(backendPopulation, isSetup = true) {
-  if (isSetup) {
-    const backendSpending = backendPopulation.spending_behaviors || {};
+export function receivePopulationPayload(backendPopulation) {
+  const backendSpending = backendPopulation.spending_behaviors || {};
 
-    const spendingBehaviors = Object.fromEntries(
-      Object.values(Demographic).map((demoValue) => {
-        const demoSpending = backendSpending[demoValue] || {};
-        const frontendSpending = Object.fromEntries(
-          Object.entries(demoSpending).map(([industryKey, value]) => [
-            industryKey,
-            decimalToPercent(value).toFixed(2),
-          ])
-        );
-        return [demoValue, frontendSpending];
-      })
-    );
+  const spendingBehaviors = Object.fromEntries(
+    Object.values(Demographic).map((demoValue) => {
+      const demoSpending = backendSpending[demoValue] || {};
+      const frontendSpending = Object.fromEntries(
+        Object.entries(demoSpending).map(([industryKey, value]) => [
+          industryKey,
+          decimalToPercent(value).toFixed(2),
+        ])
+      );
+      return [demoValue, frontendSpending];
+    })
+  );
 
-    return {
-      incomeMean: backendPopulation.income_mean,
-      incomeStd: backendPopulation.income_std,
-      balanceMean: backendPopulation.balance_mean,
-      balanceStd: backendPopulation.balance_std,
-      spendingBehaviors: spendingBehaviors,
-    };
-  }
+  return {
+    incomeMean: backendPopulation.income_mean,
+    incomeStd: backendPopulation.income_std,
+    balanceMean: backendPopulation.balance_mean,
+    balanceStd: backendPopulation.balance_std,
+    spendingBehaviors: spendingBehaviors,
+  };
+}
 
-  // not isSetup
+/**
+ * Transforms the demographic parameters from the backend into the format
+ * expected by the frontend's demoParams state.
+ *
+ * @param {object} demoMetrics - The demographic metrics object from the backend config.
+ * @returns {object} The demoParams object for the frontend.
+ */
+export function receiveDemographicsPayload(demoMetrics) {
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
-      const backendDemo = backendData[demoValue];
+      const backendDemo = demoMetrics[demoValue];
       if (!backendDemo) return [demoValue, {}];
 
       return [

@@ -3,7 +3,7 @@ import { Typography, Alert, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import EnvironmentalAccordion from "../../components/simSetup/EnvironmentalAccordion";
-import DemographicAccordion from "../../components/simSetup/DemographicAccordion";
+import PopulationAccordion from "../../components/simSetup/PopulationAccordion";
 import IndustryAccordion from "../../components/simSetup/IndustryAccordion";
 import PolicyAccordion from "../../components/simSetup/PolicyAccordion";
 
@@ -571,7 +571,7 @@ export default function SetupPage() {
         formErrors={inputErrors.env}
       />
 
-      <DemographicAccordion
+      <PopulationAccordion
         populationParams={params.populationParams}
         handlePopulationChange={handlePopulationChange}
         handlePopulationSpendingChange={handlePopulationSpendingChange}
