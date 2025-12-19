@@ -182,40 +182,39 @@ export function buildEnvironmentPayload(envParams) {
 }
 
 /**
- * Transforms the frontend `demoParams` to a JSON object
- * valid for the backend demographics configuration.
+ * Transforms the frontend `populationsParams` to a JSON object
+ * valid for the backend populations configuration (POPULATION_SCHEMA).
  *
- * @param {object} demoParams - The demoParams object from the frontend state.
- * @returns {object} The demographics part of the backend payload.
+ * @param {object} populationParams - The demoParams object from the frontend state.
+ * @returns {object} The population part of the backend payload.
  */
-export function buildDemographicsPayload(demoParams) {
-  return Object.fromEntries(
+export function buildPopulationPayload(populationParams) {
+  const spendingBehaviors = Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
-      const demoData = demoParams[demoValue];
+      // Get spending behaviors per demographic
+      const demoSpending =
+        populationParams.spendingBehaviors?.[demoValue] || {};
 
-      // Create a dictionary of spending behavior per industry
-      const spendingBehaviorDict = Object.fromEntries(
+      // Convert percentages to decimals
+      const convertedSpending = Object.fromEntries(
         Object.values(IndustryType).map((industry) => [
           industry,
-          percentToDecimal(Number(demoData[industry]) || 0),
+          percentToDecimal(Number(demoSpending[industry]) || 0),
         ])
       );
 
-      const backendDemoData = {
-        income: {
-          mean: demoData.meanIncome,
-          sd: demoData.sdIncome,
-        },
-        proportion: percentToDecimal(demoData.proportion),
-        spending_behavior: spendingBehaviorDict,
-        balance: {
-          mean: demoData.meanSavings,
-          sd: demoData.sdSavings,
-        },
-      };
-      return [demoValue, backendDemoData];
+      return [demoValue, convertedSpending];
     })
   );
+
+  // Return population schema
+  return {
+    income_mean: populationParams.incomeMean,
+    income_std: populationParams.incomeStd,
+    balance_mean: populationParams.balanceMean,
+    balance_std: populationParams.balanceStd,
+    spending_behaviors: spendingBehaviors,
+  };
 }
 
 /**
@@ -257,7 +256,7 @@ export function buildIndustriesPayload(industryParams) {
 export function buildCreatePayload(params) {
   const payload = {
     ...buildEnvironmentPayload(params.envParams),
-    demographics: buildDemographicsPayload(params.demoParams),
+    population: buildPopulationPayload(params.populationParams),
     industries: buildIndustriesPayload(params.industryParams),
     policies: buildPoliciesPayload(params.policyParams),
   };

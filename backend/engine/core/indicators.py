@@ -13,9 +13,12 @@ def calculate_unemployment(model: Model) -> float:
         percentage(float): The percentage of unemployed people in the simulation.
     """
     peopleAgents = model.agents_by_type[PersonAgent]
-    unemployed = len(peopleAgents.select(lambda agent: (agent.employer is None)))
     total = len(peopleAgents)
-
+    
+    if total == 0:
+        return 0.0
+    
+    unemployed = len(peopleAgents.select(lambda agent: (agent.employer is None)))
     return unemployed / total
 
 

@@ -185,3 +185,27 @@ class PersonAgent(Agent):
         # TODO: Implement person employment logic
         # deals with trying to find a new job if unemployed
         pass
+
+    def update_class(self, median_income: float) -> None:
+        """
+        Updates the agent's demographic class based on their current income
+        relative to the population media.
+
+        Thresholds (Pew Research Center Definition):
+        - Lower Class: < 67% of Median
+        - Middle Class: 67% to 200% of Median
+        - Upper Class: > 200% of Median
+
+        Args:
+            median_income (float)
+        """
+
+        low_threshold = 0.67 * median_income
+        high_threshold = 2.00 * median_income
+
+        if self.income < low_threshold:
+            self.demographic = Demographic.LOWER_CLASS
+        elif self.income > high_threshold:
+            self.demographic = Demographic.UPPER_CLASS
+        else:
+            self.demographic = Demographic.MIDDLE_CLASS

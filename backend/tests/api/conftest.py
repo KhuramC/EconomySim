@@ -13,16 +13,15 @@ VALID_CONFIG = {
     "max_simulation_length": 52,
     "num_people": 100,
     "inflation_rate": 0.001,
-    "demographics": {
-        demo: {
-            "income": {"mean": 300 + (i * 500), "sd": 100},
-            "proportion": 1 / len(Demographic),
-            "spending_behavior": {
-                itype.value: 1 / len(IndustryType) for itype in IndustryType
-            },
-            "balance": {"mean": 500 + (i * 2000), "sd": 100},
-        }
-        for i, demo in enumerate(Demographic)
+    "population": {
+        "income_mean": 800,
+        "income_std": 100,
+        "balance_mean": 2500,
+        "balance_std": 100,
+        "spending_behaviors": {
+            demo: {itype.value: 1 / len(IndustryType) for itype in IndustryType}
+            for demo in Demographic
+        },
     },
     "industries": {
         itype: {

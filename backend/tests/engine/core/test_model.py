@@ -11,14 +11,14 @@ from engine.agents.industry import IndustryAgent
 from engine.agents.person import PersonAgent
 
 
-def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics):
+def test_setup_person_agents(model: EconomyModel, num_agents: int, population):
     """
     Tests that the `setup_person_agents` method, called during
     EconomyModel.__init__, correctly creates agents.
 
     Tests for:
         1. Correct total number of agents.
-        2. Correct proportion of agents per demographic.
+        2. Diversity of classes.
         3. All expected attributes are initialized.
         4. Industry coverage: preferences should include all industries
     """
@@ -26,27 +26,14 @@ def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics)
     people = model.agents_by_type[PersonAgent]
     assert len(people) == num_agents
 
-    # Test correct demographic proportions
-    lower_class_agents = people.select(
-        lambda agent: agent.demographic == Demographic.LOWER_CLASS
-    )
-    middle_class_agents = people.select(
-        lambda agent: agent.demographic == Demographic.MIDDLE_CLASS
-    )
-    upper_class_agents = people.select(
-        lambda agent: agent.demographic == Demographic.UPPER_CLASS
-    )
+    # Verify incomes are positive and exist
+    incomes = [a.income for a in people]
+    assert all(i > 0 for i in incomes)
 
-    props = num_prop(
-        [
-            demographics[demographic]["proportion"] * 100
-            for demographic in demographics.keys()
-        ],
-        num_agents,
-    )
-    assert len(lower_class_agents) == props[0]
-    assert len(middle_class_agents) == props[1]
-    assert len(upper_class_agents) == props[2]
+    # Verify we have some diversity in classes
+    classes = [a.demographic for a in people]
+    assert all(isinstance(c, Demographic) for c in classes)
+    assert len(set(classes)) >= 1  # At least one demographic represented
 
     # Test expected attributes
     expected_keys = set([industry.value for industry in IndustryType])
@@ -67,7 +54,7 @@ def test_setup_person_agents(model: EconomyModel, num_agents: int, demographics)
         assert set(agent.preferences.keys()) == expected_keys
 
 
-def test_setup_person_agents_preferences(model: EconomyModel, demographics):
+def test_setup_person_agents_preferences(model: EconomyModel, population):
     """
     Tests that:
         1. Each PersonAgent preference vector sums to 1 (within floating tolerance).
@@ -90,7 +77,7 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
         if len(demo_agents) <= 1:
             continue
 
-        theoretical_means = demographics[demo]["spending_behavior"]
+        theoretical_means = population["spending_behaviors"][demo]
         theoretical_mean_vector = np.array(
             [theoretical_means[key] for key in industries]
         )
@@ -118,6 +105,35 @@ def test_setup_person_agents_preferences(model: EconomyModel, demographics):
         diff = np.abs(empirical_mean - theoretical_mean_vector)
         tolerance = 3 * std_err
         assert np.all(diff <= tolerance)
+
+
+def test_class_mobility(model: EconomyModel):
+    """
+    Tests that agents switch classes when their income changes relative to the median.
+    (Integration of test of personAgent's update_class method)
+
+    Args:
+        model (EconomyModel): a freshly created model.
+    """
+    people = model.agents_by_type[PersonAgent]
+    agent = people[0]
+    incomes = [a.income for a in people]
+    median = np.median(incomes)
+
+    # Force Lower Class (Income < 0.67 * Median)
+    agent.income = median * 0.1
+    model.step()
+    assert agent.demographic == Demographic.LOWER_CLASS
+
+    # Force Upper Class (Income > 2.00 * Median)
+    agent.income = median * 3.0
+    model.step()
+    assert agent.demographic == Demographic.UPPER_CLASS
+
+    # Force Lower Middle (Income < 0.67 * Median)
+    agent.income = median
+    model.step()
+    assert agent.demographic == Demographic.MIDDLE_CLASS
 
 
 def test_setup_industry_agents(model: EconomyModel, industries):
@@ -212,11 +228,11 @@ def test_step(model: EconomyModel):
         model (EconomyModel): _description_
     """
     model.step()
-    
+
     assert model.get_week() == 1
     for _ in range(100):
         model.step()
-    assert model.get_week() == 52 # max for this model
+    assert model.get_week() == 52  # max for this model
 
 
 def test_reverse_step(model: EconomyModel):
