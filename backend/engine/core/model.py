@@ -5,6 +5,7 @@ from mesa.datacollection import DataCollector
 from typing import Optional
 from ..agents.person import PersonAgent
 from ..agents.industry import IndustryAgent
+from ..agents.demand import demand_tangent_tuple
 from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 from ..types.indicators import Indicators
@@ -356,7 +357,7 @@ class EconomyModel(Model):
             prefs = person.preferences
 
             # call person method with expected signature
-            tangents = person.demand_tangent_tuple(budget=budget, prefs=prefs, prices=prices)
+            tangents = demand_tangent_tuple(budget=budget, sigma=person.sigma, prefs=prefs, prices=prices)
 
             # tangents: { "INDUSTRY_NAME": (slope, p_zero_or_None), ... }
             for industry_key, (slope, p_zero) in tangents.items():
