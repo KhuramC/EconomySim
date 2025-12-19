@@ -63,7 +63,7 @@ def population() -> (
     dict[str, int | float | dict[str, float] | dict[str, dict[IndustryType, float]]]
 ):
     """
-    A fixture that provides a valid demographics for starting a simulation.
+    A fixture that provides a valid population for starting a simulation.
     """
     return POPULATION
 
