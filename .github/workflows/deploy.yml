@@ -1,0 +1,37 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11" # same as container version
+
+      - name: Poetry Install/Export
+        run: |
+          pip install poetry==2.1.4
+          poetry self add poetry-plugin-export
+          cd backend
+          poetry export --without-hashes --format=requirements.txt > requirements.txt
+          cd ..
+
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      - uses: akhileshns/heroku-deploy@v3.13.15
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: "jellybean"
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          usedocker: true
