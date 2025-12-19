@@ -18,7 +18,6 @@ def test_agent_initialization(mock_economy_model):
     )
 
     assert person.demographic == Demographic.MIDDLE_CLASS
-    assert person.savings_rate == 0.10
     assert person.sigma == DEMOGRAPHIC_SIGMAS[Demographic.MIDDLE_CLASS]
 
 
@@ -82,10 +81,10 @@ def test_income_tax(
 
 
 @mark.parametrize(
-    "income, savings_rate, expected_budget",
-    [(1000, 0.1, 900), (500, 0.25, 375), (2000, 0.0, 2000), (100, 1.0, 0)],
+    "income, expected_budget",
+    [(1000, 1000), (-500, 0)],
 )
-def test_determine_budget(mock_economy_model, income, savings_rate, expected_budget):
+def test_determine_budget(mock_economy_model, income, expected_budget):
     """
     Tests the `determine_budget` function with various incomes and savings rates.
 
@@ -100,12 +99,10 @@ def test_determine_budget(mock_economy_model, income, savings_rate, expected_bud
         Demographic.MIDDLE_CLASS,
         preferences={},
         income=income,
-        savings_rate=savings_rate,
     )
 
     budget = person.determine_budget()
     assert budget == expected_budget
-
 
 @mark.parametrize(
     "food_sales_tax, entertainment_sales_tax, purchased_food_inventory, purchased_entertainment_inventory, total_spent",
@@ -153,28 +150,27 @@ def test_purchase_goods(
         mock_economy_model,
         Demographic.UPPER_CLASS,
         preferences={IndustryType.ENTERTAINMENT: 0.6, IndustryType.GROCERIES: 0.4},
-        income=1000,
-        savings_rate=0.2,
+        income=800,
     )
 
     person.purchase_goods()
 
-    # 1. Payday: Current money becomes 1000. Budget is 800.
+    # 1. Payday: Current money becomes 800. Budget is 800.
     # 2. GROCERY: 800 * 0.4 = 320. Quantity: 320 / (10 * 1.1) ~= 29, actually spent 11 * 29 = 319.
     # 3. ENTERTAINMENT: 800 * 0.6 = 480. Quantity: 480 / (20*1.15) ~= 20, actually spent 23 * 21 = 460.
     # 4. Total spent: 319 + 460 = 779
 
-    # 1. Payday: Current money becomes 1000. Budget is 800.
+    # 1. Payday: Current money becomes 800. Budget is 800.
     # 2. GROCERY: 800 * 0.4 = 320. Quantity: 320 / (10 * 2) = 16, actually spent 20 * 16 = 320.
     # 3. ENTERTAINMENT: 800 * 0.6 = 480. Quantity: 480 / (20* 1.5) = 16, actually spent 30 * 16 = 480.
     # 4. Total spent: 320 + 480 = 800
 
-    # 1. Payday: Current money becomes 1000. Budget is 800.
+    # 1. Payday: Current money becomes 800. Budget is 800.
     # 2. GROCERY: 800 * 0.4 = 320. Quantity: 320 / (10 * (1 + 1/3)) = 24, actually spent ~13.33333 * 24 = 320.
     # 3. ENTERTAINMENT: 800 * 0.6 = 480. Quantity: 480 / (20 * (1 + 5/7)) = 14, actually spent ~34.2857 * 14 = 480.
     # 4. Total spent: 320 + 480 = 800
 
-    # 1. Payday: Current money becomes 1000. Budget is 800.
+    # 1. Payday: Current money becomes 800. Budget is 800.
     # 2. GROCERY: 800 * 0.4 = 320. Quantity: 320 / 10 = 32.
     # 3. ENTERTAINMENT: 800 * 0.6 = 480. Quantity: 480 / 20 = 24.
     # 4. Total spent: 800
@@ -186,7 +182,7 @@ def test_purchase_goods(
     assert entertainment_industry.inventory == approx(
         100 - purchased_entertainment_inventory
     )
-    assert person.balance == approx(1000 - total_spent)
+    assert person.balance == approx(800 - total_spent)
 
 
 @mark.xfail(reason="Function not implemented yet.")
