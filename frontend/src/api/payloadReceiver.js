@@ -38,10 +38,7 @@ function weeklyWagetoAnnual(weeklyWage) {
 const getUniformIndustryPolicyValue = (policyDict) => {
   if (typeof policyDict === "object" && policyDict !== null) {
     const industryKeys = Object.values(IndustryType);
-    if (
-      industryKeys.length > 0 &&
-      policyDict[industryKeys[0]] !== undefined
-    ) {
+    if (industryKeys.length > 0 && policyDict[industryKeys[0]] !== undefined) {
       return policyDict[industryKeys[0]];
     }
   }
@@ -58,9 +55,7 @@ const getUniformIndustryPolicyValue = (policyDict) => {
  */
 const buildFrontendIndustryPercentDict = (backendDict) => {
   const safeDict =
-    typeof backendDict === "object" && backendDict !== null
-      ? backendDict
-      : {};
+    typeof backendDict === "object" && backendDict !== null ? backendDict : {};
 
   return Object.fromEntries(
     Object.values(IndustryType).map((industry) => {
@@ -79,9 +74,7 @@ const buildFrontendIndustryPercentDict = (backendDict) => {
  */
 const buildFrontendIndustryWeeklyPercentDict = (backendDict) => {
   const safeDict =
-    typeof backendDict === "object" && backendDict !== null
-      ? backendDict
-      : {};
+    typeof backendDict === "object" && backendDict !== null ? backendDict : {};
 
   return Object.fromEntries(
     Object.values(IndustryType).map((industry) => {
@@ -99,9 +92,7 @@ const buildFrontendIndustryWeeklyPercentDict = (backendDict) => {
  */
 const buildFrontendIndustryBooleanDict = (backendDict) => {
   const safeDict =
-    typeof backendDict === "object" && backendDict !== null
-      ? backendDict
-      : {};
+    typeof backendDict === "object" && backendDict !== null ? backendDict : {};
 
   return Object.fromEntries(
     Object.values(IndustryType).map((industry) => [
@@ -147,23 +138,21 @@ export function receivePoliciesPayload(backendPolicies) {
   frontendPolicies.corporateTax = decimalToPercent(
     getUniformIndustryPolicyValue(backendPolicies.corporate_income_tax)
   ).toFixed(2);
-  frontendPolicies.corporateTaxByIndustry =
-    buildFrontendIndustryPercentDict(backendPolicies.corporate_income_tax);
+  frontendPolicies.corporateTaxByIndustry = buildFrontendIndustryPercentDict(
+    backendPolicies.corporate_income_tax
+  );
 
   // --- Personal income tax (global PIT brackets) ---
   const backendPersonalIncomeTax = backendPolicies.personal_income_tax || [];
-  frontendPolicies.personalIncomeTax =
-    transformBackendPITList(backendPersonalIncomeTax);
+  frontendPolicies.personalIncomeTax = transformBackendPITList(
+    backendPersonalIncomeTax
+  );
 
   // --- Personal income tax by demographic (optional from backend) ---
   const demoValues = Object.values(Demographic);
-  const backendPITByDemo =
-    backendPolicies.personal_income_tax_by_demographic;
+  const backendPITByDemo = backendPolicies.personal_income_tax_by_demographic;
 
-  if (
-    backendPITByDemo &&
-    typeof backendPITByDemo === "object"
-  ) {
+  if (backendPITByDemo && typeof backendPITByDemo === "object") {
     // Backend provides demographic-specific PIT; use those when available,
     // and fall back to the global PIT list if a demographic is missing.
     frontendPolicies.personalIncomeTaxByDemographic = Object.fromEntries(
@@ -218,15 +207,17 @@ export function receivePoliciesPayload(backendPolicies) {
   frontendPolicies.priceCap = weeklyDecimaltoAnnualPercent(
     getUniformIndustryPolicyValue(backendPolicies.price_cap)
   ).toFixed(2);
-  frontendPolicies.priceCapByIndustry =
-    buildFrontendIndustryWeeklyPercentDict(backendPolicies.price_cap);
+  frontendPolicies.priceCapByIndustry = buildFrontendIndustryWeeklyPercentDict(
+    backendPolicies.price_cap
+  );
 
   // --- Price cap enabled (boolean) ---
   frontendPolicies.priceCapEnabled = Boolean(
     getUniformIndustryPolicyValue(backendPolicies.price_cap_enabled)
   );
-  frontendPolicies.priceCapEnabledByIndustry =
-    buildFrontendIndustryBooleanDict(backendPolicies.price_cap_enabled);
+  frontendPolicies.priceCapEnabledByIndustry = buildFrontendIndustryBooleanDict(
+    backendPolicies.price_cap_enabled
+  );
 
   // --- Minimum wage (weekly -> hourly) ---
   frontendPolicies.minimumWage = weeklyWageToHourly(
@@ -255,44 +246,48 @@ export function receiveEnvironmentPayload(backendConfig) {
 }
 
 /**
- * Transforms the demographic parameters from the backend into the format
- * expected by the frontend's demoParams state.
+ * Transforms the population parameters from the backend into the format
+ * expected by the frontend's populationParams state.
  *
- * @param {object} backendDemographics - The demographics object from the backend config.
+ * @param {object} backendPopulation - The population object from the backend config.
  * @param {boolean} isSetup - whether this is for setting up, or for something else.
- * @returns {object} The demoParams object for the frontend.
+ * @returns {object} The populationParams object for the frontend.
  */
-export function receiveDemographicsPayload(
-  backendDemographics,
-  isSetup = true
-) {
+export function receivePopulationPayload(backendPopulation, isSetup = true) {
+  if (isSetup) {
+    const backendSpending = backendPopulation.spending_behaviors || {};
+
+    const spendingBehaviors = Object.fromEntries(
+      Object.values(Demographic).map((demoValue) => {
+        const demoSpending = backendSpending[demoValue] || {};
+        const frontendSpending = Object.fromEntries(
+          Object.entries(demoSpending).map(([industryKey, value]) => [
+            industryKey,
+            decimalToPercent(value).toFixed(2),
+          ])
+        );
+        return [demoValue, frontendSpending];
+      })
+    );
+
+    return {
+      incomeMean: backendPopulation.income_mean,
+      incomeStd: backendPopulation.income_std,
+      balanceMean: backendPopulation.balance_mean,
+      balanceStd: backendPopulation.balance_std,
+      spendingBehaviors: spendingBehaviors,
+    };
+  }
+
+  // not isSetup
   return Object.fromEntries(
     Object.values(Demographic).map((demoValue) => {
-      const backendDemo = backendDemographics[demoValue];
-      if (!backendDemo) return [demoValue, {}]; // Should not happen with valid templates
+      const backendDemo = backendData[demoValue];
+      if (!backendDemo) return [demoValue, {}];
 
-      let frontendDemo = {};
-
-      if (isSetup) {
-        frontendDemo = {
-          meanIncome: backendDemo.income.mean,
-          sdIncome: backendDemo.income.sd,
-          proportion: decimalToPercent(backendDemo.proportion).toFixed(2),
-          meanSavings: backendDemo.balance.mean,
-          sdSavings: backendDemo.balance.sd,
-
-          ...Object.fromEntries(
-            //spread spending as individual properties (e.g., GROCERIES: 25)
-            Object.entries(backendDemo.spending_behavior).map(
-              ([industryKey, value]) => [
-                industryKey,
-                decimalToPercent(value).toFixed(2),
-              ]
-            )
-          ),
-        };
-      } else {
-        frontendDemo = {
+      return [
+        demoValue,
+        {
           meanIncome: backendDemo[DemoMetrics.AVERAGE_WAGE].toFixed(2),
           sdIncome: backendDemo[DemoMetrics.STD_WAGE].toFixed(2),
           proportion: decimalToPercent(
@@ -300,10 +295,8 @@ export function receiveDemographicsPayload(
           ).toFixed(2),
           meanSavings: backendDemo[DemoMetrics.AVERAGE_BALANCE].toFixed(2),
           sdSavings: backendDemo[DemoMetrics.STD_BALANCE].toFixed(2),
-        };
-      }
-
-      return [demoValue, frontendDemo];
+        },
+      ];
     })
   );
 }
@@ -366,7 +359,7 @@ export function receiveIndustriesPayload(backendIndustries, isSetup = true) {
 export function receiveTemplatePayload(backendConfig) {
   return {
     envParams: receiveEnvironmentPayload(backendConfig),
-    demoParams: receiveDemographicsPayload(backendConfig.demographics),
+    populationParams: receivePopulationPayload(backendConfig.population),
     industryParams: receiveIndustriesPayload(backendConfig.industries),
     policyParams: receivePoliciesPayload(backendConfig.policies),
   };

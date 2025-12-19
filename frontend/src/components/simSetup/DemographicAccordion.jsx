@@ -17,120 +17,99 @@ import { IndustryType } from "../../types/IndustryType";
  * - Shows a row total for spending behavior (turns red when not 100%).
  */
 export default function DemographicAccordion({
-  demoParams,
-  handleDemographicChange,
+  populationParams,
+  handlePopulationChange,
+  handlePopulationSpendingChange,
   formErrors = {},
   readOnly = false,
 }) {
   const demographics = useMemo(() => Object.values(Demographic), []);
-  const industryEntries = useMemo(() => Object.values(IndustryType), []);
-  const [selectedDemographic, setSelectedDemographic] = useState(
+
+  const [selectedSpendingDemo, setSelectedSpendingDemo] = useState(
     demographics[0]
   );
 
-  const selectedDemo = demoParams[selectedDemographic] || {};
+  // Global field errors
+  const hasIncomeMeanError = !!formErrors.pop_incomeMean;
+  const hasIncomeStdError = !!formErrors.pop_incomeStd;
+  const hasBalanceMeanError = !!formErrors.pop_balanceMean;
+  const hasBalanceStdError = !!formErrors.pop_balanceStd;
 
-  // Extract nested error flags for the selected demo, if present
-  const nestedErr = (formErrors && formErrors[selectedDemographic]) || {};
+  // Spending field errors
+  const spendingErrorsForDemo = formErrors.population?.spending?.[selectedSpendingDemo] || {};
+  const hasSpendingSumError = !!formErrors[`pop_spending_${selectedSpendingDemo}`];
 
-  // Backward-compatible helpers to detect errors from either nested flags or flat keys
-  const hasProportionError = !!nestedErr.proportion || !!formErrors.proportion;
-
-  const hasMeanIncomeError =
-    !!nestedErr.meanIncome ||
-    !!formErrors[`demo_meanIncome_${selectedDemographic}`] ||
-    !!formErrors[`demo_meanIncome_monotonic_${selectedDemographic}`];
-
-  const hasSdIncomeError =
-    !!nestedErr.sdIncome ||
-    !!formErrors[`demo_sdIncome_${selectedDemographic}`];
-
-  const hasMeanSavingsError =
-    !!nestedErr.meanSavings ||
-    !!formErrors[`demo_meanSavings_${selectedDemographic}`];
-
-  const hasSdSavingsError =
-    !!nestedErr.sdSavings ||
-    !!formErrors[`demo_sdSavings_${selectedDemographic}`];
-
-  // Handler for demographic selector dropdown
-  const handleSelectedDemographicChange = (event) => {
-    setSelectedDemographic(event.target.value);
+  // Handler for the demographic selector inside the Advanced section
+  const handleSpendingDemoChange = (event) => {
+    setSelectedSpendingDemo(event.target.value);
   };
-
-  const demographicSelector = (
-    <ParameterMenuInput
-      label="Demographic"
-      value={selectedDemographic}
-      onChange={handleSelectedDemographicChange}
-      xs={12}
-      helpText="Choose which demographic group you are editing. Values below apply only to this group."
-    >
-      {demographics.map((value) => (
-        // Create a MenuItem for each Demographic
-        <MenuItem key={value} value={value}>
-          <span>{value}</span>
-        </MenuItem>
-      ))}
-    </ParameterMenuInput>
-  );
 
   const coreContent = (
     <>
-      <ParameterSliderInput
-        label="Proportion of Population (%)"
-        value={selectedDemo.proportion}
-        onChange={handleDemographicChange(selectedDemographic, "proportion")}
-        error={hasProportionError}
-        readOnly={readOnly}
-        helpText="Share of the total population in this demographic. All demographics together must sum to 100%."
-      />
-
       <ParameterNumInput
         label="Mean Income ($/week)"
-        value={selectedDemo.meanIncome}
-        onChange={handleDemographicChange(selectedDemographic, "meanIncome")}
-        error={hasMeanIncomeError}
+        value={populationParams.incomeMean}
+        onChange={handlePopulationChange("incomeMean")}
+        error={hasIncomeMeanError}
         readOnly={readOnly}
-        helpText="Target average weekly income used for sampling individual incomes. Larger values raise purchasing power."
+        helpText="The average weekly income for the entire population. This determines the center of the lognormal distribution."
       />
 
       <ParameterNumInput
         label="Income Std. Deviation ($)"
-        value={selectedDemo.sdIncome}
-        onChange={handleDemographicChange(selectedDemographic, "sdIncome")}
-        error={hasSdIncomeError}
+        value={populationParams.incomeStd}
+        onChange={handlePopulationChange("incomeStd")}
+        error={hasIncomeStdError}
         readOnly={readOnly}
-        helpText="Spread of weekly incomes around the mean (lognormal). Higher values increase inequality and volatility."
+        helpText="The spread of incomes. Higher values create higher inequality, pushing more people into Lower/Upper classes."
       />
 
       <ParameterNumInput
         label="Mean Savings ($)"
-        value={selectedDemo.meanSavings}
-        onChange={handleDemographicChange(selectedDemographic, "meanSavings")}
-        error={hasMeanSavingsError}
+        value={populationParams.balanceMean}
+        onChange={handlePopulationChange("balanceMean")}
+        error={hasBalanceMeanError}
         readOnly={readOnly}
-        helpText="Average starting cash on hand. Higher savings allow households to smooth consumption."
+        helpText="The average starting cash on hand for the population."
       />
 
       <ParameterNumInput
         label="Savings Std. Deviation ($)"
-        value={selectedDemo.sdSavings}
-        onChange={handleDemographicChange(selectedDemographic, "sdSavings")}
-        error={hasSdSavingsError}
+        value={populationParams.balanceStd}
+        onChange={handlePopulationChange("balanceStd")}
+        error={hasBalanceStdError}
         readOnly={readOnly}
-        helpText="Variation in starting savings between people. Larger values create more heterogeneous behavior."
+        helpText="The variation in starting savings across the population."
       />
     </>
   );
 
   const advancedContent = readOnly ? undefined : (
     <>
+      <ParameterMenuInput
+        label="Select Demographic Group"
+        value={selectedSpendingDemo}
+        onChange={handleSpendingDemoChange}
+        xs={12}
+        helpText="Select a demographic to edit their specific spending preferences."
+      >
+        {demographics.map((value) => (
+          <MenuItem key={value} value={value}>
+            <span>{value}</span>
+          </MenuItem>
+        ))}
+      </ParameterMenuInput>
+
       <SpendingBehavior
-        selectedDemographic={selectedDemographic}
-        selectedDemo={selectedDemo}
-        handleDemographicChange={handleDemographicChange}
-        formErrors={formErrors}
+        selectedDemographic={selectedSpendingDemo}
+        // Pass the spending dictionary for *only* the selected demographic
+        selectedDemo={populationParams.spendingBehaviors[selectedSpendingDemo] || {}}
+        // The SpendingBehavior component expects a handler that takes (demo, industry)
+        // We pass our wrapper which already knows how to handle that structure
+        handleDemographicChange={(demo, industry) => handlePopulationSpendingChange(demo, industry)}
+        
+        // Pass specific error flags if available, or the general sum error
+        formErrors={hasSpendingSumError ? { [selectedSpendingDemo]: true } : {}} 
         readOnly={readOnly}
       />
     </>
@@ -138,10 +117,9 @@ export default function DemographicAccordion({
 
   return (
     <ParameterAccordion
-      title="Demographic Parameters"
-      selector={demographicSelector}
+      title="Population Parameters"
       advancedContent={advancedContent}
-      advancedTitle="Spending Behavior by Industry"
+      advancedTitle="Spending Behavior"
     >
       {coreContent}
     </ParameterAccordion>

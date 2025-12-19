@@ -3,7 +3,7 @@ import { Box, Grid, Typography, Alert } from "@mui/material";
 import { SimulationContext } from "./BaseSimView";
 import DemographicAccordion from "../../components/simSetup/DemographicAccordion";
 import UnchangeableParameters from "../../components/simView/UnchangeableParameters";
-import { receiveDemographicsPayload } from "../../api/payloadReceiver";
+import { receivePopulationPayload } from "../../api/payloadReceiver";
 
 /**
  * Read-onlyDemographics view
@@ -50,7 +50,7 @@ export default function Demographics({ oldDemoParams }) {
       }
 
       if (message.action === "get_current_demo_metrics" && message.data) {
-        const newDemoParams = receiveDemographicsPayload(message.data, false);
+        const newDemoParams = receivePopulationPayload(message.data, false);
         console.log("changed fetched demographic metrics:", newDemoParams);
         setDemoParams(newDemoParams);
       }
