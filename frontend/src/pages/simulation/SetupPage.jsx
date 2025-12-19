@@ -134,6 +134,13 @@ export default function SetupPage() {
       if (!flags.population[dk]) flags.population[dk] = {};
       flags.population[dk][key] = true;
     };
+
+    const markPopSpending = (demo, key) => {
+        if (!flags.population.spending) flags.population.spending = {};
+        if (!flags.population.spending[demo]) flags.population.spending[demo] = {};
+        flags.population.spending[demo][key] = true;
+    };
+
     const markIndustry = (ik, key) => {
       if (!flags.industry[ik]) flags.industry[ik] = {};
       flags.industry[ik][key] = true;
