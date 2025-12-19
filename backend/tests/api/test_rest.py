@@ -61,7 +61,7 @@ def test_get_city_template_config(
             ("num_people",), status.HTTP_422_UNPROCESSABLE_ENTITY, id="invalid payload"
         ),
         pytest.param(
-            ("demographics", Demographic.LOWER_CLASS),
+            ("population", "spending_behaviors", Demographic.LOWER_CLASS),
             status.HTTP_400_BAD_REQUEST,
             id="invalid_demographics",
         ),

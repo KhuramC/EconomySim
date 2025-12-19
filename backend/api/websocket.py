@@ -47,6 +47,7 @@ def handle_get_industry_data(model_id: int) -> dict:
     """
     logger.info(f"Retrieving industry data for model {model_id}.")
     industries_df = controller.get_industry_data(model_id)
+    industries_df = industries_df[industries_df["week"] > 0]
 
     industries_dict = {}
     # make each industries its own column, with the other stuff being the value as a dict.
@@ -99,6 +100,7 @@ def handle_get_demo_metrics(model_id: int) -> dict:
     """
     logger.info(f"Retrieving demographic metrics for model {model_id}.")
     metrics_df = controller.get_demo_metrics(model_id)
+    metrics_df = metrics_df[metrics_df["week"] > 0]
 
     metrics_dict = {}
     # make each demographics its own column, with the other stuff being the value as a dict.
@@ -152,6 +154,7 @@ def handle_get_indicators(model_id: int) -> dict:
     """
     logger.info(f"Retrieving indicators for model {model_id}.")
     indicators_df = controller.get_indicators(model_id)
+    indicators_df = indicators_df[indicators_df["week"] > 0]
     return {
         "status": "success",
         "action": "get_indicators",

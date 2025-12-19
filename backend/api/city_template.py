@@ -9,11 +9,13 @@ from engine.types.demographic import Demographic
 _SMALL_CONFIG = {
     "num_people": 1000,
     "inflation_rate": 0.0005,  # Inflation Rate is weekly; equates to 2.6% annually
-    "demographics": {
-        Demographic.LOWER_CLASS: {
-            "income": {"mean": 596, "sd": 248},  # Median: $548/wk (~$28.5k/yr)
-            "proportion": 0.35,
-            "spending_behavior": {
+    "population": {
+        "income_mean": 1147,
+        "income_std": 352,
+        "balance_mean": 5325,
+        "balance_std": 2218,
+        "spending_behaviors": {
+            Demographic.LOWER_CLASS: {
                 IndustryType.GROCERIES: 0.15,
                 IndustryType.UTILITIES: 0.11,
                 IndustryType.AUTOMOBILES: 0.25,
@@ -22,12 +24,7 @@ _SMALL_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.07,
                 IndustryType.LUXURY: 0.10,
             },
-            "balance": {"mean": 457, "sd": 244},  # Low savings
-        },
-        Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 1147, "sd": 352},  # Median: $1096/wk (~$57k/yr)
-            "proportion": 0.50,
-            "spending_behavior": {
+            Demographic.MIDDLE_CLASS: {
                 IndustryType.GROCERIES: 0.12,
                 IndustryType.UTILITIES: 0.09,
                 IndustryType.AUTOMOBILES: 0.23,
@@ -36,12 +33,7 @@ _SMALL_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.12,
                 IndustryType.LUXURY: 0.18,
             },
-            "balance": {"mean": 5325, "sd": 2218},  # Moderate savings
-        },
-        Demographic.UPPER_CLASS: {
-            "income": {"mean": 3294, "sd": 2169},  # Median: $2740/wk (~$142.5k/yr)
-            "proportion": 0.15,
-            "spending_behavior": {
+            Demographic.UPPER_CLASS: {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.08,
                 IndustryType.AUTOMOBILES: 0.20,
@@ -49,9 +41,8 @@ _SMALL_CONFIG = {
                 IndustryType.HOUSEHOLD_GOODS: 0.03,
                 IndustryType.ENTERTAINMENT: 0.14,
                 IndustryType.LUXURY: 0.25,
-            },
-            "balance": {"mean": 76496, "sd": 60829},  # High savings
-        },
+            }
+        }
     },
     "industries": {
         IndustryType.GROCERIES: {
@@ -188,11 +179,13 @@ _SMALL_CONFIG = {
 _MEDIUM_CONFIG = {
     "num_people": 10000,
     "inflation_rate": 0.0005,  # Inflation Rate is weekly
-    "demographics": {
-        Demographic.LOWER_CLASS: {
-            "income": {"mean": 757, "sd": 316},  # Median: $702/wk (~$36.5k/yr)
-            "proportion": 0.30,
-            "spending_behavior": {
+    "population": {
+        "income_mean": 1473,
+        "income_std": 452,
+        "balance_mean": 5324,
+        "balance_std": 2218,
+        "spending_behaviors": {
+            Demographic.LOWER_CLASS: {
                 IndustryType.GROCERIES: 0.16,
                 IndustryType.UTILITIES: 0.12,
                 IndustryType.AUTOMOBILES: 0.16,
@@ -201,13 +194,8 @@ _MEDIUM_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.07,
                 IndustryType.LUXURY: 0.14,
             },
-            "balance": {"mean": 457, "sd": 244},  # Low savings
-        },
-        Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 1473, "sd": 452},  # Median: $1404/wk (~$73k/yr)
-            "proportion": 0.55,
-            "spending_behavior": {
-                IndustryType.GROCERIES: 0.10,
+            Demographic.MIDDLE_CLASS: {
+                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
                 IndustryType.AUTOMOBILES: 0.13,
                 IndustryType.HOUSING: 0.26,
@@ -215,12 +203,7 @@ _MEDIUM_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.12,
                 IndustryType.LUXURY: 0.25,
             },
-            "balance": {"mean": 5324, "sd": 2218},  # Moderate savings
-        },
-        Demographic.UPPER_CLASS: {
-            "income": {"mean": 4188, "sd": 2757},  # Median: $3510/wk (~$182.5k/yr)
-            "proportion": 0.15,
-            "spending_behavior": {
+            Demographic.UPPER_CLASS: {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
                 IndustryType.AUTOMOBILES: 0.15,
@@ -228,9 +211,8 @@ _MEDIUM_CONFIG = {
                 IndustryType.HOUSEHOLD_GOODS: 0.04,
                 IndustryType.ENTERTAINMENT: 0.12,
                 IndustryType.LUXURY: 0.25,
-            },
-            "balance": {"mean": 76496, "sd": 60829},  # High savings
-        },
+            }
+        }
     },
     "industries": {
         IndustryType.GROCERIES: {
@@ -365,11 +347,13 @@ _MEDIUM_CONFIG = {
 _LARGE_CONFIG = {
     "num_people": 75220,
     "inflation_rate": 0.0005,  # Inflation Rate is weekly
-    "demographics": {
-        Demographic.LOWER_CLASS: {
-            "income": {"mean": 934, "sd": 389},  # Median: $865/wk (~$45k/yr)
-            "proportion": 0.35,
-            "spending_behavior": {
+    "population": {
+        "income_mean": 2528,
+        "income_std": 776,
+        "balance_mean": 5324,
+        "balance_std": 2218,
+        "spending_behaviors": {
+            Demographic.LOWER_CLASS: {
                 IndustryType.GROCERIES: 0.14,
                 IndustryType.UTILITIES: 0.15,
                 IndustryType.AUTOMOBILES: 0.05,
@@ -378,12 +362,7 @@ _LARGE_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.05,
                 IndustryType.LUXURY: 0.10,
             },
-            "balance": {"mean": 457, "sd": 244},  # Low savings
-        },
-        Demographic.MIDDLE_CLASS: {
-            "income": {"mean": 2528, "sd": 776},  # Median: $2423/wk (~$126k/yr)
-            "proportion": 0.40,
-            "spending_behavior": {
+            Demographic.MIDDLE_CLASS: {
                 IndustryType.GROCERIES: 0.12,
                 IndustryType.UTILITIES: 0.12,
                 IndustryType.AUTOMOBILES: 0.08,
@@ -392,12 +371,7 @@ _LARGE_CONFIG = {
                 IndustryType.ENTERTAINMENT: 0.08,
                 IndustryType.LUXURY: 0.17,
             },
-            "balance": {"mean": 5324, "sd": 2218},  # Moderate savings
-        },
-        Demographic.UPPER_CLASS: {
-            "income": {"mean": 7259, "sd": 4778},  # Median: $6058/wk (~$315k/yr)
-            "proportion": 0.25,
-            "spending_behavior": {
+            Demographic.UPPER_CLASS: {
                 IndustryType.GROCERIES: 0.10,
                 IndustryType.UTILITIES: 0.10,
                 IndustryType.AUTOMOBILES: 0.10,
@@ -405,9 +379,8 @@ _LARGE_CONFIG = {
                 IndustryType.HOUSEHOLD_GOODS: 0.04,
                 IndustryType.ENTERTAINMENT: 0.15,
                 IndustryType.LUXURY: 0.25,
-            },
-            "balance": {"mean": 76496, "sd": 60829},  # High savings
-        },
+            }
+        }
     },
     "industries": {
         IndustryType.GROCERIES: {

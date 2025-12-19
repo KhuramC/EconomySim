@@ -7,7 +7,7 @@ import numpy as np
 from engine.core.utils import (
     validate_schema,
     POLICIES_SCHEMA,
-    DEMOGRAPHICS_SCHEMA,
+    POPULATION_SCHEMA,
     INDUSTRIES_SCHEMA,
     num_prop,
     generate_lognormal,
@@ -17,14 +17,14 @@ from engine.types.demographic import Demographic
 
 
 @pytest.fixture()
-def data(request, policies, demographics, industries) -> dict[str, Any]:
+def data(request, policies, population, industries) -> dict[str, Any]:
     """
     Based on the request, returns one of the following dicts.
 
     Args:
         request (_type_): which dict to return.
         policies (dict): a valid policies dict.
-        demographics (dict): a valid demographics dict.
+        population (dict): a valid population dict.
         industries (dict): a valid industries dict.
 
     Returns:
@@ -33,8 +33,8 @@ def data(request, policies, demographics, industries) -> dict[str, Any]:
     wanted_data = request.param
     if wanted_data == "policies":
         return policies
-    elif wanted_data == "demographics":
-        return demographics
+    elif wanted_data == "population":
+        return population
     elif wanted_data == "industries":
         return industries
     else:
@@ -42,14 +42,14 @@ def data(request, policies, demographics, industries) -> dict[str, Any]:
 
 
 @pytest.fixture()
-def invalid_data(request, policies, demographics, industries) -> dict[str, Any]:
+def invalid_data(request, policies, population, industries) -> dict[str, Any]:
     """
     Deletes a specified key somewhere in the requested dictionary to make it invalid.
 
     Args:
         request (_type_): which dict to return, and what key to delete.
         policies (dict): a valid policies dict.
-        demographics (dict): a valid demographics dict.
+        population (dict): a valid population dict.
         industries (dict): a valid industries dict.
 
     Returns:
@@ -60,8 +60,8 @@ def invalid_data(request, policies, demographics, industries) -> dict[str, Any]:
     invalid_data = {}
     if wanted_data == "policies":
         invalid_data = deepcopy(policies)
-    elif wanted_data == "demographics":
-        invalid_data = deepcopy(demographics)
+    elif wanted_data == "population":
+        invalid_data = deepcopy(population)
     elif wanted_data == "industries":
         invalid_data = deepcopy(industries)
 
@@ -83,10 +83,10 @@ def invalid_data(request, policies, demographics, industries) -> dict[str, Any]:
             id="valid_policies",
         ),
         pytest.param(
-            "demographics",
-            DEMOGRAPHICS_SCHEMA,
-            "demographics",
-            id="valid_demographics",
+            "population",
+            POPULATION_SCHEMA,
+            "population",
+            id="valid_population",
         ),
         pytest.param(
             "industries",
@@ -125,10 +125,10 @@ def test_validate_schema_success(
             id="invalid_policies",
         ),
         pytest.param(
-            ("demographics", (Demographic.LOWER_CLASS, "proportion")),
-            DEMOGRAPHICS_SCHEMA,
-            "demographics",
-            id="invalid_demographics",
+            ("population", ("spending_behaviors", Demographic.LOWER_CLASS)),
+            POPULATION_SCHEMA,
+            "population",
+            id="invalid_population",
         ),
         pytest.param(
             ("industries", (IndustryType.HOUSEHOLD_GOODS, "starting_price")),

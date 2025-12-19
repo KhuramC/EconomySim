@@ -168,7 +168,7 @@ def test_get_demo_metrics_validation(controller_model: dict, kwargs, error_msg):
         controller.get_industry_data(**kwargs)
 
 
-def test_get_demo_metrics(controller_model: dict, demographics):
+def test_get_demo_metrics(controller_model: dict, population):
     """
     Test for `get_demo_metrics`.
     Tests that time and metric filtering function as expected and
@@ -176,7 +176,7 @@ def test_get_demo_metrics(controller_model: dict, demographics):
 
     Args:
         controller_model(dict): the controller with the created model.
-        demographics (dict): a valid demographics dict.
+        population (dict): a valid population dict.
     """
     controller = controller_model["controller"]
     model_id = controller_model["model_id"]
@@ -188,9 +188,9 @@ def test_get_demo_metrics(controller_model: dict, demographics):
     # Test fetching all data (end_time=0 means up to current week, which is 5)
     all_data_df = controller.get_demo_metrics(model_id, start_time=0, end_time=0)
     assert not all_data_df.empty
-    assert set(all_data_df["week"].unique()) == {1, 2, 3, 4, 5}
-    assert len(all_data_df["Demographics"].unique()) == len(demographics)
-    expected_columns = set(DemoMetrics.values()).union({"week"})
+    assert set(all_data_df["week"].unique()) == {0, 1, 2, 3, 4, 5}
+    assert len(all_data_df["Demographics"].unique()) == len(Demographic)
+    expected_columns = set(DemoMetrics.values()).union({"week", "Demographics"})
     assert expected_columns.issubset(all_data_df.columns)
 
     # Test time filtering
@@ -274,7 +274,7 @@ def test_get_industry_data(controller_model: dict, industries):
     # Test fetching all data (end_time=0 means up to current week, which is 5)
     all_data_df = controller.get_industry_data(model_id, start_time=0, end_time=0)
     assert not all_data_df.empty
-    assert set(all_data_df["week"].unique()) == {1, 2, 3, 4, 5}
+    assert set(all_data_df["week"].unique()) == {0, 1, 2, 3, 4, 5}
     assert len(all_data_df["industry"].unique()) == len(industries)
     expected_columns = set(IndustryMetrics.values()).union({"week"})
     assert expected_columns.issubset(all_data_df.columns)
@@ -364,7 +364,7 @@ def test_get_indicators(controller_model: dict):
     # Test fetching all data
     all_data_df = controller.get_indicators(model_id)
     assert not all_data_df.empty
-    assert set(all_data_df["week"]) == {1, 2, 3, 4, 5}
+    assert set(all_data_df["week"]) == {0, 1, 2, 3, 4, 5}
     assert set(all_data_df.columns) == set(Indicators.values()).union({"week"})
 
     # Test time filtering
@@ -378,7 +378,7 @@ def test_get_indicators(controller_model: dict):
     )
     # The 'week' column should always be returned
     assert set(indicator_filtered_df.columns) == set(target_indicators).union({"week"})
-    assert set(indicator_filtered_df["week"]) == {1, 2, 3, 4, 5}
+    assert set(indicator_filtered_df["week"]) == {0, 1, 2, 3, 4, 5}
 
     # Test filtering by both time and indicators
     combined_filtered_df = controller.get_indicators(

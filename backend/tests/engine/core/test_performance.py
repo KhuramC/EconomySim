@@ -5,7 +5,7 @@ AGENT_COUNTS = [100, 1000, 10000, 100000, 1000000]
 @pytest.mark.parametrize("num_agents", AGENT_COUNTS)
 @pytest.mark.performance
 def test_model_step_performance(
-    benchmark, demographics, industries, policies, num_agents: int
+    benchmark, population, industries, policies, num_agents: int
 ):
     """
     Nonfunctional tests for performance of the model.
@@ -13,7 +13,7 @@ def test_model_step_performance(
 
     Args:
         benchmark: a fixture to benchmark(time) functions.
-        demographics (dict): a valid demographics.
+        population (dict): a valid population.
         industries (dict): a valid industries.
         policies (dict): a valid policies.
         num_agents (int): the number of agents to create.
@@ -22,7 +22,7 @@ def test_model_step_performance(
     model = EconomyModel(
         max_simulation_length=52,
         num_people=num_agents,
-        demographics=demographics,
+        population=population,
         industries=industries,
         starting_policies=policies,
     )

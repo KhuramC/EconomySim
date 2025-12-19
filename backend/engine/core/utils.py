@@ -3,14 +3,14 @@ from ..types.industry_type import IndustryType
 from ..types.demographic import Demographic
 
 
-DEMOGRAPHICS_SCHEMA = {
-    demo.value: {
-        "income": {"mean": None, "sd": None},
-        "proportion": None,
-        "spending_behavior": {itype.value: None for itype in IndustryType},
-        "balance": {"mean": None, "sd": None},
-    }
-    for demo in Demographic
+POPULATION_SCHEMA = {
+    "income_mean": None,
+    "income_std": None,
+    "balance_mean": None,
+    "balance_std": None,
+    "spending_behaviors": {
+        dtype: {itype: None for itype in IndustryType} for dtype in Demographic
+    },
 }
 """Schema for validating the demographics dictionary."""
 

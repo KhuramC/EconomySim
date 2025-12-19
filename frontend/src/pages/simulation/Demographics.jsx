@@ -50,7 +50,7 @@ export default function Demographics({ oldDemoParams }) {
       }
 
       if (message.action === "get_current_demo_metrics" && message.data) {
-        const newDemoParams = receiveDemographicsPayload(message.data, false);
+        const newDemoParams = receiveDemographicsPayload(message.data);
         console.log("changed fetched demographic metrics:", newDemoParams);
         setDemoParams(newDemoParams);
       }

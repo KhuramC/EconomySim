@@ -5,12 +5,12 @@ from engine.types.demographic import Demographic
 
 
 @pytest.fixture()
-def model(num_agents, demographics, industries, policies) -> EconomyModel:
+def model(num_agents, population, industries, policies) -> EconomyModel:
     """
     A fixture that provides a valid model.
 
     Args:
-        demographics (dict): a valid demographics.
+        population (dict): a valid population.
         industries (dict): a valid industries.
         policies (dict): a valid policies.
 
@@ -20,7 +20,7 @@ def model(num_agents, demographics, industries, policies) -> EconomyModel:
     model = EconomyModel(
         max_simulation_length=52,
         num_people=num_agents,
-        demographics=demographics,
+        population=population,
         industries=industries,
         starting_policies=policies,
     )
@@ -29,7 +29,7 @@ def model(num_agents, demographics, industries, policies) -> EconomyModel:
 
 
 @pytest.fixture()
-def indicator_test_model_factory_balance(demographics, industries, policies):
+def indicator_test_model_factory_balance(population, industries, policies):
     """
     A factory fixture to create a minimal EconomyModel with a specific list
     of agent balances, perfect for testing economic indicators.
@@ -39,7 +39,7 @@ def indicator_test_model_factory_balance(demographics, industries, policies):
         model = EconomyModel(
             max_simulation_length=1,
             num_people=len(balances),
-            demographics=demographics,
+            population=population,
             industries=industries,
             starting_policies=policies,
         )
@@ -62,7 +62,7 @@ def indicator_test_model_factory_balance(demographics, industries, policies):
 
 
 @pytest.fixture()
-def indicator_test_model_factory_income(demographics, industries, policies):
+def indicator_test_model_factory_income(population, industries, policies):
     """
     A factory fixture to create a minimal EconomyModel with a specific list
     of agent incomes, perfect for testing economic indicators.
@@ -72,7 +72,7 @@ def indicator_test_model_factory_income(demographics, industries, policies):
         model = EconomyModel(
             max_simulation_length=1,
             num_people=len(incomes),
-            demographics=demographics,
+            population=population,
             industries=industries,
             starting_policies=policies,
         )

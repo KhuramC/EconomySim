@@ -223,7 +223,7 @@ def test_websocket_get_current_demo_metrics(
         assert isinstance(demo_metrics, dict)
 
         # Check that the data has the correct structure (dict of dicts)
-        expected_demographics = valid_config["demographics"].keys()
+        expected_demographics = set(Demographic)
         assert set(demo_metrics.keys()) == set(expected_demographics)
 
         # Check the structure of a single demographic entry

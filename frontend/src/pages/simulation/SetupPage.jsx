@@ -3,7 +3,7 @@ import { Typography, Alert, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import EnvironmentalAccordion from "../../components/simSetup/EnvironmentalAccordion";
-import DemographicAccordion from "../../components/simSetup/DemographicAccordion";
+import PopulationAccordion from "../../components/simSetup/PopulationAccordion";
 import IndustryAccordion from "../../components/simSetup/IndustryAccordion";
 import PolicyAccordion from "../../components/simSetup/PolicyAccordion";
 
@@ -14,23 +14,25 @@ import { IndustryType } from "../../types/IndustryType";
 import { SimulationAPI } from "../../api/SimulationAPI";
 
 // Function to generate default parameters for one demographic
-const getDefaultDemographicParams = () => {
-  const spendingAllocation = {
-    [IndustryType.GROCERIES]: 25,
-    [IndustryType.UTILITIES]: 18,
-    [IndustryType.AUTOMOBILES]: 2,
-    [IndustryType.HOUSING]: 41,
-    [IndustryType.HOUSEHOLD_GOODS]: 8,
-    [IndustryType.ENTERTAINMENT]: 4,
-    [IndustryType.LUXURY]: 2,
-  };
+const getDefaultSpending = () => ({
+  [IndustryType.GROCERIES]: 25,
+  [IndustryType.UTILITIES]: 18,
+  [IndustryType.AUTOMOBILES]: 2,
+  [IndustryType.HOUSING]: 41,
+  [IndustryType.HOUSEHOLD_GOODS]: 8,
+  [IndustryType.ENTERTAINMENT]: 4,
+  [IndustryType.LUXURY]: 2,
+});
+
+const getDefaultPopulationParams = () => {
   return {
-    meanIncome: 50000,
-    sdIncome: 15000,
-    proportion: 33,
-    meanSavings: 10000,
-    sdSavings: 5000,
-    ...spendingAllocation,
+    incomeMean: 50000,
+    incomeStd: 15000,
+    balanceMean: 10000,
+    balanceStd: 5000,
+    spendingBehaviors: Object.fromEntries(
+      Object.values(Demographic).map((d) => [d, getDefaultSpending()])
+    ),
   };
 };
 
@@ -72,7 +74,7 @@ export default function SetupPage() {
   // Field-level error flags used to paint inputs red (nested by section)
   const [inputErrors, setInputErrors] = useState({
     env: {},
-    demo: {},
+    population: {},
     industry: {},
     policy: {},
   });
@@ -84,12 +86,7 @@ export default function SetupPage() {
       inflationRate: 1.0,
     },
 
-    demoParams: Object.fromEntries(
-      Object.values(Demographic).map((value) => [
-        value,
-        getDefaultDemographicParams(),
-      ])
-    ),
+    populationParams: getDefaultPopulationParams(),
 
     industryParams: Object.fromEntries(
       Object.values(IndustryType).map((value) => [
@@ -119,7 +116,8 @@ export default function SetupPage() {
       priceCapEnabledByIndustry: makeIndustryDict(false),
 
       // Per-demographic Personal Income Tax
-      personalIncomeTaxByDemographic: makePersonalIncomeTaxByDemographicDefault(),
+      personalIncomeTaxByDemographic:
+        makePersonalIncomeTaxByDemographicDefault(),
     },
   });
 
@@ -128,14 +126,21 @@ export default function SetupPage() {
     // Collect human-readable messages
     const msgs = {};
     // Collect field-level boolean flags
-    const flags = { env: {}, demo: {}, industry: {}, policy: {} };
+    const flags = { env: {}, population: {}, industry: {}, policy: {} };
 
     const isBlank = (v) => v === "" || v === null || v === undefined;
 
-    const markDemo = (dk, key) => {
-      if (!flags.demo[dk]) flags.demo[dk] = {};
-      flags.demo[dk][key] = true;
+    const markPop = (dk, key) => {
+      if (!flags.population[dk]) flags.population[dk] = {};
+      flags.population[dk][key] = true;
     };
+
+    const markPopSpending = (demo, key) => {
+        if (!flags.population.spending) flags.population.spending = {};
+        if (!flags.population.spending[demo]) flags.population.spending[demo] = {};
+        flags.population.spending[demo][key] = true;
+    };
+
     const markIndustry = (ik, key) => {
       if (!flags.industry[ik]) flags.industry[ik] = {};
       flags.industry[ik][key] = true;
@@ -157,83 +162,49 @@ export default function SetupPage() {
       flags.env.numPeople = true;
     }
 
-    // ----- Demographics -----
-    const demoOrder = Object.values(Demographic);
-    const industryKeys = Object.values(IndustryType);
+    // ----- Population -----
+    const pop = params.populationParams;
 
-    // Proportions must total 100
-    const proportionSum = Object.values(params.demoParams).reduce(
-      (sum, d) => sum + Number(d.proportion || 0),
-      0
-    );
-    if (Math.round(proportionSum) !== 100) {
-      msgs.proportion = `Demographic proportions must add up to 100%. Current sum: ${proportionSum.toFixed(
-        1
-      )}% (${(100 - proportionSum).toFixed(1)}% remaining).`;
-      demoOrder.forEach((dk) => markDemo(dk, "proportion"));
+    // Mean Income > 0
+    if (isBlank(pop.incomeMean) || Number(pop.incomeMean) <= 0) {
+      msgs.pop_incomeMean = "Population: Mean income must be greater than 0.";
+      markPop("incomeMean");
+    }
+    // SD Income > 0
+    if (isBlank(pop.incomeStd) || Number(pop.incomeStd) <= 0) {
+      msgs.pop_incomeStd =
+        "Population: Income standard deviation must be greater than 0.";
+      markPop("incomeStd");
+    }
+    // Mean Balance >= 0
+    if (isBlank(pop.balanceMean) || Number(pop.balanceMean) < 0) {
+      msgs.pop_balanceMean = "Population: Mean savings must be 0 or greater.";
+      markPop("balanceMean");
+    }
+    // SD Balance > 0
+    if (isBlank(pop.balanceStd) || Number(pop.balanceStd) <= 0) {
+      msgs.pop_balanceStd =
+        "Population: Savings standard deviation must be greater than 0.";
+      markPop("balanceStd");
     }
 
-    // Per-demographic checks
-    demoOrder.forEach((dk) => {
-      const d = params.demoParams[dk];
-
-      // Std dev > 0
-      if (isBlank(d?.sdIncome) || Number(d?.sdIncome) <= 0) {
-        msgs[
-          `demo_sdIncome_${dk}`
-        ] = `Demographics (${dk}): Income standard deviation must be greater than 0.`;
-        markDemo(dk, "sdIncome");
-      }
-      if (isBlank(d?.sdSavings) || Number(d?.sdSavings) <= 0) {
-        msgs[
-          `demo_sdSavings_${dk}`
-        ] = `Demographics (${dk}): Savings standard deviation must be greater than 0.`;
-        markDemo(dk, "sdSavings");
-      }
-
-      // Optional sanity checks
-      if (isBlank(d?.meanIncome) || Number(d?.meanIncome) <= 0) {
-        msgs[
-          `demo_meanIncome_${dk}`
-        ] = `Demographics (${dk}): Mean income must be greater than 0.`;
-        markDemo(dk, "meanIncome");
-      }
-      if (isBlank(d?.meanSavings) || Number(d?.meanSavings) < 0) {
-        msgs[
-          `demo_meanSavings_${dk}`
-        ] = `Demographics (${dk}): Mean savings must be 0 or greater.`;
-        markDemo(dk, "meanSavings");
-      }
-
-      // Flat per-industry spending behavior must sum to ~100
-      const spendingSum = industryKeys.reduce(
-        (sum, key) => sum + (Number(d?.[key]) || 0),
+    // Check spending behaviors sum to ~100 for each demographic
+    Object.values(Demographic).forEach((dk) => {
+      const spending = pop.spendingBehaviors[dk];
+      const spendingSum = Object.values(IndustryType).reduce(
+        (sum, key) => sum + (Number(spending?.[key]) || 0),
         0
       );
+
       if (Math.abs(spendingSum - 100) > 0.1) {
         msgs[
-          `demo_spending_${dk}`
-        ] = `Demographics (${dk}): Spending behavior percentages must add up to 100%. Current sum: ${spendingSum.toFixed(
+          `pop_spending_${dk}`
+        ] = `Population (${dk}): Spending behavior percentages must add up to 100%. Current sum: ${spendingSum.toFixed(
           1
-        )}% (${(100 - spendingSum).toFixed(1)}% remaining).`;
-        // Mark every cell in that row so all become red
-        industryKeys.forEach((k) => markDemo(dk, k));
+        )}%.`;
+        Object.values(IndustryType).forEach((ik) => markPopSpending(dk, ik));
       }
     });
-
-    // Mean income monotonic by enum order (strictly increasing)
-    for (let i = 1; i < demoOrder.length; i++) {
-      const prevKey = demoOrder[i - 1];
-      const currKey = demoOrder[i];
-      const prev = Number(params.demoParams[prevKey]?.meanIncome);
-      const curr = Number(params.demoParams[currKey]?.meanIncome);
-      if (!(curr > prev)) {
-        msgs[
-          `demo_meanIncome_monotonic_${currKey}`
-        ] = `Demographics: Mean income for "${currKey}" must be greater than "${prevKey}".`;
-        markDemo(currKey, "meanIncome");
-      }
-    }
 
     // ----- Industry -----
     Object.values(IndustryType).forEach((ik) => {
@@ -340,19 +311,35 @@ export default function SetupPage() {
     }));
   };
 
-  const handleDemographicChange = (demographicValue, prop) => (event) => {
+  const handlePopulationChange = (key) => (event) => {
     const { value } = event.target;
     setParams((prev) => ({
       ...prev,
-      demoParams: {
-        ...prev.demoParams,
-        [demographicValue]: {
-          ...prev.demoParams[demographicValue],
-          [prop]: value,
-        },
+      populationParams: {
+        ...prev.populationParams,
+        [key]: value,
       },
     }));
   };
+
+  // Handler for nested spending behavior
+  const handlePopulationSpendingChange =
+    (demographic, industryKey) => (event) => {
+      const { value } = event.target;
+      setParams((prev) => ({
+        ...prev,
+        populationParams: {
+          ...prev.populationParams,
+          spendingBehaviors: {
+            ...prev.populationParams.spendingBehaviors,
+            [demographic]: {
+              ...prev.populationParams.spendingBehaviors[demographic],
+              [industryKey]: value,
+            },
+          },
+        },
+      }));
+    };
 
   const handleIndustryChange = (industryValue, prop) => (event) => {
     const value =
@@ -398,7 +385,7 @@ export default function SetupPage() {
         eventOrValue && eventOrValue.target
           ? eventOrValue.target.type === "checkbox"
             ? eventOrValue.target.checked // toggle → boolean
-            : eventOrValue.target.value   // slider/text → string
+            : eventOrValue.target.value // slider/text → string
           : eventOrValue;
 
       // Convert to final JS type: boolean or number
@@ -483,8 +470,7 @@ export default function SetupPage() {
     (demographicValue, index, field) => (event) => {
       const { value } = event.target;
       setParams((prev) => {
-        const prevDict =
-          prev.policyParams.personalIncomeTaxByDemographic || {};
+        const prevDict = prev.policyParams.personalIncomeTaxByDemographic || {};
         const prevList = prevDict[demographicValue] || [];
         const newList = [...prevList];
 
@@ -508,8 +494,7 @@ export default function SetupPage() {
 
   const addPersonalIncomeTaxBracketForDemo = (demographicValue) => {
     setParams((prev) => {
-      const prevDict =
-        prev.policyParams.personalIncomeTaxByDemographic || {};
+      const prevDict = prev.policyParams.personalIncomeTaxByDemographic || {};
       const prevList = prevDict[demographicValue] || [];
 
       return {
@@ -518,10 +503,7 @@ export default function SetupPage() {
           ...prev.policyParams,
           personalIncomeTaxByDemographic: {
             ...prevDict,
-            [demographicValue]: [
-              ...prevList,
-              { threshold: 0, rate: 0 },
-            ],
+            [demographicValue]: [...prevList, { threshold: 0, rate: 0 }],
           },
         },
       };
@@ -530,8 +512,7 @@ export default function SetupPage() {
 
   const removePersonalIncomeTaxBracketForDemo = (demographicValue, index) => {
     setParams((prev) => {
-      const prevDict =
-        prev.policyParams.personalIncomeTaxByDemographic || {};
+      const prevDict = prev.policyParams.personalIncomeTaxByDemographic || {};
       const prevList = prevDict[demographicValue] || [];
 
       return {
@@ -557,7 +538,7 @@ export default function SetupPage() {
         state: {
           modelId: modelId,
           industryParams: params.industryParams,
-          demoParams: params.demoParams,
+          populationParams: params.populationParams,
         },
       });
     } catch (error) {
@@ -576,8 +557,8 @@ export default function SetupPage() {
 
       <Typography variant="body1" paragraph>
         Configure the starting parameters for your simulation. These values
-        affect how the environment, demographics, industries, and policies
-        behave when the simulation begins.
+        affect how the environment, population, industries, and policies behave
+        when the simulation begins.
       </Typography>
 
       <TemplateChooser
@@ -597,10 +578,11 @@ export default function SetupPage() {
         formErrors={inputErrors.env}
       />
 
-      <DemographicAccordion
-        demoParams={params.demoParams}
-        handleDemographicChange={handleDemographicChange}
-        formErrors={inputErrors.demo}
+      <PopulationAccordion
+        populationParams={params.populationParams}
+        handlePopulationChange={handlePopulationChange}
+        handlePopulationSpendingChange={handlePopulationSpendingChange}
+        formErrors={inputErrors.population}
       />
 
       <IndustryAccordion
@@ -618,7 +600,9 @@ export default function SetupPage() {
         addPersonalIncomeTaxBracket={addPersonalIncomeTaxBracket}
         removePersonalIncomeTaxBracket={removePersonalIncomeTaxBracket}
         handleIndustryPolicyChange={handleIndustryPolicyChange}
-        handlePersonalIncomeTaxByDemoChange={handlePersonalIncomeTaxByDemoChange}
+        handlePersonalIncomeTaxByDemoChange={
+          handlePersonalIncomeTaxByDemoChange
+        }
         addPersonalIncomeTaxBracketForDemo={addPersonalIncomeTaxBracketForDemo}
         removePersonalIncomeTaxBracketForDemo={
           removePersonalIncomeTaxBracketForDemo

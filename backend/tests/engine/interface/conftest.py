@@ -16,7 +16,7 @@ def controller() -> ModelController:
 
 @pytest.fixture()
 def controller_model(
-    controller: ModelController, demographics, industries, policies, num_agents: int
+    controller: ModelController, population, industries, policies, num_agents: int
 ) -> dict:
     """
     Fixture for returning the model id of a created model
@@ -26,7 +26,7 @@ def controller_model(
 
     Args:
         controller (ModelController): The model controller.
-        demographics (dict): A valid demographics dict.
+        population (dict): A valid population dict.
         industries (dict): A valid industries dict.
         policies (dict): A valid policies dict.
         num_agents (int): The number of agents in the model.
@@ -38,7 +38,7 @@ def controller_model(
     model_id = controller.create_model(
         max_simulation_length=52,
         num_people=num_agents,
-        demographics=demographics,
+        population=population,
         industries=industries,
         starting_policies=policies,
     )
