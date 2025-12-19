@@ -31,23 +31,22 @@ def demand_func(
     demands = {}
     for name in valid_goods:
         numerator = (prefs[name] ** sigma) * (prices[name] ** -sigma)
-        quantity_unrounded = (numerator / denominator) * budget
-        quantity = custom_round(quantity_unrounded)
-        demands[name] = quantity
+        quantity_unrounded = (numerator / denominator) * budget #value is not rounded until purchase step.  This allows for savings accumulation.
+        demands[name] = quantity_unrounded  
 
     return demands
 
 
 def custom_round(x: float) -> int:
     """
-    Round up if x is within 0.05 of the next whole number,
+    Round up if x is within 1e-9 of the next whole number,
     otherwise round down.
     """
     lower = math.floor(x)
     upper = lower + 1
 
-    # If x is within 0.05 (plus some tolerance for floating point errors) of the upper integer, round up
-    if upper - x <= 0.05 + 1e-9:
+    # If x is within 1e-9 (tolerance for floating point errors) of the upper integer, round up
+    if upper - x <= 1e-9:
         return upper
     else:
         return lower

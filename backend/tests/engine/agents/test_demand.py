@@ -8,10 +8,10 @@ from pytest import approx, mark, param
     [
         param(0.0, 0),
         param(0.1, 0),
-        param(0.949999, 0),
-        param(0.95, 1),
-        param(0.952, 1),
-        param(3 * 2.33, 7),
+        param(0.9, 0),
+        param(0.99999999, 0),
+        param(0.999999999, 1),
+        param(3 * 2.3333, 6),
     ],
 )
 def test_custom_round(x: float, expected: int):
